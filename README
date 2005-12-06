@@ -1,0 +1,5 @@
+Collections of Fortran modules for various tasks:
+- manipulating strings
+- interface to SQLite
+
+No serious documentation yet
