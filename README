@@ -3,3 +3,7 @@ Collections of Fortran modules for various tasks:
 - interface to SQLite
 
 No serious documentation yet
+
+Note (13 december 2005):
+Added a preliminary implementation of glob matching in Fortran.
+Needs to be tested more thoroughly
