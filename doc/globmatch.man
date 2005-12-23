@@ -1,0 +1,67 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin flibs/strings n 1.0]
+[copyright {2005 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[moddesc flibs]
+[titledesc {Glob matching}]
+
+[description]
+
+The [strong glob_matching] module provides a string matching method
+known as [strong "glob matching"]: it is used for instance under UNIX,
+Linux and DOS to select files whose names match a certain pattern -
+strings like "*.f90" describe all file swhose names end in ".f90".
+[para]
+
+The method implemented in the module is somewhat simplified than the
+full glob matching possible under UNIX: it does not support character
+classes.
+[para]
+
+Glob patterns are intended to match the entire string. In this
+implementation, however, trailing blanks in both the string and the
+pattern are ignored, so that it is a bit easier to use in Fortran.
+[para]
+
+The module supports both "*" and "?" as wild cards, where "*" means any
+sequence of characters, including zero and "?" means a single character.
+If you need to match the [strong characters] "*" or "?", then precede
+them with a backslash ("\"). If you need to match a backslash, you will
+need to use two:
+
+[example {
+    match = string_match( "c:\somedir" "c:\\*" )
+}]
+
+will return [strong .true.], while:
+
+[example {
+    match = string_match( "c:\somedir" "c:\*" )
+}]
+
+will not match, as the backslash "escapes" the asterisk, which then
+becomes an ordinary character.
+
+
+[section ROUTINES]
+The module contains a single function:
+
+[list_begin definitions]
+
+[call [cmd "matches = string_match( string, pattern)"]]
+Check whether the (entire) string matches the given "glob" pattern.
+Trailing blanks in both the string and the pattern are ignored.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" string]
+The string to be examined
+[nl]
+[arg_def "character(len=*)" pattern]
+The string containing the pattern
+
+[list_end]
+
+
+[list_end]
+
+[manpage_end]
