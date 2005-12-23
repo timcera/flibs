@@ -1,0 +1,53 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin flibs/sqlite n 1.0]
+[copyright {2005 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[moddesc flibs]
+[titledesc {Interface to SQLite}]
+
+[description]
+
+The [strong sqlite] module provides a Fortran interface to the
+SQLite database management system (SQLite 3 to be more precise).
+The interface has been implemented
+in such a way, that you can use a high-level interface for common tasks,
+such as inserting data into a database and querying the contents, as
+well as lower-level functionality, accessible via SQL statements, for
+instance.
+[para]
+
+To this end the module defines a set of routines and functions as well
+as several derived types to hide the low-level details.
+[para]
+
+In its current form, it does not provide a full Fortran API to all the
+functionality offered by SQLite, but it should be quite useable.
+
+[section "DATA TYPES"]
+The following derived types are defined:
+
+[list_begin definitions]
+
+[call [cmd "type(SQLITE_DATABASE)"]]
+Variables of this type are used to hold the connection to the database
+or databases. They are created by the subroutine [strong sqlite3_open]
+[nl]
+The contents are valid until the database is closed (via
+[strong sqlite3_close]).
+
+[call [cmd "type(SQLITE_STATEMENT)"]]
+Variables of this type hold [strong "prepared statements"], the common
+method for database management systems to efficiently execute SQL
+statements.
+
+[call [cmd "type(SQLITE_COLUMN)"]]
+To provide easy communication with the database, SQLITE_COLUMN can
+hold values of different types. This means you can use single routine
+and variable to transfer strings, integers or reals to and from the
+database.
+
+[list_end]
+
+[section ROUTINES]
+To be done
+
+[manpage_end]

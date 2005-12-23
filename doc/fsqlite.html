@@ -1,0 +1,93 @@
+<! -- -*- flibs -*- doctools manpage
+   -->
+<html><head>
+<title>flibs/sqlite - flibs </title>
+</head>
+<! -- Generated from file 'fsqlite.man' by tcllib/doctools with format 'html'
+   -->
+<! -- Copyright &copy; 2005 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
+   -->
+<! -- CVS: $Id$ flibs/sqlite.n
+   -->
+
+<body>
+<h1> flibs/sqlite(n) 1.0  &quot;flibs&quot;</h1>
+<h2><a name="name">NAME</a></h2>
+<p>
+<p> flibs/sqlite - Interface to SQLite
+
+
+
+
+<h2><a name="table_of_contents">TABLE OF CONTENTS</a></h2>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#table_of_contents">TABLE OF CONTENTS</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#synopsis">SYNOPSIS</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#description">DESCRIPTION</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#data_types">DATA TYPES</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#routines">ROUTINES</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
+<h2><a name="synopsis">SYNOPSIS</a></h2>
+<p>
+<table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><b class='cmd'>type(SQLITE_DATABASE)</b> </a></td></tr>
+<tr valign=top ><td ><a href="#2"><b class='cmd'>type(SQLITE_STATEMENT)</b> </a></td></tr>
+<tr valign=top ><td ><a href="#3"><b class='cmd'>type(SQLITE_COLUMN)</b> </a></td></tr>
+</table></td></tr></table>
+<h2><a name="description">DESCRIPTION</a></h2>
+<p>
+
+The <em>sqlite</em> module provides a Fortran interface to the
+SQLite database management system (SQLite 3 to be more precise).
+The interface has been implemented
+in such a way, that you can use a high-level interface for common tasks,
+such as inserting data into a database and querying the contents, as
+well as lower-level functionality, accessible via SQL statements, for
+instance.
+<p>
+
+To this end the module defines a set of routines and functions as well
+as several derived types to hide the low-level details.
+<p>
+
+In its current form, it does not provide a full Fortran API to all the
+functionality offered by SQLite, but it should be quite useable.
+
+<h2><a name="data_types">DATA TYPES</a></h2>
+<p>
+The following derived types are defined:
+
+<dl>
+
+<dt><a name="1"><b class='cmd'>type(SQLITE_DATABASE)</b> </a><dd>
+
+Variables of this type are used to hold the connection to the database
+or databases. They are created by the subroutine <em>sqlite3_open</em>
+<br><br>
+The contents are valid until the database is closed (via
+<em>sqlite3_close</em>).
+
+<br><br>
+<dt><a name="2"><b class='cmd'>type(SQLITE_STATEMENT)</b> </a><dd>
+
+Variables of this type hold <em>prepared statements</em>, the common
+method for database management systems to efficiently execute SQL
+statements.
+
+<br><br>
+<dt><a name="3"><b class='cmd'>type(SQLITE_COLUMN)</b> </a><dd>
+
+To provide easy communication with the database, SQLITE_COLUMN can
+hold values of different types. This means you can use single routine
+and variable to transfer strings, integers or reals to and from the
+database.
+
+</dl>
+
+<h2><a name="routines">ROUTINES</a></h2>
+<p>
+To be done
+
+<h2><a name="copyright">COPYRIGHT</a></h2>
+<p>
+Copyright &copy; 2005 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;<br>
+</body></html>
+
