@@ -47,9 +47,14 @@ The module contains a single function:
 
 [list_begin definitions]
 
+[call [cmd "use glob_matching"]]
+To import the glob matching function, use this module.
+
 [call [cmd "matches = string_match( string, pattern)"]]
 Check whether the (entire) string matches the given "glob" pattern.
 Trailing blanks in both the string and the pattern are ignored.
+The function returns .true. if the string matches the pattern, .false.
+otherwise.
 
 [list_begin arg]
 

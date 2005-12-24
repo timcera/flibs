@@ -27,7 +27,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
 <h2><a name="synopsis">SYNOPSIS</a></h2>
 <p>
-<table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><b class='cmd'>matches = string_match( string, pattern)</b> </a></td></tr>
+<table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><b class='cmd'>use glob_matching</b> </a></td></tr>
+<tr valign=top ><td ><a href="#2"><b class='cmd'>matches = string_match( string, pattern)</b> </a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -74,10 +75,17 @@ The module contains a single function:
 
 <dl>
 
-<dt><a name="1"><b class='cmd'>matches = string_match( string, pattern)</b> </a><dd>
+<dt><a name="1"><b class='cmd'>use glob_matching</b> </a><dd>
+
+To import the glob matching function, use the module.
+
+<br><br>
+<dt><a name="2"><b class='cmd'>matches = string_match( string, pattern)</b> </a><dd>
 
 Check whether the (entire) string matches the given &quot;glob&quot; pattern.
 Trailing blanks in both the string and the pattern are ignored.
+The function returns .true. if the string matches the pattern, .false.
+otherwise.
 
 <br><br>
 <dl>

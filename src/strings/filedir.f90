@@ -106,7 +106,7 @@ function filedir_dirname( filename ) result (dirname)
 
     kslash = scan( filename, trim(separators), .true. )
 
-    dirname = filename
+    dirname = ''
     if ( kslash .gt. 1 ) then
         dirname = filename(1:kslash)
     endif

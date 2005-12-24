@@ -27,9 +27,9 @@ program test_list
     !
     ! Express error: does the prevention scheme work?
     !
-    data%string = 'Error!'
-    call list_create( list, data )
-    elem = list
+    ! data%string = 'Error!'
+    ! call list_create( list, data )
+    ! elem = list
 
     !
     ! Add elements at the start (so we get: D, C, B, A)
