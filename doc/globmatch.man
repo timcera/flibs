@@ -60,7 +60,7 @@ otherwise.
 
 [arg_def "character(len=*)" string]
 The string to be examined
-[nl]
+
 [arg_def "character(len=*)" pattern]
 The string containing the pattern
 

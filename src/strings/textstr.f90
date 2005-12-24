@@ -281,6 +281,28 @@ subroutine txt_write_to_file( lun, text )
     endif
 end subroutine txt_write_to_file
 
+! txt_delete_string --
+!    Delete a substring from a text_string type
+! Arguments:
+!    text        Text string to be treated
+!    pos         First position to be removed
+!    length      Length of the substring to be removed
+! Prerequisite:
+!    Text string must be properly initialised
+!
+subroutine txt_delete_string( text, pos, length )
+    type(TEXT_STRING), intent(inout) :: text
+    integer, intent(in)              :: pos
+    integer, intent(in)              :: length
+
+    character(len=txt_length(text)) :: newstring
+
+    call txt_to_string( text, newstring )
+    call edit_delete( newstring, pos, length )
+    call txt_from_string( text, newstring )
+
+end subroutine txt_delete_string
+
 ! txt_insert_string --
 !    Insert a substring into a text_string type
 ! Arguments:

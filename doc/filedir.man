@@ -43,7 +43,6 @@ The module contains the following routines:
 
 [call [cmd "use filedir"]]
 To import the subroutines, use this module.
-[nl]
 
 
 [call [cmd "rootname = filedir_rootname( filename )"]]
