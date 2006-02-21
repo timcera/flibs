@@ -1,4 +1,4 @@
-! vecrtors.f90 --
+! vectors.f90 --
 !     Implementation of dynamically growing arrays
 !
 !     See the example/test program for the way to use this
@@ -15,15 +15,16 @@
 !     that represents the "empty vector data" value.
 
 type VECTOR
-    integer, private                         :: no_used
+    private
+    integer                                  :: no_used
     type(VECTOR_DATA), dimension(:), pointer :: data    => null()
 end type VECTOR
 
 private
-public :: VECTOR
+public :: VECTOR, VECTOR_DATA
 public :: vector_create, vector_append, vector_at, &
-          vector_size, vector_put, vector_delete_element, &
-          vector_destroy
+          vector_size, vector_put, vector_delete_elements, &
+          vector_destroy, vector_insert_empty
 
 real, parameter :: growth_rate = 1.1
 
@@ -33,14 +34,14 @@ contains
 !     Create a new vector
 !
 ! Arguments:
-!     vector        Variable that should hold the vector
+!     vec           Variable that should hold the vector
 !     capacity      Initial capacity (optional)
 !
 ! Note:
 !     The fields of the vector data structure are set
 !
-subroutine vector_create( vector, capacity )
-    type(VECTOR)       :: vector
+subroutine vector_create( vec, capacity )
+    type(VECTOR)       :: vec
     integer, optional  :: capacity
 
     integer            :: cap
@@ -48,8 +49,8 @@ subroutine vector_create( vector, capacity )
     !
     ! Check that the vector does not have any data left
     !
-    if ( associated(vector%data) ) then
-        call vector_destroy( vector )
+    if ( associated(vec%data) ) then
+        call vector_destroy( vec )
     endif
 
     if ( present(capacity) ) then
@@ -57,44 +58,56 @@ subroutine vector_create( vector, capacity )
     else
         cap = 10
     endif
-    allocate( vector%data(1:cap) )
-    vector%no_used = 0
+    allocate( vec%data(1:cap) )
+    vec%no_used = 0
 end subroutine vector_create
 
 ! vector_destroy
 !     Destroy a vector
 !
 ! Arguments:
-!     vector        Vector in question
+!     vec           Vector in question
 !
-subroutine vector_destroy( vector )
-    type(VECTOR)       :: vector
+subroutine vector_destroy( vec )
+    type(VECTOR)       :: vec
 
     !
     ! Check that the vector does not have any data left
     !
-    if ( associated(vector%data) ) then
-        deallocate( vector%data )
+    if ( associated(vec%data) ) then
+        deallocate( vec%data )
     endif
-    vector%no_used = 0
+    vec%no_used = 0
 end subroutine vector_destroy
+
+! vector_size
+!     Return the number of elements in use
+!
+! Arguments:
+!     vec           Variable that holds the vector
+!
+integer function vector_size( vec )
+    type(VECTOR)       :: vec
+
+    vector_size = vec%no_used
+end function vector_size
 
 ! vector_at
 !     Get the value of the nth element of the vector
 !
 ! Arguments:
-!     vector        Vector in question
+!     vec           Vector in question
 !     n             Index of the element whose value
 !                   should be retrieved
 !
-type(VECTOR_DATA) vector_at( vector, n )
-    type(VECTOR)       :: vector
+type(VECTOR_DATA) function vector_at( vec, n )
+    type(VECTOR)       :: vec
     integer            :: n
 
-    if ( n .lt. 1 .or. n .gt. vector%no_used ) then
+    if ( n .lt. 1 .or. n .gt. vec%no_used ) then
         vector_at = empty_vector_data
     else
-        vector_at = vector%data(n)
+        vector_at = vec%data(n)
     endif
 end function vector_at
 
@@ -106,49 +119,75 @@ end function vector_at
 !     pos           Position to insert the empty elements
 !     number        Number of empty elements
 !
-subroutine vector_insert_empty( vector, pos, number )
-    type(VECTOR)         :: vector
+subroutine vector_insert_empty( vec, pos, number )
+    type(VECTOR)         :: vec
     integer, intent(in)  :: pos
     integer, intent(in)  :: number
 
     integer              :: i
 
-    if ( number .lt. 1 .or. pos .lt. 1 .or. pos .gt. vector%no_used ) then
+    if ( number .lt. 1 .or. pos .lt. 1 .or. pos .gt. vec%no_used ) then
         return
     endif
 
-    if ( vector%no_used+number .ge. size(vector%data) ) then
-        call vector_increase_capacity( vector, vector%no_used+number )
+    if ( vec%no_used+number .ge. size(vec%data) ) then
+        call vector_increase_capacity( vec, vec%no_used+number )
     endif
 
-    do i = 1,number
-        vector%data(vector%no_used+i-1) = vector%data(pos+i-1)
+    do i = vec%no_used,pos,-1
+        vec%data(i+number) = vec%data(i)
     enddo
 
     do i = 1,number
-        vector%data(pos+i-1) = empty_vector_data
+        vec%data(pos+i-1) = empty_vector_data
     enddo
 
-    vector%no_used = vector%no_used + number
+    vec%no_used = vec%no_used + number
 end subroutine vector_insert_empty
+
+! vector_delete_elements
+!     Delete one or more elements
+!
+! Arguments:
+!     vector        Vector in question
+!     pos           Position to start deletion
+!     number        Number of elements
+!
+subroutine vector_delete_elements( vec, pos, number )
+    type(VECTOR)         :: vec
+    integer, intent(in)  :: pos
+    integer, intent(in)  :: number
+
+    integer              :: i
+
+    if ( number .lt. 1 .or. pos .lt. 1 .or. pos .gt. vec%no_used ) then
+        return
+    endif
+
+    do i = pos,vec%no_used-number
+        vec%data(i) = vec%data(i+number)
+    enddo
+
+    vec%no_used = vec%no_used - number
+end subroutine vector_delete_elements
 
 ! vector_append
 !     Append a value to the vector
 !
 ! Arguments:
-!     vector        Vector in question
+!     vec           Vector in question
 !     data          Data to be appended
 !
-subroutine vector_append( vector, data )
-    type(VECTOR)       :: vector
+subroutine vector_append( vec, data )
+    type(VECTOR)       :: vec
     type(VECTOR_DATA)  :: data
 
-    if ( vector%no_used .ge. size(vector%data) ) then
-        call vector_increase_capacity( vector, vector%no_used+1 )
+    if ( vec%no_used .ge. size(vec%data) ) then
+        call vector_increase_capacity( vec, vec%no_used+1 )
     endif
 
-    vector%no_used = vector%no_used + 1
-    vector%data(vector%no_used) = data
+    vec%no_used = vec%no_used + 1
+    vec%data(vec%no_used) = data
 end subroutine vector_append
 
 ! vector_put
@@ -156,46 +195,49 @@ end subroutine vector_append
 !     (it needs not yet exist)
 !
 ! Arguments:
-!     vector        Vector in question
+!     vec           Vector in question
 !     n             Index of the element
 !     data          Data to be put in the vector
 !
-subroutine vector_put( vector, n, data )
-    type(VECTOR)       :: vector
+subroutine vector_put( vec, n, data )
+    type(VECTOR)       :: vec
     integer            :: n
     type(VECTOR_DATA)  :: data
 
-    if ( n .gt. size(vector%data) ) then
-        call vector_increase_capacity( vector, n )
+    if ( n .lt. 1 ) then
+        return
+    endif
+    if ( n .gt. size(vec%data) ) then
+        call vector_increase_capacity( vec, n )
     endif
 
-    vector%no_used = n
-    vector%data(vector%no_used) = data
+    vec%no_used = max( vec%no_used, n)
+    vec%data(n) = data
 end subroutine vector_put
 
 ! vector_increase_capacity
 !     Expand the array holding the data
 !
 ! Arguments:
-!     vector        Vector in question
+!     vec           Vector in question
 !     capacity      Minimum capacity
 !
-subroutine vector_increase_capacity( vector, capacity )
-    type(VECTOR)       :: vector
+subroutine vector_increase_capacity( vec, capacity )
+    type(VECTOR)       :: vec
     integer            :: capacity
 
     integer            :: new_cap
     type(VECTOR_DATA), dimension(:), pointer :: new_data
 
-    new_cap = max( capacity, nint( growth_rate * size(vector%data) ) )
+    new_cap = max( capacity, nint( growth_rate * size(vec%data) ) )
 
-    if ( new_cap .gt. size(vector%data) ) then
+    if ( new_cap .gt. size(vec%data) ) then
         allocate( new_data(1:new_cap) )
-        new_data(1:vector%no+used) = vector%data(1:vector%no_used)
-        new_data(vector%no_used+1:new_cap) = empty_vector_data
+        new_data(1:vec%no_used) = vec%data(1:vec%no_used)
+        new_data(vec%no_used+1:new_cap) = empty_vector_data
 
-        deallocate( vector%data )
-        vector%data => new_data
+        deallocate( vec%data )
+        vec%data => new_data
     endif
 
-end subroutine vector_capacity
+end subroutine vector_increase_capacity
