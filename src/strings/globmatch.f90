@@ -78,7 +78,19 @@ recursive function string_match( string, pattern ) result(match)
         !
         ! We are at the end of the pattern, and of the string?
         !
-        if ( strim == 0 ) match = .true.
+        if ( strim == 0 ) then
+            match = .true.
+        else
+            !
+            ! The string matches a literal part?
+            !
+            if ( ll > 0 ) then
+                if ( string(start:min(strim,start+ll-1)) == literal(1:ll) ) then
+                    start = start + ll
+                    match = string_match( string(start:), pattern(p:) )
+                endif
+            endif
+        endif
     endif
 
     if ( method == 1 ) then
@@ -107,7 +119,7 @@ recursive function string_match( string, pattern ) result(match)
         !
         ! Scan the whole of the remaining string ...
         !
-        if ( string(start:start+ll-1) == literal(1:ll) ) then
+        if ( string(start:min(strim,start+ll-1)) == literal(1:ll) ) then
             match = string_match( string(start+ll:), pattern(p:) )
         endif
     endif
@@ -135,6 +147,41 @@ program test_match
         string_match(string,pattern)
 
     string  = 'abcdefghijk' ; pattern = '*c*k'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    string  = 'LS' ; pattern = '?OW'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string(1:2),pattern)
+
+    string  = 'teztit' ; pattern = 'tez*t*t'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    !
+    ! Two pattern match problems that might pose difficulties
+    !
+    string  = 'abcde ' ; pattern = '*e *'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string(1:6),pattern)
+
+    string  = 'baaaaa' ; pattern = 'b*a'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    string  = 'bababa' ; pattern = 'b*ba'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    string  = 'baaaaax' ; pattern = 'b*ax'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    string  = 'baaaaa' ; pattern = 'b*ax'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    string  = 'baaaaax' ; pattern = 'b*a'
     write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
         string_match(string,pattern)
 end program
