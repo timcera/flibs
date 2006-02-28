@@ -5,13 +5,13 @@
 </head>
 <! -- Generated from file 'globmatch.man' by tcllib/doctools with format 'html'
    -->
-<! -- Copyright &copy; 2005 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
+<! -- Copyright &copy; 2006 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
    -->
 <! -- CVS: $Id$ flibs/strings.n
    -->
 
 <body>
-<h1> flibs/strings(n) 1.0  &quot;flibs&quot;</h1>
+<h1> flibs/strings(n) 1.1  &quot;flibs&quot;</h1>
 <h2><a name="name">NAME</a></h2>
 <p>
 <p> flibs/strings - Glob matching
@@ -24,6 +24,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#synopsis">SYNOPSIS</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#description">DESCRIPTION</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#routines">ROUTINES</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#bugs">BUGS</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
 <h2><a name="synopsis">SYNOPSIS</a></h2>
 <p>
@@ -102,8 +103,47 @@ The string containing the pattern
 
 </dl>
 
+<h2><a name="bugs">BUGS</a></h2>
+<p>
+The matching algorithm is not flawless:
+
+<ul>
+
+<li>
+Patterns like &quot;e* *&quot; may fail, because trailing blanks are removed. The
+string &quot;e &quot; ought to match this pattern, but because only the substring
+&quot;e&quot; will be considered, the trailing blank that is necessary for
+matching between the two asterisks is removed from the matching process.
+<br><br>
+The test program contains a case that should fail on this, but it does
+not, oddly enough.
+
+<br><br>
+<li>
+Patterns like &quot;b*ba&quot; fail on a string like &quot;babababa&quot; because the
+algorithm finds an early match (the substring at 3:4) for the last
+literal substring &quot;ba&quot; in the pattern. It should instead skip
+over that substring and search for the substring 7:8.
+<br><br>
+
+There are two ways to deal with this:
+<br><br>
+<ul>
+<li>
+Insert an extra character at the end, which does not occur anywhere in
+the pattern.
+<br><br>
+<li>
+If the match fails, continue at a point after the position of the
+literal substring where matching failed.
+</ul>
+<br><br>
+The second is probably the way to go, but it may be a bit slower.
+
+</ul>
+
 <h2><a name="copyright">COPYRIGHT</a></h2>
 <p>
-Copyright &copy; 2005 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;<br>
+Copyright &copy; 2006 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;<br>
 </body></html>
 

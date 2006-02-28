@@ -1,6 +1,6 @@
 [comment {-*- flibs -*- doctools manpage}]
-[manpage_begin flibs/strings n 1.0]
-[copyright {2005 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[manpage_begin flibs/strings n 1.1]
+[copyright {2006 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [moddesc flibs]
 [titledesc {Glob matching}]
 
@@ -66,6 +66,41 @@ The string containing the pattern
 
 [list_end]
 
+
+[list_end]
+
+[section BUGS]
+The matching algorithm is not flawless:
+
+[list_begin bullet]
+
+[bullet]
+Patterns like "e* *" may fail, because trailing blanks are removed. The
+string "e " ought to match this pattern, but because only the substring
+"e" will be considered, the trailing blank that is necessary for
+matching between the two asterisks is removed from the matching process.
+[nl]
+The test program contains a case that should fail on this, but it does
+not, oddly enough.
+
+[bullet]
+Patterns like "b*ba" fail on a string like "babababa" because the
+algorithm finds an early match (the substring at 3:4) for the last
+literal substring "ba" in the pattern. It should instead skip
+over that substring and search for the substring 7:8.
+[nl]
+
+There are two ways to deal with this:
+[list_begin bullet]
+[bullet]
+Insert an extra character at the end, which does not occur anywhere in
+the pattern.
+[bullet]
+If the match fails, continue at a point after the position of the
+literal substring where matching failed.
+[list_end]
+[nl]
+The second is probably the way to go, but it may be a bit slower.
 
 [list_end]
 

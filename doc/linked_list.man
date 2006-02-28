@@ -55,6 +55,10 @@ MYDATA_LISTS module. If you need more than one type of data in linked
 lists, then apply the same renaming trick on using the specific linked
 lists modules.
 
+[para]
+In fact the example in the source file "two_lists.f90" shows the general
+technique of how to accomplish this.
+
 [section ROUTINES]
 The source file [strong "linkedlist.f90"] provides the following
 routines:
@@ -69,11 +73,11 @@ in that element.
 
 [arg_def "type(LINKED_LIST), pointer"  list]
 The variable that will be used for accessing the list
-[nl]
 [arg_def "type(LIST_DATA), intent(in)" data]
 The data to be stored in the first element
 
 [list_end]
+[nl]
 
 
 [call [cmd "call list_destroy( list)"]]
@@ -86,6 +90,7 @@ well.
 The list to be destroyed
 
 [list_end]
+[nl]
 
 
 [call [cmd "count = list_count( list)"]]
@@ -97,6 +102,7 @@ Function to return the number of elements in the list.
 The list in question
 
 [list_end]
+[nl]
 
 
 [call [cmd "next => list_next( elem )"]]
@@ -109,6 +115,7 @@ Function to return the next element in the list. Note: it returns a
 The element in the list
 
 [list_end]
+[nl]
 
 
 [call [cmd "call list_insert( elem, data )"]]
@@ -119,11 +126,11 @@ the given element.
 
 [arg_def "type(LINKED_LIST), pointer"  elem]
 The element in the list after which to insert a new one.
-[nl]
 [arg_def "type(LIST_DATA), intent(in)" data]
 The data to be stored in the new element
 
 [list_end]
+[nl]
 
 
 [call [cmd "call list_insert_head( list, data )"]]
@@ -134,11 +141,11 @@ The argument "list" will point to the new head.
 
 [arg_def "type(LINKED_LIST), pointer"  list]
 The list in question
-[nl]
 [arg_def "type(LIST_DATA), intent(in)" data]
 The data to be stored at the new head
 
 [list_end]
+[nl]
 
 
 [call [cmd "call list_delete_element( list, elem )"]]
@@ -149,11 +156,11 @@ will disappear.
 
 [arg_def "type(LINKED_LIST), pointer"  list]
 The list in question
-[nl]
 [arg_def "type(LINKED_LIST), pointer"  elem]
 The element to be deleted
 
 [list_end]
+[nl]
 
 
 [call [cmd "call list_get_data( elem, data )"]]
@@ -163,11 +170,11 @@ Copy the data belonging to the given element into the argument "data".
 
 [arg_def "type(LINKED_LIST), pointer"  list]
 The element in question
-[nl]
 [arg_def "type(LIST_DATA), intent(out)" data]
 The variable to hold the data
 
 [list_end]
+[nl]
 
 
 [call [cmd "call list_put_data( elem, data )"]]
