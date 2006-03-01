@@ -78,7 +78,7 @@ recursive function string_match( string, pattern ) result(match)
         !
         ! We are at the end of the pattern, and of the string?
         !
-        if ( strim == 0 ) then
+        if ( strim == 0 .and. ptrim == 0 ) then
             match = .true.
         else
             !
@@ -182,6 +182,10 @@ program test_match
         string_match(string,pattern)
 
     string  = 'baaaaax' ; pattern = 'b*a'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string,pattern)
+
+    string  = '' ; pattern = 'b*'
     write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
         string_match(string,pattern)
 end program
