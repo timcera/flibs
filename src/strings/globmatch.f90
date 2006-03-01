@@ -115,7 +115,7 @@ recursive function string_match( string, pattern ) result(match)
         endif
     endif
 
-    if ( method == 2 ) then
+    if ( method == 2 .and. ll > 0 ) then
         !
         ! Scan the whole of the remaining string ...
         !
@@ -188,4 +188,8 @@ program test_match
     string  = '' ; pattern = 'b*'
     write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
         string_match(string,pattern)
+
+    string  = '3' ; pattern = '??'
+    write(*,*) 'String: ', string, '- pattern: ', pattern, ' - match: ', &
+        string_match(string(1:1),pattern)
 end program
