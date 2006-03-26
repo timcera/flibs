@@ -3,6 +3,8 @@
 !     contains the body of the one-dimensional version of the
 !     writing routines.
 !
+!     $Id$
+!
     integer, intent(in)                 :: lun
     logical, intent(in), optional       :: advance
 

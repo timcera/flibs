@@ -1,5 +1,7 @@
 ! Test program for binary streams
 !
+!     $Id$
+!
 program test_binstream
     use binary_streams
     implicit none

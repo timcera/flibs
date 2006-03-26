@@ -1,6 +1,8 @@
 ! test_dict.f90 --
 !     Test program for dictionaries
 !
+!     $Id$
+!
 module MYDATA_MODULE
 
 !

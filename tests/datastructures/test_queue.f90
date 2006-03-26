@@ -1,6 +1,8 @@
 ! test_queue.f90 --
 !     Test program for queues
 !
+!     $Id$
+!
 module MYDATA_MODULE
 
 type MYDATA

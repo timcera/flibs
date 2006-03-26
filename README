@@ -1,9 +1,9 @@
-Collections of Fortran modules for various tasks:
+Flibs is a collection of Fortran modules for various tasks:
 - manipulating strings
 - interface to SQLite
+- generic data structures
+- several computational modules
+- a simple stream module
+- a framework for unit testin, inspired by JUnit
 
-No serious documentation yet
-
-Note (13 december 2005):
-Added a preliminary implementation of glob matching in Fortran.
-Needs to be tested more thoroughly
+Documentation is being added piecemeal

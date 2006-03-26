@@ -6,6 +6,8 @@
 !     independent variable should be of type AUTODERIV, as should be the
 !     result.
 !
+!     $Id$
+!
 module automatic_differentiation
     use select_precision
     implicit none

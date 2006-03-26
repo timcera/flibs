@@ -11,6 +11,8 @@
 !     The using code must declare the type SET_DATA and
 !     the logical function element_isequal
 !
+!     $Id$
+!
 type VECTOR_DATA
     type(SET_DATA) :: data
 endtype

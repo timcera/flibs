@@ -17,6 +17,8 @@
 !       - minimum and maximum "real" time intervals
 !         for a single iteration
 !
+!     $Id$
+!
 module timing
     implicit none
 

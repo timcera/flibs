@@ -19,6 +19,8 @@
 ! gaps, what tokens do you expect? A and B or A, "", "" and B?)
 ! therefore they should not both be used in the same tokenizer.
 !
+! $Id$
+!
 
 ! TOKENIZE --
 !    Module for tokenizing strings

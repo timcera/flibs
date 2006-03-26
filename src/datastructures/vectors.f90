@@ -13,6 +13,8 @@
 !     Note:
 !     For the function vector_at() we need a parameter
 !     that represents the "empty vector data" value.
+!
+!     $Id$
 
 type VECTOR
     private

@@ -1,6 +1,8 @@
 ! filedir_tst.f90 --
 !     Test the module to manipulate file and directory names
 !
+!     $Id$
+!
 
 program filedir_tst
     use filedir

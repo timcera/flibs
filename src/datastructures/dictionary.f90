@@ -20,6 +20,8 @@
 !     - Put both in a separate module, that
 !       will be used.
 !
+!     $Id$
+!
 type LIST_DATA
     character(len=DICT_KEY_LENGTH) :: key
     type(DICT_DATA)                :: value

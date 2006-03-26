@@ -9,6 +9,8 @@
 !     the underlying data structure for the
 !     sets.
 !
+!     $Id$
+!
 module MYDATA_MODULE
 
 !

@@ -1,6 +1,8 @@
 ! test_list.f90 --
 !     Test program for linked lists
 !
+!     $Id$
+!
 module MYDATA_MODULE
 
 type MYDATA

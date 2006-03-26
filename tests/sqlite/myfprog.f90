@@ -1,6 +1,7 @@
 ! myfprog.f90 --
 !    Small test program for the Fortran-wrapper to Sqlite
 !
+!    $Id$
 !
 program myfprog
    use sqlite

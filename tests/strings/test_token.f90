@@ -1,6 +1,8 @@
 ! test_token.f90 --
 !    Incomplete test program for the tokenize module
 !
+!    $Id$
+!
 program test_token
    use tokenize
    implicit none

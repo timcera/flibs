@@ -20,6 +20,8 @@
 !       real is assumed to be 8 bytes long. There is NO provision
 !       for situations where this is not true.
 !
+!     $Id$
+!
 module binary_streams
     implicit none
 

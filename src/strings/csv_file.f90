@@ -1,6 +1,8 @@
 ! csv_file.f90 --
 !     Small module to facilitate writing CSV-files
 !
+!     $Id$
+!
 !     The module contains the following subroutines:
 !     csv_next_record       Advance to the next record
 !     csv_write_integer     Write a single integer to the CSV-file

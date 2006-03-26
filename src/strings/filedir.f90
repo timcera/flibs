@@ -12,6 +12,8 @@
 !     The functions actually perform fairly simple string manipulations.
 !     It is just that these manipulations occur frequently.
 !
+!     $Id$
+!
 module filedir
     implicit none
 

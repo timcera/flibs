@@ -6,6 +6,8 @@
 !
 !     wp: kind for working precision (set to either sp or dp)
 !
+!     $Id$
+!
 module select_precision
     implicit none
 

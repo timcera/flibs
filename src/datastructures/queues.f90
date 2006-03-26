@@ -7,6 +7,8 @@
 !     data are inserted at the end and retrieved from the
 !     top.
 !
+!     $Id$
+!
 type QUEUE_STRUCT
     logical                                 :: full
     integer                                 :: start

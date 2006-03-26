@@ -1,6 +1,8 @@
 ! test_vectors.f90 --
 !     Program illustrating the use of "vectors"
 !
+!     $Id$
+!
 ! Convenience module, holding all the data types
 !
 module DATA_MODULE

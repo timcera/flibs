@@ -20,6 +20,7 @@
 !     - this file to define the SET data type itself.
 !     The test/example program shows how to use them.
 !
+!     $Id$
 
 !
 ! Make everything private, except what we want to

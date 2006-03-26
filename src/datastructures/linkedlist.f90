@@ -11,6 +11,8 @@
 !     are designed to minimize mistakes (for instance: using
 !     = instead of =>)
 !
+!     $Id$
+!
 ! Define the linked-list data type
 !
 type LINKED_LIST

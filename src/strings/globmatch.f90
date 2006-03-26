@@ -5,6 +5,8 @@
 !     (character classes are not supported). A backslash escapes
 !     any character.
 !
+!     $Id$
+!
 module glob_matching
     implicit none
 

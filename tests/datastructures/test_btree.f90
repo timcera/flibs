@@ -8,6 +8,8 @@
 !       This requires a comparison function for
 !       the data.
 !
+!     $Id$
+!
 module MYDATA_MODULE
 
 type MYDATA

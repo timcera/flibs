@@ -16,6 +16,8 @@
 !     - Rounding modes
 !     - string to decimal
 !
+!     $Id$
+!
 module decimal_arithmetic
     implicit none
 

@@ -1,6 +1,8 @@
 !  text_tst.f90 --
 !      Test the modules manipulating arbitrary-length strings
 !
+!      $Id$
+!
 program text_tst
     use multiple_line_text
 

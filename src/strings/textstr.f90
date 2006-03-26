@@ -15,6 +15,8 @@
 !  A replace-string routine does not seem very useful, one
 !  can create it by combining the delete and insert functions
 !
+!  $Id$
+!
 module edit_text
    implicit none
 contains

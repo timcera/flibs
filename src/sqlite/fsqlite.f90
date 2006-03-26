@@ -29,6 +29,8 @@
 !    With the appropriate compilation options (if needed)
 !    the code should be thread-safe, as no data are shared.
 !
+!    $Id$
+!
 module sqlite_types
 
    integer, parameter         :: dp = kind(1.0d00)
