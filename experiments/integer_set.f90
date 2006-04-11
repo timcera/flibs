@@ -42,7 +42,7 @@ contains
 
 subroutine integer_set_value( x, value )
     type(INTEGER_OPERAND), intent(out) :: x
-    integer                            :: value
+    integer, intent(in)                :: value
 
     x%operation = 0
     x%value     = value
@@ -130,8 +130,8 @@ program test_sets
 
     type(INTEGER_RELATION), pointer :: relation
 
-!    relation => x + y == 0
-    relation => integer_equal_v( integer_add(x,y), 0 )
+    relation => x + y == 0
+!   relation => integer_equal_v( integer_add(x,y), 0 )
 
     x = 1
     y = -1
