@@ -1,0 +1,9 @@
+2006-04-11 arjenmarkus@sourceforge.net
+
+   * integer_set.f90: correction of one inconsistency (intent)
+   * func_qsort.f90: added to repository
+   * quantum.f90: added to repository
+   * quantum_computing.pdf: added to site docs
+   * index.html: description of experiments directory
+
+   Note: no detailed record maintained before 11 april 2006
