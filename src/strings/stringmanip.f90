@@ -57,12 +57,12 @@ function string_toupper( string ) result (new)
     length = len(string)
     new    = string
     do i = 1,length
-        k = index( string(i:i), lower )
+        k = index( lower, string(i:i) )
         if ( k > 0 ) then
            new(i:i) = upper(k:k)
         endif
     enddo
-end function string_upper
+end function string_toupper
 
 ! string_tolower --
 !     Return a string that has all _letters_ in lower case
@@ -83,7 +83,7 @@ function string_tolower( string ) result (new)
     length = len(string)
     new    = string
     do i = 1,length
-        k = index( string(i:i), upper )
+        k = index( upper, string(i:i) )
         if ( k > 0 ) then
            new(i:i) = lower(k:k)
         endif

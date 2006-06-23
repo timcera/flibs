@@ -11,7 +11,7 @@ program test_binstream
     logical             :: error
     character(len=3)    :: char
 
-    call binstream_open( stream, 10, 'teat_binstream.inp', error )
+    call binstream_open( stream, 10, 'test_binstream.inp', error )
 
     if ( error ) then
         write(*,*) 'Problem opening the file!'
