@@ -65,6 +65,19 @@ error is returned.
 [list_end]
 [nl]
 
+
+[call [cmd "call binstream_close( stream )"]]
+Close the file that was opened as a stream.
+
+[list_begin arg]
+
+[arg_def "type(binary_stream)" stream]
+The variable by which to reference the file
+
+[list_end]
+[nl]
+
+
 [call [cmd "call binstream_seek( stream, start, offset )"]]
 Set the position in the file (either from the start or from the current
 position).
