@@ -1,3 +1,11 @@
+2006-06-25 arjenmarkus@sourceforge.net
+
+   * added pointsets.f90
+   * started with simple interval arithmetic
+   * added an implementation of text streams
+   * simple string manipulations
+   * experiment with integer programming
+
 2006-04-11 arjenmarkus@sourceforge.net
 
    * integer_set.f90: correction of one inconsistency (intent)
@@ -5,5 +13,6 @@
    * quantum.f90: added to repository
    * quantum_computing.pdf: added to site docs
    * index.html: description of experiments directory
+   * backtracking facilities
 
    Note: no detailed record maintained before 11 april 2006
