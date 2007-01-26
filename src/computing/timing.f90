@@ -33,9 +33,10 @@ module timing
         character(len=40) :: name
     end type
 
-    integer, parameter, private              :: max_timers = 100
-    logical, private, save                   :: init_timers = .true.
-    type(TIMER), dimension(max_timers), save :: timers
+    private :: TIMER
+    integer, parameter, private                       :: max_timers = 100
+    logical, private, save                            :: init_timers = .true.
+    type(TIMER), dimension(max_timers), save, private :: timers
 
 contains
 
@@ -61,8 +62,9 @@ subroutine timer_create( name, timerid )
     do i = 1,max_timers
         if ( timers(i)%number_iterations .eq. -1 ) then
             timerid = i
-            timers%name = name
+            timers(i)%name = name
             call timer_reset( timerid )
+
             exit
         endif
     enddo
@@ -72,16 +74,35 @@ end subroutine timer_create
 !     Destroy a timer (make the entry available for a new name)
 !
 ! Arguments:
-!     name          Name of the timer (for the report)
-!     timerid       ID of the timer (-1: no more timers)
+!     timerid       ID of the timer
 !
 subroutine timer_destroy( timerid )
     integer, intent(in)             :: timerid
 
     if ( timerid .ge. 1 .and. timerid .le. max_timers ) then
-        timers(i)%number_iterations = -1
+        timers(timerid)%number_iterations = -1
     endif
-end subroutine timer_create
+end subroutine timer_destroy
+
+! timer_reset
+!     Reset a timer
+!
+! Arguments:
+!     timerid       ID of the timer
+!
+subroutine timer_reset( timerid )
+    integer, intent(in)             :: timerid
+
+    if ( timerid .ge. 1 .and. timerid .le. max_timers ) then
+        timers(timerid)%number_iterations = 0
+        timers(timerid)%start_clock       = 0
+        timers(timerid)%start_cpu         = 0
+        timers(timerid)%total_sys_time    = 0.0
+        timers(timerid)%total_cpu_time    = 0.0
+        timers(timerid)%min_sys_time      = huge(1.0)
+        timers(timerid)%max_sys_time      = 0.0
+    endif
+end subroutine timer_reset
 
 ! timer_report
 !     Write a report on the timers
@@ -101,7 +122,7 @@ subroutine timer_report( lun )
         '----------------------------------------            (s)            (s)            (s)            (s)'
         do i = 1,max_timers
             if ( timers(i)%number_iterations .gt. 0 ) then
-                write( lun, '(1x,a,4e15.4)' &
+                write( lun, '(1x,a,4e15.4)' ) &
                     timers(i)%name, &
                     timers(i)%total_sys_time / timers(i)%number_iterations, &
                     timers(i)%total_cpu_time / timers(i)%number_iterations, &
@@ -116,7 +137,7 @@ subroutine timer_report( lun )
         '----------------------------------------            (s)            (s)            (s)            (s)'
         do i = 1,max_timers
             if ( timers(i)%number_iterations .gt. 0 ) then
-                write( *, '(1x,a,4e15.4)' &
+                write( *, '(1x,a,4e15.4)' ) &
                     timers(i)%name, &
                     timers(i)%total_sys_time / timers(i)%number_iterations, &
                     timers(i)%total_cpu_time / timers(i)%number_iterations, &
@@ -141,9 +162,9 @@ subroutine timer_start( timerid )
     integer                         :: count_max
 
     if ( timerid .ge. 1 .and. timerid .le. max_timers ) then
-        call cpu_time( timers(i)%start_cpu )
+        call cpu_time( timers(timerid)%start_cpu )
         call system_clock( count, count_scale, count_max )
-        timers(i)%start_clock = count
+        timers(timerid)%start_clock = count
     endif
 end subroutine timer_start
 
@@ -173,14 +194,15 @@ subroutine timer_stop( timerid, noiter )
         noiter_ = 1
         if ( present(noiter) ) noiter_ = noiter
 
-        period = real(count)/real(count_scale)
-        timers(i)%total_sys_time = timers(i)%total_sys_time + period
-        timers(i)%total_cpu_time = timers(i)%total_cpu_time + stop_time - timers(i)%start_cpu
-        timers(i)%number_iterations = timers(i)%number_iterations + noiter_
+        period = (real(count-timers(timerid)%start_clock))/real(count_scale)
+        timers(timerid)%total_sys_time = timers(timerid)%total_sys_time + period
+        timers(timerid)%total_cpu_time = timers(timerid)%total_cpu_time + &
+            stop_time - timers(timerid)%start_cpu
+        timers(timerid)%number_iterations = timers(timerid)%number_iterations + noiter_
 
         period = period / noiter_
-        timers(i)%min_sys_time = min( timers(i)%min_sys_time, period )
-        timers(i)%max_sys_time = max( timers(i)%max_sys_time, period )
+        timers(timerid)%min_sys_time = min( timers(timerid)%min_sys_time, period )
+        timers(timerid)%max_sys_time = max( timers(timerid)%max_sys_time, period )
     endif
 end subroutine timer_stop
 

@@ -24,10 +24,10 @@ end type LINKED_LIST
 ! define a private (!) interface to prevent
 ! mistakes with ordinary assignment
 !
-interface assignment(=)
-    module procedure list_assign
-end interface
-private :: list_assign
+!interface assignment(=)
+!    module procedure list_assign
+!end interface
+!private :: list_assign
 
 !
 ! Define the subroutines and functions
@@ -40,18 +40,22 @@ contains
 !     list_left   List on the left-hand side
 !     list_right  List on the right-hand side
 !
-subroutine list_assign( list_left, list_right )
-    type(LINKED_LIST), INTENT(OUT)  :: list_left
-    type(LINKED_LIST), INTENT(IN)   :: list_right
-   !type(LINKED_LIST), pointer      :: list_left
-   !type(LINKED_LIST), pointer      :: list_right
-
-    !
-    ! Note the order!
-    !
-    stop 'Error: ordinary assignment for lists'
-    list_left%next => null()
-end subroutine list_assign
+! NOTE:
+!     This does not work because of a private/public
+!     conflict
+!
+!subroutine list_assign( list_left, list_right )
+!    type(LINKED_LIST), INTENT(OUT)  :: list_left
+!    type(LINKED_LIST), INTENT(IN)   :: list_right
+!   !type(LINKED_LIST), pointer      :: list_left
+!   !type(LINKED_LIST), pointer      :: list_right
+!
+!    !
+!    ! Note the order!
+!    !
+!    stop 'Error: ordinary assignment for lists'
+!    list_left%next => null()
+!end subroutine list_assign
 
 ! list_create --
 !     Create and initialise a list

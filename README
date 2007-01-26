@@ -4,6 +4,9 @@ Flibs is a collection of Fortran modules for various tasks:
 - generic data structures
 - several computational modules
 - a simple stream module
-- a framework for unit testin, inspired by JUnit
+- a framework for unit testing, inspired by JUnit
 
 Documentation is being added piecemeal
+
+The simple configuration system (configure.sh and configure.bat) offers
+some flexibility in setting up makefiles.
