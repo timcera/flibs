@@ -24,12 +24,18 @@
 #define sqlite3_column_int_c_          SQLITE3_COLUMN_INT_C
 #define sqlite3_column_double_c_       SQLITE3_COLUMN_DOUBLE_C
 #define sqlite3_column_text_c_         SQLITE3_COLUMN_TEXT_C
+#define sqlite3_get_table_1_c_         SQLITE3_GET_TABLE_1_C
+#define sqlite3_get_table_2_c_         SQLITE3_GET_TABLE_2_C
 #else
 #define FTNCALL
 #endif
 
 #include <string.h>
 #include "sqlite3.h"
+
+/* Result table for sqlite3_get_table
+*/
+static char **result;
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
   /*
@@ -281,4 +287,65 @@ int FTNCALL sqlite3_column_text_c_(
    pstr = sqlite3_column_text(*stmt, *colidx ) ;
    strncpy( text, pstr, len_text ) ;
    return 0 ;
+}
+
+int FTNCALL sqlite3_get_table_1_c_(
+       sqlite3 **db,
+       char *command,
+#ifdef INBETWEEN
+       int   len_command,
+#endif
+       int  *ncol,
+       int  *nrow,
+       char *errmsg,
+#ifndef INBETWEEN
+       int   len_command,
+#endif
+       int   len_errmsg
+      )
+{
+   int   rc  ;
+   char *msg ;
+
+   rc = sqlite3_get_table(*db, command, &result, nrow, ncol, &msg ) ;
+   if ( msg != NULL )
+   {
+      strncpy( errmsg, msg, len_errmsg ) ;
+   }
+
+   return rc ;
+}
+
+void FTNCALL sqlite3_get_table_2_c_(
+       int  *ncol,
+       int  *nrow,
+       char *result_table,
+       int   len_result
+      )
+{
+   int   i   ;
+   int   j   ;
+   int   k   ;
+   int   n   ;
+
+   /* Note: one extra row! */
+   for ( j = 0 ; j <= (*nrow) ; j ++ )
+   {
+      for ( i = 0 ; i < (*ncol) ; i ++ )
+      {
+         k = i + j*(*ncol) ;
+
+         strncpy( &result_table[k*len_result], result[k], len_result ) ;
+
+         for ( n = strlen(result[k]) ; n < len_result ; n ++ )
+         {
+            result_table[k*len_result+n] = ' ' ;
+         }
+      }
+   }
+
+   sqlite3_free_table( result ) ;
+   result = NULL;
+
+   return ;
 }

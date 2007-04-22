@@ -435,6 +435,29 @@ An array of values for all columns
 [nl]
 
 
+[call [cmd "call sqlite3_get_table( db, commmand, result, errmsg )"]]
+Get the result of a query in a single two-dimensional array
+
+[list_begin arg]
+
+[arg_def "type(SQLITE_DATABASE)" db]
+Variable identifying the database connection
+
+[arg_def "character(len=*)" command]
+The SQL command (query) to executed
+
+[arg_def "character(len=*), dimension(:,:), pointer" result]
+A two-dimensional array that will be filled with the results of the
+SQl command. When done, you will have to deallocate it.
+
+[arg_def "character(len=*)" errmsg]
+If there is an error, then "result" will not be allocated, and "errmsg"
+will contain the information about the error that occurred.
+
+[list_end]
+[nl]
+
+
 [call [cmd "call sqlite3_query_table( db, tablename, columns )"]]
 Query the structure of the table
 

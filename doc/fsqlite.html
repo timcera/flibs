@@ -55,7 +55,8 @@
 <tr valign=top ><td ><a href="#22"><b class='cmd'>call sqlite3_finalize( stmt )</b> </a></td></tr>
 <tr valign=top ><td ><a href="#23"><b class='cmd'>call sqlite3_next_row( stmt, columns, finished )</b> </a></td></tr>
 <tr valign=top ><td ><a href="#24"><b class='cmd'>call sqlite3_insert( db, tablename, columns )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#25"><b class='cmd'>call sqlite3_query_table( db, tablename, columns )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#25"><b class='cmd'>call sqlite3_get_table( db, commmand, result, errmsg )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#26"><b class='cmd'>call sqlite3_query_table( db, tablename, columns )</b> </a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -564,7 +565,35 @@ An array of values for all columns
 <br><br>
 
 
-<dt><a name="25"><b class='cmd'>call sqlite3_query_table( db, tablename, columns )</b> </a><dd>
+<dt><a name="25"><b class='cmd'>call sqlite3_get_table( db, commmand, result, errmsg )</b> </a><dd>
+
+Get the result of a query in a single two-dimensional array
+
+<br><br>
+<dl>
+
+<dt>type(SQLITE_DATABASE) <i class='arg'>db</i><dd>
+Variable identifying the database connection
+
+<br><br>
+<dt>character(len=*) <i class='arg'>command</i><dd>
+The SQL command (query) to executed
+
+<br><br>
+<dt>character(len=*), dimension(:,:), pointer <i class='arg'>result</i><dd>
+A two-dimensional array that will be filled with the results of the
+SQl command. When done, you will have to deallocate it.
+
+<br><br>
+<dt>character(len=*) <i class='arg'>errmsg</i><dd>
+If there is an error, then &quot;result&quot; will not be allocated, and &quot;errmsg&quot;
+will contain the information about the error that occurred.
+
+</dl>
+<br><br>
+
+
+<dt><a name="26"><b class='cmd'>call sqlite3_query_table( db, tablename, columns )</b> </a><dd>
 
 Query the structure of the table
 

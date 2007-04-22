@@ -927,4 +927,69 @@ subroutine sqlite3_prepare( db, command, stmt, columns )
 
 end subroutine sqlite3_prepare
 
+
+! sqlite3_get_table --
+!    Call sqlite3_exec() and return the result in an
+!    array of strings
+! Arguments:
+!    db            Handle to the database
+!    command       SQL comman to be executed
+!    result        Two-dimensional array of strings (pointer)
+!    errmsg        Error message (if any)
+! Note:
+!    The result array is _nullified_ first, then allocated
+!    to hold the resulting table (within the limits of the
+!    character strings). It is up to the user to deallocate
+!    this array when done.
+! Further note:
+!    Because we have to split the process into two parts,
+!    to allocate an array that is large enough to hold all
+!    strings, use is made of a static variable. As a consequence
+!    this routine is _not_ thread-safe.
+!
+subroutine sqlite3_get_table( db, command, result, errmsg )
+   type(SQLITE_DATABASE), intent(inout)        :: db
+   character(len=*), intent(in)                :: command
+   character(len=*), pointer, dimension(:,:)   :: result
+   character(len=*), intent(out)               :: errmsg
+
+   character(len=len(command)+1)               :: commandc
+   integer                                     :: ncol
+   integer                                     :: nrow
+
+   interface
+      integer function sqlite3_get_table_1_c( handle, commandc, ncol, &
+         nrow, errmsg )
+         integer, dimension(*) :: handle
+         character(len=*)      :: commandc
+         integer               :: ncol
+         integer               :: nrow
+         character(len=*)      :: errmsg
+      end function sqlite3_get_table_1_c
+   end interface
+
+   interface
+      subroutine sqlite3_get_table_2_c( ncol, nrow, result )
+         integer                       :: ncol
+         integer                       :: nrow
+         character(len=*),dimension(*) :: result
+      end subroutine sqlite3_get_table_2_c
+   end interface
+
+
+   commandc = command
+   call stringtoc( commandc )
+
+   db%error  = sqlite3_get_table_1_c( db%db_handle, commandc, ncol, nrow, db%errmsg )
+
+   nullify( result )
+   if ( db%error == 0 ) then
+       allocate( result(ncol,nrow+1) )
+       call sqlite3_get_table_2_c( ncol, nrow, result )
+   endif
+
+   errmsg = db%errmsg
+
+end subroutine sqlite3_get_table
+
 end module

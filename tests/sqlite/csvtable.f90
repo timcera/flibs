@@ -8,8 +8,6 @@
 !    - All lines after that contain the name of the station
 !      the date and the two values.
 !
-!    $Id$
-!
 program csvtable
    use sqlite
 
@@ -21,6 +19,7 @@ program csvtable
 
    integer                                    :: lun = 10
    integer                                    :: i
+   integer                                    :: j
    integer                                    :: ierr
    character(len=40), dimension(4)            :: name
    real                                       :: salin
@@ -28,6 +27,9 @@ program csvtable
    character(len=40)                          :: station
    character(len=40)                          :: date
    logical                                    :: finished
+
+   character(len=40), pointer, dimension(:,:) :: result
+   character(len=80)                          :: errmsg
 
    !
    ! Read the CSV file and feed the data into the database
@@ -91,6 +93,22 @@ program csvtable
 
       write( *, '(a20,2f20.3)' ) station, salin, temp
    enddo
+
+   !
+   ! Get the entire table
+   !
+   call sqlite3_get_table( db, "select * from measurements", result, errmsg )
+
+   if ( associated(result) ) then
+      write(*,*) 'Number of columns: ', size(result,1)
+      write(*,*) 'Number of rows:    ', size(result,2)
+      do j = 1,size(result,2)
+         write(*,'(10a20)') result(:,j)
+      enddo
+      deallocate( result )
+   else
+      write(*,*) 'Error: ', trim(errmsg)
+   endif
 
    call sqlite3_close( db )
 end program
