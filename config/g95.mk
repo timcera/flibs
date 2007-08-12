@@ -6,12 +6,12 @@ SPACE	=	\
 
 SEP	=	/
 
-FC	=	gfortran
+FC	=	g95
 FFLAGS_NORMAL	=	-c
 FFLAGS_DEBUG	=	-c -g
 FFLAGS_OPTIMISE	=	-c -O
 
-LD	=	gfortran
+LD	=	g95
 LDFLAGS_NORMAL	=	
 LDFLAGS_DEBUG	=	-g
 LDFLAGS_OPTIMISE	=	
