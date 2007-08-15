@@ -1,4 +1,3 @@
-! DEPRECATED - see funit.f90 instead
 ! ftnunit.f90 --
 !     Module that implements part of the "ftnunit" framework:
 !     It is inspired by the well-known JUnit framework for

@@ -1,4 +1,3 @@
-! DEPRECATED - see ftnunit_test.f90 instead
 ! ftnunit_test.f90 --
 !     Include file containing the source code for the
 !     general "test" subroutine

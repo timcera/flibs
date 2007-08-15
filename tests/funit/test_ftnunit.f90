@@ -1,6 +1,5 @@
-! DEPRECATED - see test_ftnunit.f90 instead
-! test_funit.f90 --
-!     Program to demonstrate the use of the "funit" framework:
+! test_ftnunit.f90 --
+!     Program to demonstrate the use of the "ftnunit" framework:
 !     It is inspired by the well-known JUnit framework for
 !     integrating unit tests in a Java application.
 !
@@ -45,8 +44,8 @@ subroutine open_files
     character(len=40) :: infile
     integer           :: ierr
 
-    open( 10, file = 'test_funit.inp' )
-    open( 20, file = 'test_funit.out' )
+    open( 10, file = 'test_ftnunit.inp' )
+    open( 20, file = 'test_ftnunit.out' )
     read( 10, '(a)' ) infile
     close( 10 )
 
@@ -144,7 +143,7 @@ end module data_processing
 !     All other routines form individual unit tests
 !
 module dataproc_testing
-    use funit
+    use ftnunit
     use data_processing
     implicit none
     private                 ! This is needed to make sure we can easily
@@ -158,7 +157,7 @@ contains
 ! The code is generic, but this way we can access the private routines
 ! in this testing module. And we do not get any name conflicts
 !
-include "funit_test.f90"
+include "ftnunit_test.f90"
 
 subroutine prolog
     ! Nothing in this case
@@ -166,7 +165,7 @@ end subroutine prolog
 
 subroutine epilog
     ! Remove the data file
-    call funit_remove_file( datafile )
+    call ftnunit_remove_file( datafile )
 end subroutine epilog
 
 
@@ -196,7 +195,7 @@ end subroutine test_all
 subroutine write_name( name )
     character(len=*) :: name
 
-    open(  11, file = 'test_funit.inp' )
+    open(  11, file = 'test_ftnunit.inp' )
     write( 11, '(a)' ) name
     close( 11 )
 
@@ -213,7 +212,7 @@ subroutine test_no_file
     integer :: nodata
     real    :: vmean, vmin, vmax
 
-    call funit_remove_file( 'no_such_file' )
+    call ftnunit_remove_file( 'no_such_file' )
     call write_name( 'no_such_file' )
 
     call open_files
@@ -233,7 +232,7 @@ subroutine test_empty_file
     integer :: nodata
     real    :: vmean, vmin, vmax
 
-    call funit_make_empty_file( 'empty_file' )
+    call ftnunit_make_empty_file( 'empty_file' )
     call write_name( 'empty_file' )
 
     call open_files
@@ -303,7 +302,7 @@ end module dataproc_testing
 !     Do the ordinary processing and run the unit tests
 !
 program dataproc
-    use funit
+    use ftnunit
     use data_processing
     use dataproc_testing ! Module with specific unit tests
 
