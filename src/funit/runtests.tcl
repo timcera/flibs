@@ -1,5 +1,5 @@
 # runtests.tcl --
-#    Tcl script to control a program that uses funit
+#    Tcl script to control a program that uses ftnunit
 #    Name of the program: first argument
 #
 #    $Id$
@@ -30,7 +30,7 @@ proc createMainWindow {} {
 }
 
 proc exitTests {} {
-    file delete -force "funit.run"
+    file delete -force "ftnunit.run"
     exit
 }
 
@@ -62,16 +62,16 @@ createMainWindow
 # Run the program, repeatedly
 #
 file delete -force "runtests.log"
-file delete -force "funit.lst"
+file delete -force "ftnunit.lst"
 
-set outfile [open "funit.run" w]
+set outfile [open "ftnunit.run" w]
 puts $outfile ALL
 close $outfile
 
-wm title . [string map {\{ "" \} ""} "Funit: $argv"]
+wm title . [string map {\{ "" \} ""} "Ftnunit: $argv"]
 
 set go 1
-while { [file exists "funit.lst"] || $go } {
+while { [file exists "ftnunit.lst"] || $go } {
     set go 0
     runProgram $argv
     vwait ::finished

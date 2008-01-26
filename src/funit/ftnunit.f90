@@ -10,7 +10,7 @@
 !     - resources that keep track of the status
 !
 !     Related files:
-!     ftnunit_test.f90
+!     ftnunit_test.f90 -- deprecated
 !     runtests.bat
 !     runtests.sh
 !     runtests.tcl
@@ -20,12 +20,59 @@
 module ftnunit
     implicit none
 
-    integer :: last_test         ! Last test that was started
-    integer :: testno            ! Current test number
-    integer :: nofails           ! Number of assertions that failed
-    integer :: noruns            ! Number of runs so far
+    integer, private :: last_test         ! Last test that was started
+    integer, private :: testno            ! Current test number
+    integer, private :: nofails           ! Number of assertions that failed
+    integer, private :: noruns            ! Number of runs so far
 
 contains
+
+! test --
+!     Routine to run a unit test
+! Arguments:
+!     proc          The subroutine implementing the unit test
+!     text          Text describing the test
+!
+subroutine test( proc, text )
+    external          :: proc
+    character(len=*)  :: text
+
+    integer           :: lun
+    integer           :: ierr
+
+    !
+    ! Check if the test should run
+    !
+    testno = testno + 1
+    if ( testno <= last_test ) then
+        return
+    endif
+
+    !
+    ! Record the fact that we started the test
+    !
+    call ftnunit_get_lun( lun )
+    open( lun, file = 'ftnunit.lst' )
+    write( lun, * ) testno, nofails, noruns
+    close( lun )
+
+    !
+    ! Run the test
+    !
+    write( *, '(2a)' ) 'Test: ', trim(text)
+
+    call proc
+
+    !
+    ! No runtime error or premature end of
+    ! the program ...
+    !
+    call ftnunit_get_lun( lun )
+    open( lun, file = 'ftnunit.lst' )
+    write( lun, * ) testno, nofails, noruns
+    close( lun )
+
+end subroutine test
 
 ! runtests --
 !     Subroutine to run the tests if requested

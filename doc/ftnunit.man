@@ -98,11 +98,8 @@ end subroutine test_all
 }]
 
 [bullet]
-The module includes a source file "ftnunit_test.f90" which defines the
-generic subroutine "test", thereby creating a copy [emph local] to
-the module. It should also define two auxiliary routines,
-[emph prolog] and [emph epilog] that can be used for code that is
-common to all unit tests.
+The module includes a source file "ftnunit_test.f90". This is a remnant
+of a previous version. Please ignore this.
 
 [bullet]
 The generic routine "test" checks whether a particular unit
@@ -293,12 +290,16 @@ framework for Fortran:
 
 [list_begin bullet]
 [bullet]
-[uri {http://nasarb.rubyforge.org} {A framework implemented in Ruby}] by
-Bil Kleb and others
+[uri {http://nasarb.rubyforge.org} {Funit (implemented in Fortran and
+Ruby)}] by Bil Kleb and others
 
 [bullet]
 [uri {http://www.sourceforge.net/projects/pfunit} {A framework
 implemented in Fortran}] by Brice Womack and Tom Clune
+
+[bullet]
+[uri {http://www.sourceforge.net/projects/fortranxunit} {FRUIT
+(implemented in Fortran and Ruby)}] by Andrew Chen
 
 [list_end]
 
