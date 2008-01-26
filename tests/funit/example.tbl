@@ -49,7 +49,7 @@ CODE
 !
 RESULT
     oxymin  0.001        ! Minimum oxygen concentration
-    time    0.01%        ! Time the minimum is reached
+    time    0.1%         ! Time the minimum is reached
 
 !
 ! The keyword ERROR is used for a code fragment that checks if the
@@ -93,6 +93,9 @@ RANGES
 TABLE
 dt   oxy       bod       oxysat    h         k         ka        oxymin    time
 0.1  10        1         10        10        0.1       1.0       10.0      2.0
+0.1  10        1         10        10        0.1       1.0       9.630     9.9   ! Should be okay!
+0.1  10        1         10        10        0.1       1.0       9.632     9.9   ! Should NOT be okay!
+0.1  10        1         10        10        0.1       1.0       9.630     9.8999 ! Should be okay!
 1.0  10        1         10        10        0.1       1.0       ?         ?
 !
 ! This case is unacceptable: time step must be positive

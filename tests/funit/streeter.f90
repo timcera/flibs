@@ -57,8 +57,8 @@ subroutine compute_min_oxygen( bod, oxy, k, ka, h, oxysat, dt, oxymin, time )
     timemax = 10.0 / k ! More than safe time interval
 
     do while ( t < timemax )
-        dbod = -k * bod
-        doxy = -k * bod + ka * ( oxysat - oxy ) / h
+        dbod = -k * bodn
+        doxy = -k * bodn + ka * ( oxysat - oxyn ) / h
 
         t    = t    + dt
         bodn = bodn + dbod *dt

@@ -50,7 +50,7 @@ end function not_equal_rel
 
 subroutine error
     error_recognised_ = .true.
-    write(luout_,*) 'Error condition correctly recognised'
+    write(luout_,'(a)') '    Note: error condition correctly recognised'
 end subroutine error
 subroutine all_tests}
 
@@ -151,7 +151,7 @@ proc generateFromTable {tblname} {
             puts $outfile "    error_recognised_ = .false."
             puts $outfile $data(error)
             puts $outfile "    if ( .not. error_recognised_ ) then"
-            puts $outfile "        write(luout_,'(a)') '    Error not recognised: failure!'"
+            puts $outfile "        write(luout_,'(a)') '    Failure: error not recognised'"
             puts $outfile "    endif"
         }
         if { $status == 0 } {
@@ -250,7 +250,7 @@ proc readResultParameters {infile var} {
         set margin  "${margin}_wp"
         append data(report) "    if ( $compare\($p,expected_$p,$margin) ) then
         write(luout_,'(a,g12.4,a,g12.4)') &
-            'Error: $p = ',$p, ' - expected: ',expected_$p
+            '    Error: $p = ',$p, ' - expected: ',expected_$p
         error_ = error_ + 1
     endif\n"
     }

@@ -1,3 +1,11 @@
+2008-01-26 arjenmarkus@sourceforge.net
+
+   * ftnunit.f90: moved the test subroutine
+   * ftnunit.man: updated documentation
+   * gentabletest.tcl: added facility
+
+   (ChangeLog was not kept up-to-date)
+
 2006-06-25 arjenmarkus@sourceforge.net
 
    * added pointsets.f90
