@@ -319,11 +319,14 @@ program dataproc
 ! The routine test_all runs all unit tests
 ! (see the dataproc_testing module)
 !
+    call runtests_init
     call runtests( test_all )
+    call runtests_final
 
 !
 ! Ordinary processing
 !
+    write(*,*) 'Ordinary processing ...'
     call open_files
     call process_data( nodata, vmean, vmin, vmax )
     call report_results( nodata, vmean, vmin, vmax )

@@ -48,10 +48,30 @@ logical function not_equal_rel( x, y, margin )
     not_equal_rel = abs(x-y) > 0.5 * margin * (abs(x)+abs(y))
 end function not_equal_rel
 
+real function random_uniform( xmin, xmax )
+    real(kind=wp) :: xmin, xmax
+    real(kind=wp) :: r
+
+    call random_number( r )
+    random_uniform = xmin + (xmax-xmin) * r
+end function random_uniform
+
+real function random_normal( xmean, xstdev )
+    real(kind=wp) :: xmean, xstdev
+    real(kind=wp) :: r, phi
+
+    call random_number( r )
+    call random_number( phi )
+    phi = 8.0_wp * atan(1.0_wp) * phi
+    r   = sqrt( -2.0_wp * log(r) )
+    random_normal = xmean + xstdev * r * cos(phi)
+end function random_normal
+
 subroutine error
     error_recognised_ = .true.
     write(luout_,'(a)') '    Note: error condition correctly recognised'
 end subroutine error
+
 subroutine all_tests}
 
 set data(epilogue) {
@@ -188,6 +208,55 @@ proc readCodeFragment {infile key var} {
         }
         if { ! [regexp {^ *!} $nextline] } {
             append data($key) "$nextline\n"
+        }
+    }
+
+    #
+    # Apparently the end of the file
+    #
+    return -1
+}
+
+
+# readPreliminaries --
+#     Read the parameters for the prologue code
+#
+# Arguments:
+#     infile       Input file
+#     var          Variable to store the next line in
+#
+# Result:
+#     Continue or not
+#
+# Side effects:
+#     Stores the parameters in the variables data(precision) and data(trials)
+#
+proc readPreliminaries {infile var} {
+    upvar 1 $var nextline
+    global data
+    global keywords
+
+    while { [gets $infile nextline] >= 0 } {
+        if { [lsearch $keywords [string trim $nextline]] >= 0 } {
+            return 1
+        }
+        if { ! [regexp {^ *!} $nextline] } {
+            if { [regexp {([a-z]+) += *([^ ]+)} $nextline ==> key value] } {
+                switch -- $key {
+                    "precision" {
+                        if { $value == "double"} {
+                            set value 1.0d0
+                        } else {
+                            set value 1.0
+                        }
+                        set data(precision) $value
+                    }
+                    "trials" {
+                        if { [string is integer -strict $value] } {
+                            set data(trials) $value
+                        }
+                }
+            }
         }
     }
 

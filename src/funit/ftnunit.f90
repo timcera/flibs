@@ -20,10 +20,21 @@
 module ftnunit
     implicit none
 
-    integer, private :: last_test         ! Last test that was started
-    integer, private :: testno            ! Current test number
-    integer, private :: nofails           ! Number of assertions that failed
-    integer, private :: noruns            ! Number of runs so far
+    integer, private, save :: last_test           ! Last test that was started
+    integer, private, save :: testno              ! Current test number
+    integer, private, save :: nofails             ! Number of assertions that failed
+    integer, private, save :: noruns              ! Number of runs so far
+    logical, private, save :: call_final = .true. ! Call runtests_final implicitly?
+
+    interface assert_equal
+        module procedure assert_equal_int
+        module procedure assert_equal_int1d
+    end interface
+
+    interface assert_comparable
+        module procedure assert_comparable_real
+        module procedure assert_comparable_real1d
+    end interface
 
 contains
 
@@ -74,13 +85,43 @@ subroutine test( proc, text )
 
 end subroutine test
 
+! runtests_init --
+!     Subroutine to initialise the ftnunit system
+! Arguments:
+!     None
+! Note:
+!     Use in conjunction with runtests_final to enable multiple calls
+!     to the runtests subroutine. This makes it easier to run tests
+!     from different modules, as you have more than one subroutine to
+!     do the actual tests.
+!
+subroutine runtests_init
+    call_final = .false.
+end subroutine
+
+! runtests_final --
+!     Subroutine to report the overall statistics
+! Arguments:
+!     None
+! Note:
+!     Use in conjunction with runtests_init to enable multiple calls
+!     to the runtests subroutine. This makes it easier to run tests
+!     from different modules, as you have more than one subroutine to
+!     do the actual tests.
+!
+subroutine runtests_final
+    if ( ftnunit_file_exists("ftnunit.run") ) then
+        write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
+        write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
+        call ftnunit_remove_file( "ftnunit.lst" )
+        stop
+    endif
+end subroutine
+
 ! runtests --
 !     Subroutine to run the tests if requested
 ! Arguments:
 !     testproc      The test subroutine that actually runs the unit test
-! Side effects:
-!     The input file with data is opened at LUN 10,
-!     the report file is opened at LUN 20
 !
 subroutine runtests( testproc )
     interface
@@ -115,10 +156,10 @@ subroutine runtests( testproc )
 
         call testproc
 
-        write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
-        write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
-        call ftnunit_remove_file( "ftnunit.lst" )
-        stop
+        if ( call_final ) then
+            call runtests_final
+        endif
+
     endif
 
 end subroutine runtests
@@ -142,6 +183,154 @@ subroutine assert_true( cond, text )
         write(*,*) '    It should have been true'
     endif
 end subroutine assert_true
+
+! assert_false --
+!     Subroutine to check if a condition is false
+! Arguments:
+!     cond          Condition to be checked
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_false( cond, text )
+    logical, intent(in)          :: cond
+    character(len=*), intent(in) :: text
+
+    if ( cond ) then
+        nofails = nofails + 1
+        write(*,*) '    Condition "',trim(text), '" failed'
+        write(*,*) '    It should have been false'
+    endif
+end subroutine assert_false
+
+! assert_equal_int --
+!     Subroutine to check if two integers are equal
+! Arguments:
+!     value1        First value
+!     value2        Second value
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_equal_int( value1, value2, text )
+    integer, intent(in)          :: value1
+    integer, intent(in)          :: value2
+    character(len=*), intent(in) :: text
+
+    if ( value1 /= value2) then
+        nofails = nofails + 1
+        write(*,*) '    Values not equal: "',trim(text), '" - assertion failed'
+        write(*,*) '    Values: ', value1, ' and ', value2
+    endif
+end subroutine assert_equal_int
+
+! assert_equal_int1d --
+!     Subroutine to check if two integer arrays are equal
+! Arguments:
+!     array1        First array
+!     array2        Second array
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_equal_int1d( array1, array2, text )
+    integer, dimension(:), intent(in) :: array1
+    integer, dimension(:), intent(in) :: array2
+    character(len=*), intent(in)      :: text
+
+    integer                           :: i
+    integer                           :: count
+
+    if ( size(array1) /= size(array2) ) then
+        nofails = nofails + 1
+        write(*,*) '    Arrays have different sizes: "',trim(text), '" - assertion failed'
+    else
+        if ( any( array1 /= array2 ) ) then
+            nofails = nofails + 1
+            write(*,*) '    One or more values different: "',trim(text), '" - assertion failed'
+            count = 0
+            do i = 1,size(array1)
+                if ( array1(i) /= array2(i) ) then
+                    count = count + 1
+                    write(*,'(3a10)')    '    Index', '     First', '    Second'
+                    if ( count < 50 ) then
+                        write(*,'(3i10)')    i, array1(i), array2(i)
+                    endif
+                    write(*,*) 'Number of differences: ', count
+                endif
+            enddo
+        endif
+    endif
+end subroutine assert_equal_int1d
+
+! assert_comparable_real --
+!     Subroutine to check if two reals are approximately equal
+! Arguments:
+!     value1        First value
+!     value2        Second value
+!     margin        Allowed margin (relative)
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_comparable_real( value1, value2, margin, text )
+    real, intent(in)             :: value1
+    real, intent(in)             :: value2
+    real, intent(in)             :: margin
+    character(len=*), intent(in) :: text
+
+    if ( abs(value1-value2) > 0.5 * margin * (abs(value1)+abs(value2)) ) then
+        nofails = nofails + 1
+        write(*,*) '    Values not comparable: "',trim(text), '" - assertion failed'
+        write(*,*) '    Values: ', value1, ' and ', value2
+    endif
+end subroutine assert_comparable_real
+
+! assert_compatable_real1d --
+!     Subroutine to check if two real arrays are comparable
+! Arguments:
+!     array1        First array
+!     array2        Second array
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_comparable_real1d( array1, array2, margin, text )
+    real, dimension(:), intent(in)    :: array1
+    real, dimension(:), intent(in)    :: array2
+    real, intent(in)                  :: margin
+    character(len=*), intent(in)      :: text
+
+    integer                           :: i
+    integer                           :: count
+
+    if ( size(array1) /= size(array2) ) then
+        nofails = nofails + 1
+        write(*,*) '    Arrays have different sizes: "',trim(text), '" - assertion failed'
+    else
+        if ( any( abs(array1-array2) > 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+            nofails = nofails + 1
+            write(*,*) '    One or more values different: "',trim(text), '" - assertion failed'
+            count = 0
+            do i = 1,size(array1)
+                if ( abs(array1(i)-array2(i)) > &
+                         0.5 * margin * (abs(array1(i))+abs(array2(i))) ) then
+                    count = count + 1
+                    write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                    if ( count < 50 ) then
+                        write(*,'(i10,e15.5)')    i, array1(i), array2(i)
+                    endif
+                    write(*,*) 'Number of differences: ', count
+                endif
+            enddo
+        endif
+    endif
+end subroutine assert_comparable_real1d
 
 ! ftnunit_file_exists --
 !     Auxiliary function to see if a file exists

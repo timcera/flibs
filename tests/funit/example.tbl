@@ -71,9 +71,15 @@ ERROR
 ! consists of the detailed output as well as a summary.
 !
 RANGES
-    oxy   10.0   2.0  Uniform ! Name of the variable, the mean and the margin (uniform)
-                              ! Normal: mean and standard deviation followed by Normal
-                              ! Note: all parameters must be given!
+    dt      0.1        Constant  ! Constant parameter
+    oxy    10.0   2.0  Uniform   ! Name of the variable, the mean and the margin (uniform)
+                                 ! Normal: mean and standard deviation followed by Normal
+                                 ! Note: all parameters must be given!
+    bod    10.0   5.0  Uniform
+    oxysat 10.0   5.0  Uniform
+    h      10.0        Constant
+    k       0.5   0.4  Uniform
+    ka      0.5   0.4  Uniform
 !
 ! The keyword TABLE indicates the beginning of a table of input data and
 ! expected values. The first (non-comment) line contains the names of
