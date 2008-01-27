@@ -30,7 +30,7 @@ Despite these limitations, [emph ftnunit] can be a great help:
 
 [list_begin bullet]
 [bullet]
-The Tcl program gentabletest.tcl generates a complete test program based
+The Tcl program [emph gentabletest.tcl] generates a complete test program based
 on a simple input file (see [sectref "GENERATING TESTS FROM A TABLE"]).
 
 [bullet]
@@ -190,7 +190,17 @@ exists. If so, it will call the subroutine [emph testproc] that was
 passed. Otherwise it will simply return, so that the ordinary program
 execution may continue.
 [nl]
-If the subroutine testproc returns, the program stops.
+If the subroutine testproc returns, the program stops, unless you have
+called the subroutine [emph runtests_init] before [emph runtests].
+
+[call [cmd "call runtests_init"]]
+Routine to initialise the ftnunit system, so that you call [emph runtests]
+more than once. To complete the tests, call [emph runtests_final], as
+this will print the final statistics and stop the program.
+
+[call [cmd "call runtests_final"]]
+Routine to finalise the ftnunit system: it will print the final statistics
+and stop the program, but only if the file "ftnunit.run" is present.
 
 [list_begin arg]
 [arg_def "subroutine" testproc]
@@ -233,6 +243,59 @@ in the log file and the number of failures is increased.
 [list_begin arg]
 [arg_def "logical" cond]
 The condition to be checked
+
+[arg_def "character(len=*), intent(in)" text]
+Text describing the condition
+[list_end]
+
+
+[call [cmd "call assert_false( cond, text )"]]
+Routine to check that a condition is false. If not, a message is
+printed in the log file and the number of failures is increased.
+
+[list_begin arg]
+[arg_def "logical" cond]
+The condition to be checked
+
+[arg_def "character(len=*), intent(in)" text]
+Text describing the condition
+[list_end]
+
+
+[call [cmd "call assert_equal( value1, value2, text )"]]
+Routine to check that two integers are equal or if two one-dimensional
+integer arrays are equal. If not, a message is printed, along with the
+values that were different.
+
+[list_begin arg]
+[arg_def "integer \[, dimension(:)\]" value1]
+The first integer value or array
+
+[arg_def "integer \[, dimension(:)\]" value2]
+The second integer value or array
+
+[arg_def "character(len=*), intent(in)" text]
+Text describing the condition
+[list_end]
+
+
+[call [cmd "call assert_comparable( value1, value2, margin, text )"]]
+Routine to check that two reals are almost equal or if two one-dimensional
+real arrays are almost equal. If not, a message is printed, along with
+the values that were different.
+[nl]
+The margin is taken as a relative tolerance. Two values are
+considered almost equal if:
+[example {
+    abs( v1 - v2 ) < margin * (abs(v1)+abs(v2)) / 2
+}]
+
+[list_begin arg]
+[arg_def "real \[, dimension(:)\]" value1]
+The first real value or array
+
+[arg_def "real \[, dimension(:)\]" value2]
+The second real value or array
 
 [arg_def "character(len=*), intent(in)" text]
 Text describing the condition

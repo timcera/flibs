@@ -34,12 +34,17 @@
 <tr valign=top ><td ><a href="#2">runtests.sh </a></td></tr>
 <tr valign=top ><td ><a href="#3">runtests.tcl </a></td></tr>
 <tr valign=top ><td ><a href="#4"><b class='cmd'>call runtests( testproc )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#5"><b class='cmd'>call test( proc, text )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#6"><b class='cmd'>call assert_true( cond, text )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#7"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#8"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#9"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#10"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#5"><b class='cmd'>call runtests_init</b> </a></td></tr>
+<tr valign=top ><td ><a href="#6"><b class='cmd'>call runtests_final</b> </a></td></tr>
+<tr valign=top ><td ><a href="#7"><b class='cmd'>call test( proc, text )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#8"><b class='cmd'>call assert_true( cond, text )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#9"><b class='cmd'>call assert_false( cond, text )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#10"><b class='cmd'>call assert_equal( value1, value2, text )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#11"><b class='cmd'>call assert_comparable( value1, value2, margin, text )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#12"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#13"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#14"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#15"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -70,7 +75,7 @@ Despite these limitations, <em>ftnunit</em> can be a great help:
 
 <ul>
 <li>
-The Tcl program gentabletest.tcl generates a complete test program based
+The Tcl program <em>gentabletest.tcl</em> generates a complete test program based
 on a simple input file (see <a href="#generating_tests_from_a_table">GENERATING TESTS FROM A TABLE</a>).
 
 <br><br>
@@ -244,7 +249,21 @@ exists. If so, it will call the subroutine <em>testproc</em> that was
 passed. Otherwise it will simply return, so that the ordinary program
 execution may continue.
 <br><br>
-If the subroutine testproc returns, the program stops.
+If the subroutine testproc returns, the program stops, unless you have
+called the subroutine <em>runtests_init</em> before <em>runtests</em>.
+
+<br><br>
+<dt><a name="5"><b class='cmd'>call runtests_init</b> </a><dd>
+
+Routine to initialise the ftnunit system, so that you call <em>runtests</em>
+more than once. To complete the tests, call <em>runtests_final</em>, as
+this will print the final statistics and stop the program.
+
+<br><br>
+<dt><a name="6"><b class='cmd'>call runtests_final</b> </a><dd>
+
+Routine to finalise the ftnunit system: it will print the final statistics
+and stop the program, but only if the file &quot;ftnunit.run&quot; is present.
 
 <br><br>
 <dl>
@@ -255,7 +274,7 @@ routine <em>test</em> - see below.
 </dl>
 
 
-<dt><a name="5"><b class='cmd'>call test( proc, text )</b> </a><dd>
+<dt><a name="7"><b class='cmd'>call test( proc, text )</b> </a><dd>
 
 Routine to run the individual unit test routine (emph proc). It decides
 if the test has not run yet and if so, the test routine is called.
@@ -284,7 +303,7 @@ file.
 </dl>
 
 
-<dt><a name="6"><b class='cmd'>call assert_true( cond, text )</b> </a><dd>
+<dt><a name="8"><b class='cmd'>call assert_true( cond, text )</b> </a><dd>
 
 Routine to check that a condition is true. If not, a message is printed
 in the log file and the number of failures is increased.
@@ -300,7 +319,71 @@ Text describing the condition
 </dl>
 
 
-<dt><a name="7"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a><dd>
+<dt><a name="9"><b class='cmd'>call assert_false( cond, text )</b> </a><dd>
+
+Routine to check that a condition is false. If not, a message is
+printed in the log file and the number of failures is increased.
+
+<br><br>
+<dl>
+<dt>logical <i class='arg'>cond</i><dd>
+The condition to be checked
+
+<br><br>
+<dt>character(len=*), intent(in) <i class='arg'>text</i><dd>
+Text describing the condition
+</dl>
+
+
+<dt><a name="10"><b class='cmd'>call assert_equal( value1, value2, text )</b> </a><dd>
+
+Routine to check that two integers are equal or if two one-dimensional
+integer arrays are equal. If not, a message is printed, along with the
+values that were different.
+
+<br><br>
+<dl>
+<dt>integer [, dimension(:)] <i class='arg'>value1</i><dd>
+The first integer value or array
+
+<br><br>
+<dt>integer [, dimension(:)] <i class='arg'>value2</i><dd>
+The second integer value or array
+
+<br><br>
+<dt>character(len=*), intent(in) <i class='arg'>text</i><dd>
+Text describing the condition
+</dl>
+
+
+<dt><a name="11"><b class='cmd'>call assert_comparable( value1, value2, margin, text )</b> </a><dd>
+
+Routine to check that two reals are almost equal or if two one-dimensional
+real arrays are almost equal. If not, a message is printed, along with
+the values that were different.
+<br><br>
+The margin is taken as a relative tolerance. Two values are
+considered almost equal if:
+<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+    abs( v1 - v2 ) &lt; margin * (abs(v1)+abs(v2)) / 2
+</pre></td></tr></table></p>
+
+<br><br>
+<dl>
+<dt>real [, dimension(:)] <i class='arg'>value1</i><dd>
+The first real value or array
+
+<br><br>
+<dt>real [, dimension(:)] <i class='arg'>value2</i><dd>
+The second real value or array
+
+<br><br>
+<dt>character(len=*), intent(in) <i class='arg'>text</i><dd>
+Text describing the condition
+</dl>
+
+
+<dt><a name="12"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a><dd>
 
 Logical function to check that a particular file exists
 
@@ -311,7 +394,7 @@ Name of the file to be checked
 </dl>
 
 
-<dt><a name="8"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a><dd>
+<dt><a name="13"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a><dd>
 
 Subroutine to get a free LU-number
 
@@ -322,7 +405,7 @@ Next free LU-number
 </dl>
 
 
-<dt><a name="9"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a><dd>
+<dt><a name="14"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a><dd>
 
 Subroutine to remove (delete) a file
 
@@ -333,7 +416,7 @@ Name of the file to be removed
 </dl>
 
 
-<dt><a name="10"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a><dd>
+<dt><a name="15"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a><dd>
 
 Subroutine to make a new, empty file
 
