@@ -17,7 +17,7 @@ set data(prologue) \
 program test_table
     implicit none
     integer, parameter :: wp = kind(PRECISION)
-    integer, parameter :: niters = TRIALS
+    integer, parameter :: niters_ = TRIALS
     logical :: error_recognised_
     integer :: luout_
     integer :: lutbl_
@@ -34,6 +34,7 @@ set data(contains) \
     lutbl_ = 11
     open( luout_, file = 'report.out' )
     open( lutbl_, file = 'table.out' )
+    call run_ranges
     call all_tests
     write(luout_,'(a,i5)') 'All tests completed. Number of errors:',error_
 contains
@@ -74,14 +75,20 @@ end subroutine error
 
 subroutine all_tests}
 
+set data(end_all_tests) {end subroutine all_tests}
+
 set data(epilogue) {
-end subroutine all_tests
 end program test_table}
 
 set data(code)         {}
 set data(error)        {}
 set data(table)        {}
 set data(declarations) {}
+
+set data(ranges) {
+subroutine run_ranges
+    ! Nothing to do
+end subroutine run_ranges}
 
 
 # generateFromTable --
@@ -135,8 +142,7 @@ proc generateFromTable {tblname} {
                 set cont [readResultParameters $infile nextline]
             }
             "RANGES" {
-                set cont [readCodeFragment $infile "dummy" nextline]
-                #set cont [readRanges $infile nextline]
+                set cont [readRanges $infile nextline]
             }
             "TABLE" {
                 set cont [readTable $infile nextline]
@@ -153,6 +159,7 @@ proc generateFromTable {tblname} {
     #
     # Generate the code from the various pieces
     #
+    appendResultsToRanges
 
     puts $outfile [string map [list PRECISION $data(precision) TRIALS $data(trials)] $data(prologue)]
     puts $outfile $data(expected_result)
@@ -179,6 +186,8 @@ proc generateFromTable {tblname} {
         }
     }
 
+    puts $outfile $data(end_all_tests)
+    puts $outfile $data(ranges)
     puts $outfile $data(epilogue)
 }
 
@@ -255,6 +264,7 @@ proc readPreliminaries {infile var} {
                         if { [string is integer -strict $value] } {
                             set data(trials) $value
                         }
+                    }
                 }
             }
         }
@@ -308,7 +318,7 @@ proc readResultParameters {infile var} {
     # Transform the list into useable code
     #
     foreach {p margin} $params {
-        append data(expected_result) "    real(kind=wp) :: expected_$p\n"
+        append data(expected_result) "    real(kind=wp) :: expected_$p, min_$p, max_$p\n"
 
         if { [string first % $margin] >= 0 } {
             set compare "not_equal_rel"
@@ -395,6 +405,120 @@ proc readTable {infile var} {
     return $cont
 }
 
+
+# readRanges --
+#     Read the ranges section
+#
+# Arguments:
+#     infile       Input file
+#     var          Variable to store the next line in
+#
+# Result:
+#     Continue or not
+#
+# Side effects:
+#     Stores the information in the variable data(ranges)
+#
+proc readRanges {infile var} {
+    upvar 1 $var nextline
+    global data
+    global keywords
+
+    set cont  -1
+    set ranges {}
+    while { [gets $infile nextline] >= 0 } {
+        if { [lsearch $keywords [string trim $nextline]] >= 0 } {
+            set cont 1
+            break
+        }
+        if { ! [regexp {^ *!} $nextline] } {
+            lappend ranges [lindex [split $nextline !] 0]
+        }
+    }
+
+    #
+    # Transform the entries into useable code fragments
+    #
+    set varnames {}
+    set prologue {
+subroutine run_ranges
+    integer :: i_
+}
+    set epilogue {}
+    set code {
+    do i = 1,niters_
+}
+    set varnames {}
+    foreach vars $ranges {
+
+        set entry {}
+        set status 0 ;# Ordinary
+
+        foreach {vn v1 v2 type} $vars {
+            lappend varnames $vn
+            if { $type == "" } {
+                set type $v2
+            }
+            append prologue "    real(wp) :: $vn, min_$vn = huge(1.0_wp), max_$vn = -huge(1.0_wp)\n"
+
+            switch -- $type {
+                "Constant" {
+                    append code "        $vn = $v1\n"
+                }
+                "Uniform" {
+                    set v1 [expr {$v1-0.5*$v2}]
+                    set v2 [expr {$v1+$v2}]
+                    append code "        $vn = random_uniform($v1,$v2)\n"
+                }
+                "Normal" {
+                    append code "        $vn = random_normal($v1,$v2)\n"
+                }
+            }
+            append code "        if ( $vn < min_$vn ) min_$vn = $vn\n"
+            append code "        if ( $vn > max_$vn ) max_$vn = $vn\n"
+        }
+    }
+
+    set epilogue "        write(lutbl_,'(100g12.4)') [join $varnames ,]
+    enddo
+    write(luout_,'(a)') 'Overview of iterations:'\n"
+    foreach vn $varnames {
+        append epilogue "    write(luout_,'(a20,2g12.4)') '$vn', min_$vn, max_$vn\n"
+    }
+    append epilogue "
+    ! TODO: results!
+end subroutine run_ranges"
+
+    set data(prologue_ranges) $prologue
+    set data(code_ranges) $code
+    set data(epilogue_ranges) $epilogue
+
+    return $cont
+}
+
+
+# appendResultsToRanges --
+#     Fill in the missing pieces for the run_ranges subroutine
+#
+# Arguments:
+#     None
+#
+# Result:
+#     None
+#
+# Side effects:
+#     Code for run_ranges routine completed
+#
+proc appendResultsToRanges {} {
+    global data
+
+    if { ! [info exists data(prologue_ranges)] } {
+        return
+    }
+
+    TODO
+
+}
 
 # main --
 #     Run the program
