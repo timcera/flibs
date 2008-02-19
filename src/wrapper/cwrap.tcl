@@ -188,10 +188,17 @@ proc transformArgList {arglist} {
 
     set wraplist {}
     set end      {}
+    set carg     0
     foreach arg [split $arglist ,] {
         set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
+
+        if { [llength $arg] == 1 } {
+            incr carg
+            set name "arg__$carg"
+            set type [lindex $arg 0]
+        }
 
         switch -- $type {
             "int"    -
@@ -255,10 +262,17 @@ proc setUpBody {type name arglist} {
         set return "    return;"
     }
     set wraplist {}
+    set carg     0
     foreach arg [split $arglist ,] {
         set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
+
+        if { [llength $arg] == 1 } {
+            incr carg
+            set name "arg__$carg"
+            set type [lindex $arg 0]
+        }
 
         switch -- $type {
             "char"   -
@@ -320,10 +334,17 @@ proc setUpInterface {type fname arglist} {
     set wraplist  {}
     set ftnargs   {}
     set ambiguous 0
+    set carg      0
     foreach arg [split $arglist ,] {
         set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
+
+        if { [llength $arg] == 1 } {
+            incr carg
+            set name "arg__$carg"
+            set type [lindex $arg 0]
+        }
 
         switch -- $type {
             "char"   -
@@ -397,10 +418,17 @@ proc setUpIsoCInterface {type fname cname arglist} {
     set wraplist  {}
     set ftnargs   {}
     set ambiguous 0
+    set carg      0
     foreach arg [split $arglist ,] {
         set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
+
+        if { [llength $arg] == 1 } {
+            incr carg
+            set name "arg__$carg"
+            set type [lindex $arg 0]
+        }
 
         switch -- $type {
             "char"   -
@@ -564,9 +592,9 @@ proc define {macro args} {
     if { [llength $args] == 1 } {
         set value [lindex $args 0]
         if { [string is integer -strict $value] } {
-            puts $declout "    integer(c_int), parameter :: $macro = $value"
+            puts $declout "    integer(c_int), parameter :: $macro = [expr {$value+0}] ! $value"
         } elseif { [string is double -strict $value] } {
-            puts $declout "    real(c_double), parameter :: $macro = $value"
+            puts $declout "    real(c_double), parameter :: $macro = [expr {$value+0.0}] ! $value"
         } else {
             puts $declout "    character(len=[string length $value]), parameter :: $macro = \"$value\""
         }
