@@ -7,6 +7,15 @@
 #     prototypes without argument names: int f(int,int);
 #
 
+# global variables --
+#
+set typemap {}   ;# Accumulates translation from user-defined types to basic types
+
+set convert {"unsigned int" "int" "unsigned char" "char" "signed char" "char" "short" "int"}
+
+set ignored {WINGDIAPI  "" APIENTRY "" "CONST " "" _cdecl ""
+             "CONST84 " "" "CONST84_RETURN " ""} ;# List of ignored keywords (CONST, _cdecl, ...)
+
 # ftype --
 #     Translation of C types to corresponding Fortran types
 #
@@ -36,6 +45,7 @@ array set isotype {int     "integer(c_int), intent(in), value"
                    void*   "type(c_ptr), intent(in)"
                    void**  "type(c_ptr), intent(inout)"}
 
+
 # cwrap --
 #     Generate the actual C code and the Fortran interface (if possible)
 #
@@ -62,6 +72,9 @@ proc cwrap {type name arglist args} {
     set error ""
     set fname [string tolower "${name}_"]
 
+    puts "Cwrap: $name"
+    puts "Cwrap: $arglist"
+
     set ftnargs [transformArgList $arglist]
     set body    [setUpBody $type $name $arglist]
 
@@ -86,6 +99,7 @@ $body
     puts $isoout "\n$interface"
 }
 
+
 # transformToTcl --
 #     Transform the C code to a set of Tcl commands for easy processing
 #
@@ -101,31 +115,46 @@ $body
 #
 proc transformToTcl {code} {
 
-    set code [removeExternC $code]
+    set code "\n[removeExternC $code]"            ;# start of all lines easier to detect
 
-    regsub -all {\\ *\n} $code { } code
-    regsub -all {^# +} $code {#} code
-    regsub -all {\n# +} $code "\n#" code
+    regsub -all {/\*.*?\*/} $code "" code           ;# remove comments
+    regsub -all {\\ *\n} $code { } code             ;# continuation of macros
+    regsub -all {\n[ \t]*#[ \t]+} $code "\n#" code  ;# normalise #keyword
+    regsub -all {#([^\n]+)\n} $code ";#\\1;" code   ;# insert semicolon before and after #keyword
+    regsub -all {\n} $code " " code                 ;# commands always end with semicolon
+    regsub -all {;} $code "\n" code                 ;# break lines at semicolons
+    regsub -all {\{} $code " \{ " code              ;# proper lists
+    regsub -all {\}} $code " \} " code              ;# proper lists
 
-    set code [string map {(         " \{"
-                          )         "\} \\ "
-                          \}        "\} "
-                          \{        " \{"
-                          "/*"      ";comment \{"
-                          "*/"      "\}\n"
-                          "typedef" "comment"
-                          "#else"  "\} else \{"
-                          "#endif"  "\}\n"
-                          "#if "     "# if \{" } $code]
+    regsub -all {defined *\(([a-zA-Z_0-9]+) *\)} $code "\[defined \\1\]" code
+    regsub -all {#if ([^\n]+)} $code "if \{ \\1 \} \{" code
+    regsub -all {#elif ([^\n]+)} $code "\} elseif \{ \\1 \} \{" code
+
+#
+#   set code [string map {(         " \{"
+#                         )         "\} \\ "
+#                         \}        "\} "
+#                         \{        " \{"
+#                         "/*"      ";comment \{"
+#                         "*/"      "\}\n"
+#                         "const "  " "
+#                         "#else"  "\} else \{"
+#                         "#endif"  "\}\n"       } $code]
     regsub -all {#ifdef ([a-zA-Z_0-9]+)} $code "if \{ \[defined \\1\] \} \{ " code
     regsub -all {#ifndef ([a-zA-Z_0-9]+)} $code "if \{ ! \[defined \\1\] \} \{ " code
     regsub -all {#define ([^\n]+)\n} $code "define \\1\n\n" code
     regsub -all {#undef ([^\n]+)\n} $code "undef \\1\n\n" code
-    regsub -all {([a-zA-Z_0-9\}]) *\n} $code "\\1 " code
+    regsub -all {#else} $code "\} else \{\n" code
+    regsub -all {#endif} $code "\}\n" code
     regsub -all { *\*} $code "* " code
+    regsub -all {\* +\*} $code "**" code
+    regsub -all {\(} $code " \{ " code
+    regsub -all {\)} $code " \} " code
 
+    puts ">>>$code<<<"
     return $code
 }
+
 
 # removeExternC --
 #     Remove the "#ifdef __cplusplus extern "C" #endif" sequence and its
@@ -143,6 +172,7 @@ proc removeExternC {code} {
     return $code
 }
 
+
 # transformArgList --
 #     Transform the C argument list for the wrapper
 #
@@ -154,10 +184,12 @@ proc removeExternC {code} {
 #
 proc transformArgList {arglist} {
     global error
+    global typemap
 
     set wraplist {}
     set end      {}
     foreach arg [split $arglist ,] {
+        set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
 
@@ -165,20 +197,25 @@ proc transformArgList {arglist} {
             "int"    -
             "long"   -
             "float"  -
-            "double" -
-            "void*" {
+            "double" {
                 lappend wraplist "$type* $name"
             }
             "int*"    -
             "long*"   -
             "float*"  -
-            "double*" {
+            "double*" -
+            "void*"   -
+            "void**"  {
                 lappend wraplist "$type $name"
             }
             "char"    -
             "char*"   {
                 lappend wraplist "$type $name"
                 lappend end      "int len__$name"
+            }
+            ""        -
+            "void"    {
+                # Nothing
             }
             default {
                 append error "\n    $arg: conversion to/from Fortran not supported"
@@ -189,6 +226,7 @@ proc transformArgList {arglist} {
 
     return [concat $wraplist $end]
 }
+
 
 # setUpBody --
 #     Construct the body of the wrapper
@@ -203,6 +241,9 @@ proc transformArgList {arglist} {
 #
 proc setUpBody {type name arglist} {
     global error
+    global typemap
+
+    set type [string map $typemap $type]
 
     if { $type != "void" } {
         set body   "    $type result__;\n"
@@ -215,6 +256,7 @@ proc setUpBody {type name arglist} {
     }
     set wraplist {}
     foreach arg [split $arglist ,] {
+        set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
 
@@ -223,16 +265,20 @@ proc setUpBody {type name arglist} {
             "int"    -
             "long"   -
             "float"  -
-            "double" -
-            "void*"  {
+            "double" {
                 lappend wraplist "*$name"
             }
             "char*"   -
             "int*"    -
             "long*"   -
             "float*"  -
-            "double*" {
+            "double*" -
+            "void*"   -
+            "void**"  {
                 lappend wraplist "$name"
+            }
+            "void"    {
+                # Nothing
             }
             default {
                 # Nothing!
@@ -244,6 +290,7 @@ proc setUpBody {type name arglist} {
 
     return $body
 }
+
 
 # setUpInterface --
 #     Construct the Fortran 90/95 interface
@@ -259,6 +306,9 @@ proc setUpBody {type name arglist} {
 proc setUpInterface {type fname arglist} {
     global error
     global ftype
+    global typemap
+
+    set type [string map $typemap $type]
 
     if { $type != "void" } {
         set body   "    $ftype($type) function $fname ("
@@ -271,6 +321,7 @@ proc setUpInterface {type fname arglist} {
     set ftnargs   {}
     set ambiguous 0
     foreach arg [split $arglist ,] {
+        set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
 
@@ -281,7 +332,8 @@ proc setUpInterface {type fname arglist} {
             "long"   -
             "float"  -
             "double" -
-            "void*"  {
+            "void*"  -
+            "void**" {
                 lappend wraplist "$ftype($type) :: $name"
                 lappend ftnargs  "$name"
             }
@@ -292,6 +344,9 @@ proc setUpInterface {type fname arglist} {
                 set ambiguous 1
                 lappend wraplist "$ftype($type) :: $name"
                 lappend ftnargs  "$name"
+            }
+            "void" {
+                # Nothing
             }
             default {
                 # Nothing!
@@ -308,6 +363,7 @@ proc setUpInterface {type fname arglist} {
     return $body
 }
 
+
 # setUpIsoCInterface --
 #     Construct the Fortran 2003 interface, using the standard ISO C bindings
 #
@@ -323,20 +379,26 @@ proc setUpInterface {type fname arglist} {
 proc setUpIsoCInterface {type fname cname arglist} {
     global error
     global isotype
+    global typemap
+
+    set type [string map $typemap $type]
 
     if { $type != "void" } {
         set body   "    function $fname ("
-        set result "result(result__)\n        $isotype($type) :: result__"
+        set result "result(result__)
+        use iso_c_binding
+        [lindex [split $isotype($type) ,] 0] :: result__"
         set end    "    end function $fname"
     } else {
         set body   "    subroutine $fname ("
-        set result ""
+        set result "\n        use iso_c_binding"
         set end    "    end subroutine $fname"
     }
     set wraplist  {}
     set ftnargs   {}
     set ambiguous 0
     foreach arg [split $arglist ,] {
+        set arg  [string map $typemap $arg]
         set name [lindex $arg end]
         set type [lindex $arg end-1]
 
@@ -359,6 +421,8 @@ proc setUpIsoCInterface {type fname cname arglist} {
                 lappend wraplist "$isotype($type) :: $name"
                 lappend ftnargs  "$name"
             }
+            "void" {
+            }
             default {
                 # Nothing!
             }
@@ -371,11 +435,11 @@ proc setUpIsoCInterface {type fname cname arglist} {
     }
     set body "$body [join $ftnargs ,\ ] ) &
         bind(C,name=\"$cname\") $result
-        use iso_c_binding
         [join $wraplist \n\ \ \ \ \ \ \ \ ]\n$end"
 
     return $body
 }
+
 
 # prologue --
 #     Write the prologue code for the wrapper
@@ -406,7 +470,7 @@ proc prologue {module names} {
 #else
 #define STDCALL
 #endif
-#include "cfstring.h"
+#include \"cfstring.h\"
 "
 
     foreach out [list $ftnout $isoout] {
@@ -421,6 +485,7 @@ interface"
     }
 
 }
+
 
 # epilogue --
 #     Write the epilogue code for the wrapper
@@ -457,6 +522,7 @@ end module"
     }
 }
 
+
 # defined --
 #     Check if a macro has been defined or not
 #
@@ -471,6 +537,7 @@ proc defined {macro} {
 
     info exists macros($macro)
 }
+
 
 # define --
 #     Define a macro
@@ -506,6 +573,7 @@ proc define {macro args} {
     }
 }
 
+
 # undef --
 #     Undefine a macro
 #
@@ -523,6 +591,69 @@ proc undef {macro} {
 
     unset macros($macro)
 }
+
+
+# enum --
+#     Transform enumerations
+#
+# Arguments:
+#     list          List of enumerated names (and possibly values)
+#     args          Any names for this enumeration
+#
+# Result:
+#     None
+#
+proc enum {list args} {
+    global declout
+
+    set value -1
+    foreach e [split $list ,] {
+        if { [string first = $e] < 0 } {
+            set name [string trim $e]
+            incr value
+        } else {
+            regexp { *([a-zA-Z_0-9]+) *= *([a-zA-Z_0-9]+)} $e ==> name value
+        }
+
+        puts $declout "    integer, parameter :: $name = $value"
+    }
+}
+
+
+# typedef --
+#     Handle type definitions
+#
+# Arguments:
+#     args          List of all arguments
+#
+# Result:
+#     None
+#
+# Note:
+#     At this moment only simple typedefs are treated!
+#
+proc typedef {args} {
+    global typemap
+
+    #
+    # Simple case: two arguments
+    #
+    if { [llength $args] == 2 } {
+        set basic   [lindex $args 0]
+        set newname [lindex $args 1]
+
+        lappend typemap $newname $basic
+
+        proc $newname {name arglist args} "cwrap $basic \$name \$arglist"
+
+    } else {
+        #
+        # More complex cases
+        #
+        puts "Typedef: [lindex $args 0] ... [lindex $args end] - not treated yet"
+    }
+}
+
 
 # handleArgs --
 #     Handle the command-line arguments
@@ -550,34 +681,42 @@ proc handleArgs {argv} {
                     set var     "module"
                 }
                 default {
-                    set names [concat $names [glob -nocomplain $arg]]
+                    set newnames [glob -nocomplain $arg]
+                    if { [llength $newnames] > 0 } {
+                        set names [concat $names $newnames]
+                    } else {
+                        puts "No file(s) by that name: $arg"
+                    }
                 }
             }
         }
     }
 
     if { $module == "" } {
-        set module [file root [lindex $names 0]]
+        set module [file root [file tail [lindex $names 0]]]
     }
-    regsub -all {[^a-z0-9_]} $module "" module
+    regsub -all {[^a-zA-Z0-9_]} $module "" module
 
     return [list $module $names]
 }
 
+
 # comment, void, ... --
 #     Auxiliary procedures
 #
-proc comment {args} {
-    # No op to handle comments and other constructs we do not handle (yet)
+proc extern {args} {
+    # No op: definition of external data
+}
+proc EXTERN {type args} {
+    eval cwrap $type $args
 }
 
 foreach type {char int long float double void void*} {
-    proc $type {name arglist dummy} [string map [list TYPE $type] {
+    proc $type {name arglist} [string map [list TYPE $type] {
         cwrap TYPE $name $arglist
     }]
 }
 
-parray isotype
 proc unknown {cmdname args} {
     puts "Unknown type: $cmdname"
     puts "Prototype:   $args"
@@ -604,6 +743,9 @@ foreach name $names {
     set infile [open $name r]
     set contents [read $infile]
     close $infile
+
+    set contents [string map $convert $contents]
+    set contents [string map $ignored $contents]
 
     #puts [transformToTcl $contents]
     eval [transformToTcl $contents]
