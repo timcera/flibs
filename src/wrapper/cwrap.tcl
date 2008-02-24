@@ -19,31 +19,35 @@ set ignored {WINGDIAPI  "" APIENTRY "" "CONST " "" _cdecl ""
 # ftype --
 #     Translation of C types to corresponding Fortran types
 #
-array set ftype {int     "integer(c_int)"
-                 int*    "integer(c_int), dimension(*)"
-                 long    "integer(c_long)"
-                 long*   "integer(c_long), dimension(*)"
-                 float   "real(c_float)"
-                 float*  "real(c_float), dimension(*)"
-                 double  "real(c_double)"
-                 double* "real(c_double), dimension(*)"
-                 char    "character(len=*)"
-                 char*   "character(len=*)"
-                 void*   "type(c_ptr)"
-                 void**  "type(c_ptr)"}
+array set ftype {int      "integer(c_int)"
+                 int*     "integer(c_int), dimension(*)"
+                 long     "integer(c_long)"
+                 long*    "integer(c_long), dimension(*)"
+                 __int64  "integer(c_longlong)"
+                 __int64* "integer(c_longlong), dimension(*)"
+                 float    "real(c_float)"
+                 float*   "real(c_float), dimension(*)"
+                 double   "real(c_double)"
+                 double*  "real(c_double), dimension(*)"
+                 char     "character(len=*)"
+                 char*    "character(len=*)"
+                 void*    "type(c_ptr)"
+                 void**   "type(c_ptr)"}
 
-array set isotype {int     "integer(c_int), intent(in), value"
-                   int*    "integer(c_int), dimension(*), intent(inout)"
-                   long    "integer(c_long), intent(in), value"
-                   long*   "integer(c_long), dimension(*), intent(inout)"
-                   float   "real(c_float), intent(in), value"
-                   float*  "real(c_float), dimension(*), intent(inout)"
-                   double  "real(c_double), intent(in), value"
-                   double* "real(c_double), dimension(*), intent(inout)"
-                   char    "character(len=*), intent(in), value"
-                   char*   "character(len=*), intent(inout)"
-                   void*   "type(c_ptr), intent(in)"
-                   void**  "type(c_ptr), intent(inout)"}
+array set isotype {int      "integer(c_int), intent(in), value"
+                   int*     "integer(c_int), dimension(*), intent(inout)"
+                   long     "integer(c_long), intent(in), value"
+                   long*    "integer(c_long), dimension(*), intent(inout)"
+                   __int64  "integer(c_longlong), intent(in)"
+                   __int64* "integer(c_longlong), dimension(*), intent(inout)"
+                   float    "real(c_float), intent(in), value"
+                   float*   "real(c_float), dimension(*), intent(inout)"
+                   double   "real(c_double), intent(in), value"
+                   double*  "real(c_double), dimension(*), intent(inout)"
+                   char     "character(len=*), intent(in), value"
+                   char*    "character(len=*), intent(inout)"
+                   void*    "type(c_ptr), intent(in)"
+                   void**   "type(c_ptr), intent(inout)"}
 
 
 # cwrap --
@@ -118,6 +122,7 @@ proc transformToTcl {code} {
     set code "\n[removeExternC $code]"            ;# start of all lines easier to detect
 
     regsub -all {/\*.*?\*/} $code "" code           ;# remove comments
+    regsub -all {//[^\n]*\n} $code "" code          ;# remove C++ comments
     regsub -all {\\ *\n} $code { } code             ;# continuation of macros
     regsub -all {\n[ \t]*#[ \t]+} $code "\n#" code  ;# normalise #keyword
     regsub -all {#([^\n]+)\n} $code ";#\\1;" code   ;# insert semicolon before and after #keyword
@@ -127,8 +132,8 @@ proc transformToTcl {code} {
     regsub -all {\}} $code " \} " code              ;# proper lists
 
     regsub -all {defined *\(([a-zA-Z_0-9]+) *\)} $code "\[defined \\1\]" code
-    regsub -all {#if ([^\n]+)} $code "if \{ \\1 \} \{" code
-    regsub -all {#elif ([^\n]+)} $code "\} elseif \{ \\1 \} \{" code
+    regsub -all {#if([^dn][^\n]+)} $code "IF \{ \\1 \} \{" code
+    regsub -all {#elif([^dn][^\n]+)} $code "\} elseif \{ \\1 \} \{" code
 
 #
 #   set code [string map {(         " \{"
@@ -140,8 +145,8 @@ proc transformToTcl {code} {
 #                         "const "  " "
 #                         "#else"  "\} else \{"
 #                         "#endif"  "\}\n"       } $code]
-    regsub -all {#ifdef ([a-zA-Z_0-9]+)} $code "if \{ \[defined \\1\] \} \{ " code
-    regsub -all {#ifndef ([a-zA-Z_0-9]+)} $code "if \{ ! \[defined \\1\] \} \{ " code
+    regsub -all {#ifdef ([a-zA-Z_0-9]+)} $code "IF \{ \[defined \\1\] \} \{ " code
+    regsub -all {#ifndef ([a-zA-Z_0-9]+)} $code "IF \{ ! \[defined \\1\] \} \{ " code
     regsub -all {#define ([^\n]+)\n} $code "define \\1\n\n" code
     regsub -all {#undef ([^\n]+)\n} $code "undef \\1\n\n" code
     regsub -all {#else} $code "\} else \{\n" code
@@ -551,6 +556,39 @@ end module"
 }
 
 
+# IF --
+#     Wrapper around "if" to take care of preprocessor syntax
+#
+# Arguments:
+#     args          Conditions etc. for the #if directive
+#
+# Result:
+#     None
+#
+# Note:
+#     Possible patterns are: if - condition - body - else - body
+#     or: if - condition - body - elseif - condition - body ...
+#
+proc IF {args} {
+    set cmd  if
+    set cond 1
+    foreach string $args {
+        if { $cond } {
+            set string [string map {\{ ( \} )} $string]
+            regsub -all {([(&|! ]+)([A-Za-z_][A-Za-z_0-9]*)([)&| =><!])} $string {\1$::macros(\2)\3} string
+            lappend cmd $string
+            set cond 0
+        } else {
+            lappend cmd $string
+            if { $string eq "elseif" } {
+                set cond 1
+            }
+        }
+    }
+    eval $cmd
+}
+
+
 # defined --
 #     Check if a macro has been defined or not
 #
@@ -612,12 +650,15 @@ proc define {macro args} {
 #     None
 #
 # Note:
-#     This has no equivalent on the Fortran side
+#     This has no equivalent on the Fortran side.
+#     Only do something if the macro has been defined before
 #
 proc undef {macro} {
     global macros
 
-    unset macros($macro)
+    if { [info exists macros($macro)] } {
+        unset macros($macro)
+    }
 }
 
 
@@ -760,6 +801,17 @@ proc unknown {cmdname args} {
 foreach {module names} [handleArgs $argv] {break}
 
 set macros(__TCL__) ""
+
+#
+# These predefined macros should be handled via a command-line option
+# or an inspection of the platform (or both)
+#
+set macros(_WIN32)   ""
+set macros(_MSC_VER) 800
+
+#
+# Open the output files
+#
 set cout    [open "${module}_wrap.c"  w]
 set ftnout  [open "${module}_mod.f90" w]
 set isoout  [open "${module}_iso.f90" w]
