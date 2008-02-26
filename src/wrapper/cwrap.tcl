@@ -31,6 +31,7 @@ array set ftype {int      "integer(c_int)"
                  double*  "real(c_double), dimension(*)"
                  char     "character(len=*)"
                  char*    "character(len=*)"
+                 char**   "character(len=*) -- actually unhandled!"
                  void*    "type(c_ptr)"
                  void**   "type(c_ptr)"}
 
@@ -46,6 +47,7 @@ array set isotype {int      "integer(c_int), intent(in), value"
                    double*  "real(c_double), dimension(*), intent(inout)"
                    char     "character(len=*), intent(in), value"
                    char*    "character(len=*), intent(inout)"
+                   char**   "character(len=*), intent(inout) -- actually unhandled!"
                    void*    "type(c_ptr), intent(in)"
                    void**   "type(c_ptr), intent(inout)"}
 
@@ -210,6 +212,7 @@ proc removeExternC {code} {
 proc transformArgList {arglist} {
     global error
     global typemap
+    global ftype
 
     set wraplist {}
     set end      {}
@@ -225,23 +228,23 @@ proc transformArgList {arglist} {
             set type [lindex $arg 0]
         }
 
-        switch -- $type {
+        switch -glob -- $type {
             "int"    -
             "long"   -
             "float"  -
             "double" {
                 lappend wraplist "$type* $name"
             }
-            "int*"    -
-            "long*"   -
-            "float*"  -
-            "double*" -
-            "void*"   -
-            "void**"  {
+            "int\*"    -
+            "long\*"   -
+            "float\*"  -
+            "double\*" -
+            "void\*"   -
+            "void\*\*"  {
                 lappend wraplist "$type $name"
             }
             "char"    -
-            "char*"   {
+            "char\*"   {
                 lappend wraplist "$type $name"
                 lappend end      "int len__$name"
             }
@@ -250,7 +253,11 @@ proc transformArgList {arglist} {
                 # Nothing
             }
             default {
-                append error "\n    $arg: conversion to/from Fortran not supported"
+                if { [info exists ftype($type)] } {
+                    lappend wraplist "$type $name"
+                } else {
+                    append error "\n    $arg: conversion to/from Fortran not supported"
+                }
             }
         }
 
@@ -286,8 +293,11 @@ proc setUpBody {type name arglist} {
         set call   "    $name ("
         set return "    return;"
     }
-    set wraplist {}
-    set carg     0
+    set wraplist  {}
+    set localvars {}
+    set prologue  {}
+    set epilogue  {}
+    set carg      0
     foreach arg [split $arglist ,] {
         set arg  [string map $typemap $arg]
         set name [lindex $arg end]
@@ -299,7 +309,7 @@ proc setUpBody {type name arglist} {
             set type [lindex $arg 0]
         }
 
-        switch -- $type {
+        switch -glob -- $type {
             "char"   -
             "int"    -
             "long"   -
@@ -307,13 +317,18 @@ proc setUpBody {type name arglist} {
             "double" {
                 lappend wraplist "*$name"
             }
-            "char*"   -
-            "int*"    -
-            "long*"   -
-            "float*"  -
-            "double*" -
-            "void*"   -
-            "void**"  {
+            "char\\*"   {
+                lappend localvars "    fortran_string fort__$name;"
+                lappend prologue  "    ftoc_string( &fort__$name, $name, len__$name );"
+                lappend epilogue  "    ctof_string( &fort__$name, $name, len__$name );"
+                lappend wraplist "&fort__$name"
+            }
+            "int\\*"     -
+            "long\\*"    -
+            "float\\*"   -
+            "double\\*"  -
+            "void\\*"    -
+            "void\\*\\*" {
                 lappend wraplist "$name"
             }
             "void"    {
@@ -324,7 +339,11 @@ proc setUpBody {type name arglist} {
             }
         }
 
-        set body "$call [join $wraplist ,\ ] );\n$return"
+        set body "[join $localvars \n]
+[join $prologue \n]
+$call [join $wraplist ,\ ] );
+[join $epilogue \n]
+$return"
     }
 
     return $body
@@ -371,22 +390,22 @@ proc setUpInterface {type fname arglist} {
             set type [lindex $arg 0]
         }
 
-        switch -- $type {
-            "char"   -
-            "char*"  -
-            "int"    -
-            "long"   -
-            "float"  -
-            "double" -
-            "void*"  -
-            "void**" {
+        switch -glob -- $type {
+            "char"     -
+            "char\\*"   -
+            "int"      -
+            "long"     -
+            "float"    -
+            "double"   -
+            "void\\*"   -
+            "void\\*\\*" {
                 lappend wraplist "$ftype($type) :: $name"
                 lappend ftnargs  "$name"
             }
-            "int*"    -
-            "long*"   -
-            "float*"  -
-            "double*" {
+            "int\\*"    -
+            "long\\*"   -
+            "float\\*"  -
+            "double\\*" {
                 set ambiguous 1
                 lappend wraplist "$ftype($type) :: $name"
                 lappend ftnargs  "$name"
@@ -395,7 +414,10 @@ proc setUpInterface {type fname arglist} {
                 # Nothing
             }
             default {
-                # Nothing!
+                if { [info exists ftype($type)] } {
+                    lappend wraplist [string map [list @ $name] $ftype($type)]
+                    lappend ftnargs  "$name"
+                }
             }
         }
 
@@ -455,21 +477,21 @@ proc setUpIsoCInterface {type fname cname arglist} {
             set type [lindex $arg 0]
         }
 
-        switch -- $type {
-            "char"   -
-            "char*"  -
-            "int"    -
-            "long"   -
-            "float"  -
-            "double" -
-            "void*"  {
+        switch -glob -- $type {
+            "char"     -
+            "char\\*"  -
+            "int"      -
+            "long"     -
+            "float"    -
+            "double"   -
+            "void\\*"  {
                 lappend wraplist "$isotype($type) :: $name"
                 lappend ftnargs  "$name"
             }
-            "int*"    -
-            "long*"   -
-            "float*"  -
-            "double*" {
+            "int\\*"    -
+            "long\\*"   -
+            "float\\*"  -
+            "double\\*" {
                 set ambiguous 1
                 lappend wraplist "$isotype($type) :: $name"
                 lappend ftnargs  "$name"
@@ -477,7 +499,10 @@ proc setUpIsoCInterface {type fname cname arglist} {
             "void" {
             }
             default {
-                # Nothing!
+                if { [info exists isotype($type)] } {
+                    lappend wraplist [string map [list @ $name] $isotype($type)]
+                    lappend ftnargs  "$name"
+                }
             }
         }
 
@@ -566,9 +591,9 @@ proc epilogue {module} {
         puts $out \
 "end interface
 
-    !
-    ! Parameters (macros) from the C header file(s) - if any
-    !
+!
+! Parameters (macros) from the C header file(s) - if any
+!
 $contents
 
 end module"
@@ -694,11 +719,11 @@ proc define {macro args} {
     if { [llength $args] == 1 } {
         set value [lindex $args 0]
         if { [string is integer -strict $value] } {
-            puts $declout "    integer(c_int), parameter :: $macro = [expr {$value+0}] ! $value"
+            puts $declout "integer(c_int), parameter :: $macro = [expr {$value+0}] ! $value"
         } elseif { [string is double -strict $value] } {
-            puts $declout "    real(c_double), parameter :: $macro = [expr {$value+0.0}] ! $value"
+            puts $declout "real(c_double), parameter :: $macro = [expr {$value+0.0}] ! $value"
         } else {
-            puts $declout "    character(len=[string length $value]), parameter :: $macro = \"$value\""
+            puts $declout "character(len=[string length $value]), parameter :: $macro = \"$value\""
         }
     }
 }
@@ -748,10 +773,86 @@ proc enum {list args} {
             regexp { *([a-zA-Z_0-9]+) *= *([a-zA-Z_0-9]+)} $e ==> name value
         }
 
-        puts $declout "    integer, parameter :: $name = $value"
+        puts $declout "integer, parameter :: $name = $value"
     }
 }
 
+
+# function --
+#     Handle the definition of a function type
+#
+# Arguments:
+#     definition    List of all components of the definition
+#
+# Result:
+#     None
+#
+proc function {definition} {
+    global ftype
+    global isotype
+
+    #
+    # Construct the complete interface for this function type
+    # Note: @ will be replaced by the actual argument name
+    #
+    set return_type [lindex $definition 0]
+    set type_name   [lindex $definition 1 1]
+    set arglist     [lindex $definition 2]
+
+    if { $return_type == "void" } {
+        set ftn_unit   "subroutine"
+        set ftn_return ""
+        set ftn_type   ""
+    } else {
+        set ftn_unit   "function"
+        set ftn_return "result(result__)"
+        set ftn_type   "
+                $ftype($return_type) :: result__"    ;# Note: ftype!!
+    }
+    set f90_interface \
+"interface
+            $ftn_unit @ (ARGLIST) $ftn_return
+                use iso_c_binding
+                ARGTYPES$ftn_type
+            end $ftn_unit
+        end interface"
+
+    set iso_interface \
+"interface
+            $ftn_unit @ (ARGLIST), bind(c) $ftn_return
+                use iso_c_binding
+                ARGTYPES$ftn_type
+            end $ftn_unit
+        end interface"
+
+    set arguments {}
+    set f90_argtypes  {}
+    set iso_argtypes  {}
+    set count     0
+    foreach arg [split $arglist ,] {
+        incr count
+        set  type [lindex $arg 0]
+        set  name [lindex $arg 1]
+        if { $name == "" } {
+            set name "arg__$count"
+        }
+
+        lappend arguments    $name
+        lappend f90_argtypes "$ftype($type) :: $name"
+        lappend iso_argtypes "$isotype($type) :: $name"
+    }
+
+    set arguments    [join $arguments    ", "]
+    set f90_argtypes [join $f90_argtypes "\n              "]
+    set iso_argtypes [join $iso_argtypes "\n              "]
+
+    set ftype($type_name) [string map [list ARGLIST $arguments ARGTYPES $f90_argtypes] $f90_interface]
+    set isotype($type_name) [string map [list ARGLIST $arguments ARGTYPES $iso_argtypes] $iso_interface]
+
+    puts "Function: "
+    puts "F90:   $ftype($type_name)"
+    puts "ISO:   $isotype($type_name)"
+}
 
 # struct --
 #     Handle the definition of a structure
@@ -765,8 +866,6 @@ proc enum {list args} {
 proc struct {definition} {
     global typout
 
-    puts "Struct: >>$definition<<"
-
     #
     # Structures can have explicit names or be anonymous
     #
@@ -779,10 +878,6 @@ proc struct {definition} {
         set types      [split [string map {" " ""} [lrange $definition 1 end]] ,]
         set structname [lindex $types 0]
     }
-
-    puts "Structname: $structname"
-    puts "Contents:   $contents"
-    puts "Types:      $types"
 
     puts $typout "type $structname"
     eval $contents
@@ -812,6 +907,7 @@ proc typedef {args} {
     #
     # Simple case: two arguments
     #
+    puts "Typedef: >>$args<<"
     if { [llength $args] == 2 } {
         set basic   [lindex $args 0]
         set newname [lindex $args 1]
@@ -823,6 +919,10 @@ proc typedef {args} {
     } elseif { [lindex $args 0] eq "struct" } {
 
         struct [lrange $args 1 end]
+
+    } elseif { [lindex $args 1 0] eq "*" } {
+
+        function $args
 
     } else {
         #
