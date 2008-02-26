@@ -67,22 +67,31 @@ array set isotype {int      "integer(c_int), intent(in), value"
 #     C functions whose interface is ambiguous are left out of the
 #     Fortran interface module
 #
-proc cwrap {type name arglist args} {
+proc cwrap {type name args} {
     global cout
     global ftnout
     global isoout
+    global typout
     global error
+    global ftype
 
     set error ""
     set fname [string tolower "${name}_"]
 
-    puts "Cwrap: $name"
-    puts "Cwrap: $arglist"
+    #
+    # Function interface
+    #
+    if { [lindex $args 0] ne "--" } {
+        set arglist [lindex $args 0]
+        set args    [lrange $args 1 end]
 
-    set ftnargs [transformArgList $arglist]
-    set body    [setUpBody $type $name $arglist]
+        puts "Cwrap: $name"
+        puts "Cwrap: $arglist"
 
-    puts $cout "
+        set ftnargs [transformArgList $arglist]
+        set body    [setUpBody $type $name $arglist]
+
+        puts $cout "
 #ifdef FTN_ALLCAPS
 #define $fname [string toupper $name]
 #endif
@@ -91,16 +100,23 @@ $type STDCALL $fname ( \n    [join $ftnargs ,\n\ \ \ \ ] ) {
 $body
 }"
 
-    if { $error != "" } {
-        puts "Function/routine: $name"
-        puts "$error"
+        if { $error != "" } {
+            puts "Function/routine: $name"
+            puts "$error"
+        }
+
+        set interface [setUpInterface $type [string tolower $name] $arglist]
+        puts $ftnout "\n$interface"
+
+        set interface [setUpIsoCInterface $type [string tolower $name] $name $arglist]
+        puts $isoout "\n$interface"
+
+    } else {
+        #
+        # Single variable or field in a structure
+        #
+        puts $typout "    $ftype($type) :: $name"
     }
-
-    set interface [setUpInterface $type [string tolower $name] $arglist]
-    puts $ftnout "\n$interface"
-
-    set interface [setUpIsoCInterface $type [string tolower $name] $name $arglist]
-    puts $isoout "\n$interface"
 }
 
 
@@ -122,7 +138,7 @@ proc transformToTcl {code} {
     set code "\n[removeExternC $code]"            ;# start of all lines easier to detect
 
     regsub -all {/\*.*?\*/} $code "" code           ;# remove comments
-    regsub -all {//[^\n]*\n} $code "" code          ;# remove C++ comments
+    regsub -all {//[^\n]*\n} $code "\n" code        ;# remove C++ comments
     regsub -all {\\ *\n} $code { } code             ;# continuation of macros
     regsub -all {\n[ \t]*#[ \t]+} $code "\n#" code  ;# normalise #keyword
     regsub -all {#([^\n]+)\n} $code ";#\\1;" code   ;# insert semicolon before and after #keyword
@@ -145,12 +161,13 @@ proc transformToTcl {code} {
 #                         "const "  " "
 #                         "#else"  "\} else \{"
 #                         "#endif"  "\}\n"       } $code]
-    regsub -all {#ifdef ([a-zA-Z_0-9]+)} $code "IF \{ \[defined \\1\] \} \{ " code
-    regsub -all {#ifndef ([a-zA-Z_0-9]+)} $code "IF \{ ! \[defined \\1\] \} \{ " code
+    regsub -all {#ifdef +([a-zA-Z_0-9]+)} $code "IF \{ \[defined \\1\] \} \{ " code
+    regsub -all {#ifndef +([a-zA-Z_0-9]+)} $code "IF \{ ! \[defined \\1\] \} \{ " code
     regsub -all {#define ([^\n]+)\n} $code "define \\1\n\n" code
     regsub -all {#undef ([^\n]+)\n} $code "undef \\1\n\n" code
     regsub -all {#else} $code "\} else \{\n" code
     regsub -all {#endif} $code "\}\n" code
+    regsub -all {#include} $code "include" code
     regsub -all { *\*} $code "* " code
     regsub -all {\* +\*} $code "**" code
     regsub -all {\(} $code " \{ " code
@@ -173,7 +190,10 @@ proc transformToTcl {code} {
 #
 proc removeExternC {code} {
 
-    regsub -all {#ifdef +__cplusplus[^#]*#endif} $code {} code
+    regsub -all {#ifdef +__cplusplus[ \n]+extern [^#]*#endif} $code {} code
+    regsub -all {#ifdef +__cplusplus[ \n]+\}[; \n]*#endif} $code {} code
+    regsub -all {#if +defined *\(__cplusplus\)[ \n]+extern [^#]*#endif} $code {} code
+    regsub -all {#if +defined *\(__cplusplus\)[ \n]+\}[; \n]*#endif} $code {} code
     return $code
 }
 
@@ -467,7 +487,7 @@ proc setUpIsoCInterface {type fname cname arglist} {
         set body "    ! Ambiguous interface: scalars or arrays?\n$body"
     }
     set body "$body [join $ftnargs ,\ ] ) &
-        bind(C,name=\"$cname\") $result
+        ,bind(C,name=\"$cname\") $result
         [join $wraplist \n\ \ \ \ \ \ \ \ ]\n$end"
 
     return $body
@@ -575,7 +595,7 @@ proc IF {args} {
     foreach string $args {
         if { $cond } {
             set string [string map {\{ ( \} )} $string]
-            regsub -all {([(&|! ]+)([A-Za-z_][A-Za-z_0-9]*)([)&| =><!])} $string {\1$::macros(\2)\3} string
+            regsub -all {([(&|! \t]+)([A-Za-z_][A-Za-z_0-9]*)([)&| =><!\t])} $string {\1$::macros(\2)\3} string
             lappend cmd $string
             set cond 0
         } else {
@@ -586,6 +606,50 @@ proc IF {args} {
         }
     }
     eval $cmd
+}
+
+
+# include --
+#     Handle the #include directive
+#
+# Arguments:
+#     header        Name of the header file
+#
+# Result:
+#     None
+#
+proc include {header} {
+    global include_dirs
+    #
+    # Identify the location of the header file
+    #
+    if { [string first "<" $header] >= 0 } {
+        set header [string range $header 1 end-1]
+        foreach dir $include_dirs {
+            if { [file exists [file join $dir $header]] } {
+                set header [file join $dir $header]
+                break
+            }
+        }
+    }
+    if { ![file exists $header] } {
+        puts "Error: header file not found - $header"
+        return
+    } else {
+        puts "Including: $header"
+    }
+    #
+    # Handle the contents
+    #
+    set infile [open $header r]
+    set contents [read $infile]
+    close $infile
+
+    set contents [string map $::convert $contents]
+    set contents [string map $::ignored $contents]
+
+    #puts [transformToTcl $contents]
+    eval [transformToTcl $contents]
 }
 
 
@@ -689,6 +753,47 @@ proc enum {list args} {
 }
 
 
+# struct --
+#     Handle the definition of a structure
+#
+# Arguments:
+#     definition    List of all components of the definition
+#
+# Result:
+#     None
+#
+proc struct {definition} {
+    global typout
+
+    puts "Struct: >>$definition<<"
+
+    #
+    # Structures can have explicit names or be anonymous
+    #
+    if { [llength [lindex $definition 0]] == 1 } {
+        set structname [lindex $definition 0]
+        set contents   [lindex $definition 1]
+        set types      [split [string map {" " ""} [lrange $definition 2 end]] ,]
+    } else {
+        set contents   [lindex $definition 0]
+        set types      [split [string map {" " ""} [lrange $definition 1 end]] ,]
+        set structname [lindex $types 0]
+    }
+
+    puts "Structname: $structname"
+    puts "Contents:   $contents"
+    puts "Types:      $types"
+
+    puts $typout "type $structname"
+    eval $contents
+    puts $typout "endtype $structname"
+
+    #
+    # TODO: something smart with the types
+    #
+}
+
+
 # typedef --
 #     Handle type definitions
 #
@@ -713,7 +818,11 @@ proc typedef {args} {
 
         lappend typemap $newname $basic
 
-        proc $newname {name arglist args} "cwrap $basic \$name \$arglist"
+        proc $newname {name {arglist {}} args} "cwrap $basic \$name \$arglist"
+
+    } elseif { [lindex $args 0] eq "struct" } {
+
+        struct [lrange $args 1 end]
 
     } else {
         #
@@ -781,7 +890,7 @@ proc EXTERN {type args} {
 }
 
 foreach type {char int long float double void void*} {
-    proc $type {name arglist} [string map [list TYPE $type] {
+    proc $type { name {arglist {--}} } [string map [list TYPE $type] {
         cwrap TYPE $name $arglist
     }]
 }
@@ -803,11 +912,26 @@ foreach {module names} [handleArgs $argv] {break}
 set macros(__TCL__) ""
 
 #
+# Common places for system header files
+#
+if { $::tcl_platform(platform) == "windows" } {
+    if { [info exists ::env(INCLUDE)] } {
+        set include_dirs [split $::env(INCLUDE) \;]
+    } else {
+        set include_dirs "."
+    }
+} else {
+    set include_dirs {/usr/include}
+}
+
+#
 # These predefined macros should be handled via a command-line option
 # or an inspection of the platform (or both)
 #
 set macros(_WIN32)   ""
 set macros(_MSC_VER) 800
+set macros(_M_IX86)  ""
+set macros(__STDC__) 1
 
 #
 # Open the output files
@@ -816,6 +940,7 @@ set cout    [open "${module}_wrap.c"  w]
 set ftnout  [open "${module}_mod.f90" w]
 set isoout  [open "${module}_iso.f90" w]
 set declout [open "${module}_decl.f90" w]
+set typout  [open "${module}_types.f90" w]
 
 prologue $module $names
 
