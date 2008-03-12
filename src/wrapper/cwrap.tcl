@@ -11,7 +11,12 @@
 #
 set typemap {}   ;# Accumulates translation from user-defined types to basic types
 
-set convert {"unsigned int" "int" "unsigned char" "char" "signed char" "char" "short" "int"}
+set convert {"unsigned char" "char"      "signed char"            "char"
+             "unsigned int"  "int"
+             "short int"     "short"     "unsigned short int"     "short"
+             "long int"      "long"      "unsigned long int"      "long"
+             "long long int" "longlong"  "unsigned long long int" "longlong"
+            }
 
 set ignored {WINGDIAPI  "" APIENTRY "" "CONST " "" _cdecl ""
              "CONST84 " "" "CONST84_RETURN " ""} ;# List of ignored keywords (CONST, _cdecl, ...)
@@ -19,38 +24,43 @@ set ignored {WINGDIAPI  "" APIENTRY "" "CONST " "" _cdecl ""
 # ftype --
 #     Translation of C types to corresponding Fortran types
 #
-array set ftype {int      "integer(c_int)"
+array set ftype {short    "integer(c_short)"
+                 short*   "integer(c_short), dimension(*)"
+                 int      "integer(c_int)"
                  int*     "integer(c_int), dimension(*)"
                  long     "integer(c_long)"
                  long*    "integer(c_long), dimension(*)"
                  __int64  "integer(c_longlong)"
                  __int64* "integer(c_longlong), dimension(*)"
+                 longlong "integer(c_longlong)"
+                 longlong "integer(c_longlong), dimension(*)"
                  float    "real(c_float)"
                  float*   "real(c_float), dimension(*)"
                  double   "real(c_double)"
                  double*  "real(c_double), dimension(*)"
                  char     "character(len=*)"
                  char*    "character(len=*)"
-                 char**   "character(len=*) -- actually unhandled!"
+                 char**   "type(c_ptr)"
                  void*    "type(c_ptr)"
                  void**   "type(c_ptr)"}
 
-array set isotype {int      "integer(c_int), intent(in), value"
-                   int*     "integer(c_int), dimension(*), intent(inout)"
-                   long     "integer(c_long), intent(in), value"
-                   long*    "integer(c_long), dimension(*), intent(inout)"
-                   __int64  "integer(c_longlong), intent(in)"
-                   __int64* "integer(c_longlong), dimension(*), intent(inout)"
-                   float    "real(c_float), intent(in), value"
-                   float*   "real(c_float), dimension(*), intent(inout)"
-                   double   "real(c_double), intent(in), value"
-                   double*  "real(c_double), dimension(*), intent(inout)"
-                   char     "character(len=*), intent(in), value"
-                   char*    "character(len=*), intent(inout)"
-                   char**   "character(len=*), intent(inout) -- actually unhandled!"
-                   void*    "type(c_ptr), intent(in)"
-                   void**   "type(c_ptr), intent(inout)"}
-
+array set isotype {short     "integer(c_short), intent(in), value"
+                   short*    "integer(c_short), dimension(*), intent(inout)"
+                   int       "integer(c_int), intent(in), value"
+                   int*      "integer(c_int), dimension(*), intent(inout)"
+                   long      "integer(c_long), intent(in), value"
+                   long*     "integer(c_long), dimension(*), intent(inout)"
+                   longlong  "integer(c_longlong), intent(in)"
+                   longlong* "integer(c_longlong), dimension(*), intent(inout)"
+                   float     "real(c_float), intent(in), value"
+                   float*    "real(c_float), dimension(*), intent(inout)"
+                   double    "real(c_double), intent(in), value"
+                   double*   "real(c_double), dimension(*), intent(inout)"
+                   char      "character(len=*), intent(in), value"
+                   char*     "character(len=*), intent(inout)"
+                   char**    "type(c_ptr), intent(inout)"
+                   void*     "type(c_ptr), intent(in)"
+                   void**    "type(c_ptr), intent(inout)"}
 
 # cwrap --
 #     Generate the actual C code and the Fortran interface (if possible)
@@ -229,22 +239,33 @@ proc transformArgList {arglist} {
         }
 
         switch -glob -- $type {
-            "int"    -
-            "long"   -
-            "float"  -
+            "short"      -
+            "int"        -
+            "long"       -
+            "longlong"   -
+            "__int64"    -
+            "float"      -
             "double" {
                 lappend wraplist "$type* $name"
+                if { [string match "*\[\]" $name } {
+                    set name [string range $name 0 end-2]
+                    set type "$type\[\]"
+                }
             }
-            "int\*"    -
-            "long\*"   -
-            "float\*"  -
-            "double\*" -
-            "void\*"   -
-            "void\*\*"  {
+            "short\*"    -
+            "int\*"      -
+            "long\*"     -
+            "longlong\*" -
+            "__int64\*"  -
+            "float\*"    -
+            "double\*"   -
+            "char\*\*"   -
+            "void\*"     -
+            "void\*\*"   {
                 lappend wraplist "$type $name"
             }
-            "char"    -
-            "char\*"   {
+            "char"       -
+            "char\*"     {
                 lappend wraplist "$type $name"
                 lappend end      "int len__$name"
             }
@@ -310,23 +331,27 @@ proc setUpBody {type name arglist} {
         }
 
         switch -glob -- $type {
-            "char"   -
-            "int"    -
-            "long"   -
-            "float"  -
-            "double" {
+            "char"      -
+            "short"     -
+            "int"       -
+            "long"      -
+            "longlong"  -
+            "__int64"   -
+            "float"     -
+            "double"    {
                 lappend wraplist "*$name"
             }
             "char\\*"   {
                 lappend localvars "    fortran_string fort__$name;"
                 lappend prologue  "    ftoc_string( &fort__$name, $name, len__$name );"
                 lappend epilogue  "    ctof_string( &fort__$name, $name, len__$name );"
-                lappend wraplist "&fort__$name"
+                lappend wraplist "fort__$name.pstr"
             }
             "int\\*"     -
             "long\\*"    -
             "float\\*"   -
             "double\\*"  -
+            "char\\*\\*" -
             "void\\*"    -
             "void\\*\\*" {
                 lappend wraplist "$name"
@@ -391,21 +416,28 @@ proc setUpInterface {type fname arglist} {
         }
 
         switch -glob -- $type {
-            "char"     -
-            "char\\*"   -
-            "int"      -
-            "long"     -
-            "float"    -
-            "double"   -
-            "void\\*"   -
+            "char"       -  "char\[\]"       -
+            "char\\*"    -
+            "short"      -  "short\[\]"      -
+            "int"        -  "int\[\]"        -
+            "long"       -  "long\[\]"       -
+            "longlong"   -  "longlong\[\]"   -
+            "__int64"    -  "__int64\[\]"    -
+            "float"      -  "float\[\]"      -
+            "double"     -  "double\[\]"     -
+            "char\\*\\*" -
+            "void\\*"    -
             "void\\*\\*" {
                 lappend wraplist "$ftype($type) :: $name"
                 lappend ftnargs  "$name"
             }
-            "int\\*"    -
-            "long\\*"   -
-            "float\\*"  -
-            "double\\*" {
+            "short\\*"    -
+            "int\\*"      -
+            "long\\*"     -
+            "longlong\\*" -
+            "__int64\\*"  -
+            "float\\*"    -
+            "double\\*"   {
                 set ambiguous 1
                 lappend wraplist "$ftype($type) :: $name"
                 lappend ftnargs  "$name"
@@ -480,18 +512,24 @@ proc setUpIsoCInterface {type fname cname arglist} {
         switch -glob -- $type {
             "char"     -
             "char\\*"  -
+            "short"    -
             "int"      -
             "long"     -
+            "longlong" -
+            "__int64"  -
             "float"    -
             "double"   -
             "void\\*"  {
                 lappend wraplist "$isotype($type) :: $name"
                 lappend ftnargs  "$name"
             }
-            "int\\*"    -
-            "long\\*"   -
-            "float\\*"  -
-            "double\\*" {
+            "short\\*"     -
+            "int\\*"       -
+            "long\\*"      -
+            "longlong\\*"  -
+            "__int64\\*"   -
+            "float\\*"     -
+            "double\\*"    {
                 set ambiguous 1
                 lappend wraplist "$isotype($type) :: $name"
                 lappend ftnargs  "$name"
