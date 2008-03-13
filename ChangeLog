@@ -1,3 +1,8 @@
+2008-03-13 arjenmarkus@sourceforge.net
+
+   * filedir: module for manipulating files and directories added (written by Michael Baudin)
+   * platform: module for basic identification of platform properties (written by Michael Baudin)
+
 2008-01-27 arjenmarkus@sourceforge.net
 
    * ftnunit.f90: added init and final routines, added assertions
