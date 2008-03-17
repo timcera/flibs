@@ -1,3 +1,7 @@
+2008-03-16 arjenmarkus@sourceforge.net
+   * testmake: a complete application to create test programs
+   * chksys: a set of programs to check properties of the compiler
+
 2008-03-13 arjenmarkus@sourceforge.net
 
    * filedir: module for manipulating files and directories added (written by Michael Baudin)

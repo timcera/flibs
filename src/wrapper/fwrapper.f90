@@ -177,18 +177,14 @@ subroutine strip_source( lusrc, lufstrip )
         if ( line == ' ' ) cycle
 
         !
-        ! Remove all spaces - they are of little interest
-        ! NOTE: exception: in parameter statements
+        ! Compact the source line
         !
-        length = len_trim(line)
-        compact_line = ' '
-        j      = 0
-        do i =1,length
-            if ( line(i:i) /= ' ' ) then
-                j = j + 1
-                compact_line(j:j) = lower_case(line(i:i))
-            endif
-        enddo
+        ! TODO:
+        ! parameter(k=1)
+        ! splitting on semicolon
+        !
+        compact_line = compact_source_line( line )
+        write(*,'(a)') compact_line
 
         !
         ! Now: filter out those lines that are not part of a declaration
@@ -209,6 +205,87 @@ subroutine strip_source( lusrc, lufstrip )
     enddo
 
 end subroutine strip_source
+
+! compact_source_line --
+!     Change the source line so that it is easier to parse later on
+!
+! Arguments:
+!     line            Line to be treated
+!
+function compact_source_line( line )
+    character(len=*), intent(inout) :: line
+    character(len=len(line))        :: compact_source_line
+
+    integer :: i
+    integer :: j
+    integer :: open_parens
+    integer :: colons_added
+    logical :: in_quotes
+    logical :: previous_space
+    character(len=9), parameter :: before_colon = ')rlxn1248'
+
+    j              = 0
+    open_parens    = 0
+    colons_added   = 0
+    in_quotes      = .false.
+    previous_space = .false.
+    do i = 1,len_trim(line)
+        if ( line(i:i) == ' ' ) then
+            if ( compact_source_line(1:j) == 'double' ) then
+                previous_space = .false.
+            else
+                previous_space = .true.
+            endif
+            cycle
+        else
+            !
+            ! TODO: parameter(k=1)
+            !
+            j = j + 1
+            if ( previous_space .and. &
+                 index( before_colon, compact_source_line(j:j) ) > 0 ) then
+                colons_added = colons_added ! Sanity check
+                compact_source_line(j:) = '::'
+                j = j + 2
+            endif
+            previous_space   = .false.
+
+            if ( in_quotes ) then
+                compact_source_line(j:) = line(i:i)
+            else
+                compact_source_line(j:) = lower_case(line(i:i))
+            endif
+        endif
+
+        if ( line(i:i) == '(' ) then
+            open_parens = open_parens + 1
+        endif
+
+        if ( line(i:i) == ')' ) then
+            open_parens = open_parens - 1
+            if ( open_parens < 0 ) then
+                write(*,*) 'Incorrect number of parentheses: '
+                write(*,*) '    ', trim(line)
+            endif
+        endif
+
+        if ( line(i:i) == '''' .or. line(i:i) == '"' ) then
+            in_quotes = .not. in_quotes
+        endif
+
+        if ( line(i:i) == ',' .and. open_parens > 0 ) then
+            compact_source_line(j:j) = '|'
+        endif
+    enddo
+
+    if ( colons_added > 1 ) then
+        write(*,*) 'More than one pair of colons added:'
+        write(*,*) '    Original: ', trim(line)
+        write(*,*) '    Result:', trim(compact_source_line)
+    endif
+
+end function compact_source_line
+
 
 ! analyse_source --
 !     Analyse the source code and delegate the actual wrapper generation
