@@ -24,4 +24,33 @@ program test_manip
        call random_word( string )
        write(*,*) '    >', string, '<'
     enddo
+
+    write(*,*) 'Insert/delete/replace substrings:'
+
+    test_line = 'ABCDEFGH'
+    write(*,*) 'String:      >',test_line,'<'
+    call string_insert( test_line, 1, 'abc' )
+    write(*,*) 'Insert at 1: >',test_line,'<'
+    test_line = 'ABCDEFGH'
+    call string_insert( test_line, 2, 'abc' )
+    write(*,*) 'Insert at 2: >',test_line,'<'
+
+    test_line = 'ABCDEFGH'
+    call string_delete( test_line, 1, 2 )
+    write(*,*) 'Delete at 1: >',test_line,'<'
+    test_line = 'ABCDEFGH'
+    call string_delete( test_line, 2, 2 )
+    write(*,*) 'Delete at 2: >',test_line,'<'
+
+    test_line = 'ABCDEFGH'
+    call string_replace( test_line, 'AB', 'abc' )
+    write(*,*) 'Replace AB: >',test_line,'<'
+    test_line = 'ABCDEFGH'
+    call string_replace( test_line, 'XY', 'abc' )
+    write(*,*) 'Replace XY: >',test_line,'<'
+
+    test_line = 'ABABABBA'
+    call string_map( test_line, 'AB', 'abc' )
+    write(*,*) 'Map AB:     >',test_line,'<'
+
 end program test_manip
