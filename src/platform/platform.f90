@@ -2,17 +2,17 @@
 ! This module provides low-level services to define and acces to the system.
 !
 ! Operating System dependency :
-! It should be compiled by defining several preprocessing macros, to 
+! It should be compiled by defining several preprocessing macros, to
 ! select from the various operating systems and compilers for which this module
 ! is made for.
 ! Choose your OS between one of these :
 ! _OS_WINDOWS_95 , _OS_WINDOWS_NT , _OS_MAC , _OS_SUN , _OS_LINUX , _OS_UNIX
 !
 ! System fortran extension :
-! Depending on the compiler, the SYSTEM fortran extension is provided 
-! as a subroutine or a function. See in your manual for the specific 
+! Depending on the compiler, the SYSTEM fortran extension is provided
+! as a subroutine or a function. See in your manual for the specific
 ! settings.
-! For example, this is a short list of compilers and their particular 
+! For example, this is a short list of compilers and their particular
 ! SYSTEM provided :
 ! - subroutine : Intel Fortran, gfortran,
 ! - function : g95.
@@ -21,7 +21,7 @@
 !
 ! Environment variables extension :
 ! The fortran 2003 standard introduces a standard way of accessing
-! to the environment variables. Older compilers does not match 
+! to the environment variables. Older compilers does not match
 ! that standard but provide extensions to access to environment variables.
 ! Choose your option between one of these :
 ! _INTEL_FORTRAN_PORTABILITY_ROUTINES , _FORTRAN_2003
@@ -35,7 +35,7 @@ module platform
   !
   ! The name of the operating system running on this machine, such as Windows 95,
   ! Windows NT, MacOS, or SunOS. On UNIX machines, this is the value returned by
-  ! uname -s. 
+  ! uname -s.
   !
   integer, parameter, public :: PLATFORM_OS_WINDOWS_95 = 1
   integer, parameter, public :: PLATFORM_OS_WINDOWS_NT = 2

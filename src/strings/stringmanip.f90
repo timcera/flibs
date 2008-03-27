@@ -215,6 +215,7 @@ subroutine string_map( string, substr, replace )
             start = start + k - 1
             call string_delete( string, start, len(substr) )
             call string_insert( string, start, replace )
+            start = start + len(replace)
         else
             exit
         endif
