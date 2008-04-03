@@ -171,11 +171,11 @@ contains
   !    I got status 1 or 5228135 with a good copy result.
   !
   subroutine platform_system ( command , status )
-    implicit none
+    
     character (len=*), intent(in) :: command
     integer, intent ( out ), optional :: status
     integer :: local_status
-    integer :: m_platform
+    integer :: platform
 #ifdef _PLATFORM_SYSTEM_SUBROUTINE
     call system ( command , local_status )
 #endif
@@ -183,8 +183,8 @@ contains
     local_status = system ( command )
 #endif
     if (present(status)) then
-       m_platform = platform_get_platform ()
-       if (m_platform == PLATFORM_PLATFORM_WINDOWS) then
+       platform = platform_get_platform ()
+       if (platform == PLATFORM_PLATFORM_WINDOWS) then
           status = 0
        else
           local_status = status
@@ -197,7 +197,7 @@ contains
   ! Arguments:
   !    No argument
   integer function platform_get_os ( )
-    implicit none
+    
     platform_get_os = PLATFORM_OS
   end function platform_get_os
 
@@ -206,7 +206,7 @@ contains
   ! Arguments:
   !    No argument
   integer function platform_get_platform ( )
-    implicit none
+    
     platform_get_platform = PLATFORM_PLATFORM
   end function platform_get_platform
 
@@ -215,7 +215,7 @@ contains
   ! Arguments:
   !    No argument
   subroutine platform_get_environment_variable ( envvar , value )
-    implicit none
+    
     character (len=*), intent(in) :: envvar
     character (len=*), intent(out) :: value
 #ifdef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
@@ -237,7 +237,7 @@ contains
   !        upon return
   !
   subroutine platform_cd ( dirname , status )
-    implicit none
+    
     character(len=*), intent(in)             :: dirname
     integer, intent(out) , optional :: status
     integer :: local_status
@@ -274,7 +274,7 @@ contains
   !        upon return
   !
   subroutine platform_stat ( filename , statarray , status )
-    implicit none
+    
     character(len=*), intent(in)             :: filename
     integer, dimension (1:13) , intent(out)  :: statarray
     integer, intent(out) , optional :: status
