@@ -1,0 +1,50 @@
+# Objects of the whole project
+objects =\
+$(objects_1)\
+$(objects_2)\
+$(objects_3)\
+$(objects_4)\
+$(objects_5)\
+$(objects_6)\
+$(objects_7)\
+$(objects_8)\
+$(objects_9)
+# Objects from /src/computing
+objects_1 = \
+$(libdir)/automdiff.o \
+$(libdir)/combinations.o \
+$(libdir)/decimal.o \
+$(libdir)/interval_simple.o \
+$(libdir)/pointsets.o \
+$(libdir)/select_precision.o \
+$(libdir)/timing.o
+# Objects from /src/controlstructures
+objects_2 = 
+# Objects from /src/datastructures
+objects_3 = 
+# Objects from /src/file
+objects_4 = \
+$(libdir)/m_filedir.o
+# Objects from /src/funit
+objects_5 = \
+$(libdir)/funit.o \
+$(libdir)/funit_test.o
+# Objects from /src/sqlite
+objects_6 = \
+$(libdir)/fsqlite.o
+# Objects from /src/streams
+objects_7 = \
+$(libdir)/binstream.o \
+$(libdir)/textstream.o
+# Objects from /src/strings
+objects_8 = \
+$(libdir)/csv_file.o \
+$(libdir)/globmatch.o \
+$(libdir)/stringmanip.o \
+$(libdir)/stringquery.o \
+$(libdir)/m_vstring.o \
+$(libdir)/textstr.o
+# Objects from /src/platform
+objects_9 = \
+$(libdir)/m_platform.o
+
