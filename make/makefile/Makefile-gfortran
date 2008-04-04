@@ -2,13 +2,13 @@
 # Options specific to the fortran compiler
 #
 FC = gfortran
+FOPTS_BASE += -fno-backslash
 F90OPTS = $(FOPTS_BASE) -x f95-cpp-input -fcray-pointer -fbounds-check -Wall -I$(srcdir) -J$(libdir) -I$(libdir)
-F90OPTS += -D_FORTRAN_2003
+F90OPTS += -D_PLATFORM_FORTRAN_2003
 F90OPTS += -D_PLATFORM_SYSTEM_SUBROUTINE
 F90OPTS += -D_PLATFORM_STAT_SUBROUTINE
 F90OPTS += -D_PLATFORM_CHDIR_SUBROUTINE
 F90OPTS += -D_VSTRING_ALLOCATABLE
-#F90OPTS += -D_VSTRING_POINTERS
 F77OPTS = $(FOPTS_BASE) -x f77-cpp-input -fbounds-check -Wall -I$(srcdir) -J$(libdir) -I$(libdir)
 LINK = gfortran
 LOPTS = $(LOPTS_BASE)

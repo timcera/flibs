@@ -28,27 +28,27 @@ endif
 VERSION = debug
 #VERSION = release
 #VERSION = profiled
-#
-# Options specific to the fortran compiler
-#
-#include Makefile-g95
-include Makefile-gfortran
 
 ifeq ($(VERSION),debug)
-	FOPTS_BASE = -g -D_DEBUG -D$(OS_TAG) 
-	LOPTS_BASE = -g
+	FOPTS_BASE += -g -D_DEBUG -D$(OS_TAG) 
+	LOPTS_BASE += -g
 endif
 ifeq ($(VERSION),release)
-	FOPTS_BASE =  -D$(OS_TAG) -O2
+	FOPTS_BASE +=  -D$(OS_TAG) -O2
 	LOPTS_BASE = 
 endif
 ifeq ($(VERSION),optimized)
-	FOPTS_BASE = -O3 -mtune=pentium4  
-	LOPTS_BASE = -O3
+	FOPTS_BASE += -O3 -mtune=pentium4  
+	LOPTS_BASE += -O3
 endif
 ifeq ($(VERSION),profiled)
-	FOPTS_BASE = -pg
-	LOPTS_BASE = -pg
+	FOPTS_BASE += -pg
+	LOPTS_BASE += -pg
 endif
 
+#
+# Options specific to the fortran compiler
+#
+include Makefile-g95
+#include Makefile-gfortran
 

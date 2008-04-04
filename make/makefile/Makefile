@@ -48,6 +48,7 @@ debug:
 	@echo "FC : $(FC)"
 	@echo "F90OPTS : $(F90OPTS)"
 	@echo "F77OPTS : $(F77OPTS)"
+	@echo "FOPTS_BASE : $(FOPTS_BASE)"
 	@echo "archive_flibs:$(archive_flibs)"
 	@echo "EXE_TEST_FILSYS:$(EXE_TEST_FILSYS)"
 	@echo "EXE_TEST_PLATFORM:$(EXE_TEST_PLATFORM)"
