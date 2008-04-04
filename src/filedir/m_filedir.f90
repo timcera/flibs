@@ -695,8 +695,11 @@ contains
   !
   ! filedir_error --
   !   Manage an error for the filedir module
+  ! Arguments :
+  !   origin : the name of the subroutine/function which generated the error.
+  !   message : the message to display
   !
-  subroutine filedir_error ( origin , message)
+  subroutine filedir_error ( origin , message )
     character(len=*), intent(in) :: origin
     character(len=*), intent(in) :: message
     write(6,*) "Internal error from: ", origin
