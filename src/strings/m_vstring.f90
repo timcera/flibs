@@ -1,6 +1,130 @@
 !
 ! m_vstring --
 !   This module provides services to manage strings of dynamic length.
+!   The goal of the current component is to provide higher-level
+!   services that the standard fortran currently provides,
+!   considering Tcl as a model for string management.
+!   It provides string comparison, string search and string 
+!   matching methods.
+!   See in test_m_vstring to see a complete example of the 
+!   services provided.
+!
+!   A vstring is an array of characters. 
+!   The simplest way to create a vstring is with vstring_new 
+!   from a "character(len=<something>)" string.
+!   The length of the vstring is computed dynamically,
+!   depending on the current number of characters, with vstring_length.
+!   In the following example, the length is 9.
+!  
+!     use m_vstring, only : &
+!       vstring_new, &
+!       vstring_free, &
+!       t_vstring, &
+!       vstring_length
+!     type ( t_vstring,) :: string1
+!     integer :: length
+!     call vstring_new ( string1 , "my string" )
+!     length = vstring_length (string1)
+!     call vstring_free( string1 )
+!
+!   With vstring_new, one can also create a new vstring as a copy 
+!   of an existing vstring.
+!   With vstring_new, one can also create a new vstring with an 
+!   array of characters or with a repeated copy of an existing vstring.
+!   Destroy the vstring with vstring_free.
+!
+!   Two vstrings can be concatenated in two ways.
+!   The vstring_concat method returns a new vstring computed by the 
+!   concatenation of the two strings.
+!   The vstring_append allows to add the characters of the 2nd vstring
+!   at the end of the current string.
+!   In the following example, the string3 is "my string is very interesting".
+!
+!     call vstring_new ( string1 , "my string" )
+!     call vstring_new ( string2 , " is very interesting" )
+!     string3 = vstring_concat ( string1 , string2 )
+!
+!   The user can modify the case of a vstring.
+!   The vstring_tolower creates a new vstring with lower case characters.
+!   The vstring_toupper creates a new vstring with upper case characters.
+!   The vstring_totitle creates a new vstring with the first letter in
+!   upper case and all the other characters to lower case.
+!
+!   The user can know if two vstrings are equal with vstring_equals.
+!   Two vstrings can be compared with vstring_compare, which 
+!   is based on the lexicographic order.
+!
+!   One can transform one vstring into a new one using a map with
+!   vstring_map.
+!
+!   The vstring_split method allows to split a vstring into an array 
+!   of vstrings each time one character is found in a vstring. 
+!   The vstring_join method concatenates an array of vstrings,
+!   using a vstring as the join between the components.
+!   In the following example, the string is split at each dot 
+!   and the number of components is 3 :
+!
+!     call vstring_new ( string1 , "comp.lang.fortran" )
+!     call vstring_split ( string1 , numberOfComponents , listOfComponents )
+!
+!   The vstring_match method provides string-matching services in the glob-style.
+!   It manages "*" pattern (which matches 0 or more characters), 
+!   the "?" pattern (which matches exactly one character),
+!   escape sequences and character ranges.
+!   The following example show how to compare a file name against a pattern :
+!
+!     call vstring_new ( string1 , "m_vstring.f90" )
+!     call vstring_new ( pattern , 'm_*.f90' )
+!     match = vstring_match ( string1 , pattern )
+!
+!   The vstring_is method provides a way of validating data by 
+!   computing whether the vstring is in a class of data, for example 
+!   integer, real, digit, alphanumeric, etc...
+!   In the following example, the user can check whether the 
+!   string read on standard input is an integer :
+!
+!     read ( 5 , * ) charstring
+!     call vstring_new ( string1 , charstring )
+!     isinteger = call vstring_is ( string1 , "integer" )
+!     if ( .NOT. isinteger ) then
+!       ! Generate an error
+!     endif
+!    
+!   If the character set under use is not in one the pre-defined classes 
+!   of vstring_is, the user can directly call vstring_isincharset or 
+!   vstring_isinasciirange, which are the basic blocks of vstring_is.
+!
+!   Two implementation of m_vstring are provided, depending on the compiler used :
+!   - the allocatable array of characters with the pre-processing macro _VSTRING_ALLOCATABLE,
+!   - the pointer array of characters with the pre-processing macro _VSTRING_POINTERS
+!   If none of the macros are defined, the default implementation is _VSTRING_ALLOCATABLE.
+!   The two implementations provide exactly the same services.
+!   But the "allocatable" implementation allows to manage the vstring
+!   which are going out of the current scope so that the use of vstring_free
+!   is not necessary and memory leaks do not occur.
+!   Instead, with the pointer implementation, the call to vstring_free is 
+!   strictly necessary (if not, memory is lost each time a new vstring is
+!   created).
+!   The current version of m_vstring has been tested with the 
+!   following compilers and versions !
+!   - Intel Visual Fortran 8 : tested with _VSTRING_ALLOCATABLE and _VSTRING_POINTERS
+!       But the allocatable version allows to debug more easily.
+!   - gfortran 2007/04/16 : tested with _VSTRING_POINTERS (works fine,
+!       except for vstring_match)
+!   - g95 May  3 2007 : tested with _VSTRING_POINTERS, OK
+!
+!   Limitations
+!     - No regular expression algorithm is provided.
+!       But vstring_match allows to do string matching in glob-style.
+!     - The vstring_match does not work with gfortran 2007/04/16 because 
+!       of a limitation in gfortran for zero-size arrays
+!     - the vstring_adjustl, vstring_adjustr, vstring_scan, 
+!       vstring_adjustl, vstring_adjustr, vstring_is methods does not
+!       work with IVF8 because strings declared like this :
+!         character (len = vstring_length(this) :: character
+!       are not consistent strings, probably because of a bug
+!       in the implementation of len = pure function value in IVF8.
+!     - Fortran does not allow to manage character encodings such as UTF8.
 !
 ! ******************************************************************************
 ! *                                                                            *
@@ -33,7 +157,7 @@
 ! *                                                                            *
 ! ******************************************************************************
 !
-! Copyright (c) 2008 Michaël Baudin
+! Copyright (c) 2008 Michael Baudin
 !
 ! $Id$
 !
@@ -65,11 +189,9 @@ module m_vstring
      private
 #ifdef _VSTRING_ALLOCATABLE
      character(LEN=1), dimension(:), allocatable :: chars
-     !character, allocatable :: chars(:)
 #endif
 #ifdef _VSTRING_POINTERS
-     !character(LEN=1), dimension(:), pointer :: chars => NULL()
-     character, pointer :: chars(:) => NULL()
+     character(LEN=1), dimension(:), pointer :: chars => NULL()
 #endif
   end type t_vstring
   !
@@ -77,6 +199,7 @@ module m_vstring
   ! Constructor
   !
   interface vstring_new
+     module procedure vstring_new_empty
      module procedure vstring_new_from_charstring
      module procedure vstring_new_from_vstring
      module procedure vstring_new_from_chararray
@@ -127,6 +250,10 @@ module m_vstring
   public :: vstring_trimleft
   public :: vstring_trimright
   public :: vstring_verify
+  public :: vstring_join
+  public :: vstring_is
+  public :: vstring_isincharset
+  public :: vstring_isinasciirange
   !
   ! Constants
   !
@@ -134,9 +261,10 @@ module m_vstring
   integer, parameter, public :: VSTRING_COMPARE_EQUAL = 0
   integer, parameter, public :: VSTRING_COMPARE_GREATER = 1
   integer, parameter, public :: VSTRING_INDEX_UNKNOWN = 0
+  character(len=*), parameter, private :: VSTRING_DIGITS = "0123456789"
   character(len=*), parameter, private :: VSTRING_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter, private :: VSTRING_LOWER = "abcdefghijklmnopqrstuvwxyz"
-  character(len=*), parameter, private :: VSTRING_CHARACTERSET = "abcdefghijklmnopqrstuvwxyz0123456789"
+  character(len=*), parameter, private :: VSTRING_CHARACTERSET = VSTRING_LOWER//VSTRING_DIGITS
   character(len=*), parameter, private :: VSTRING_SPACE           = achar(32)
   ! Ascii char #10 -> corresponds to \n : line_feed
   character(len=*), parameter, private :: VSTRING_NEWLINE         = achar(10)
@@ -144,9 +272,13 @@ module m_vstring
   character(len=*), parameter, private :: VSTRING_CARRIAGE_RETURN = achar(13)
   ! Ascii char #9 -> corresponds to \t : tab
   character(len=*), parameter, private :: VSTRING_TAB             = achar(9)
+  ! Ascii char #34 -> corresponds to "
+  character(len=*), parameter, private :: VSTRING_DOUBLEQUOTE             = achar(34)
+  ! Ascii char #39 -> corresponds to '
+  character(len=*), parameter, private :: VSTRING_SINGLEQUOTE             = achar(39)
   character(len=*), parameter, private :: VSTRING_WHITESPACE = VSTRING_SPACE//VSTRING_NEWLINE//VSTRING_CARRIAGE_RETURN//VSTRING_TAB
-  character(len=*), parameter, private :: VSTRING_DIGITS = "0123456789"
-  character(len=*), parameter, private :: VSTRING_HEXDIGITS = "0123456789abcdefABCDEF"
+  character(len=*), parameter, private :: VSTRING_HEXDIGITS = "abcdefABCDEF"//VSTRING_DIGITS
+  character(len=*), parameter, private :: VSTRING_PUNCTUATION = "_,;:.?![](){}@"//VSTRING_DOUBLEQUOTE//VSTRING_SINGLEQUOTE
   !
   ! Static parameters
   !
@@ -158,8 +290,20 @@ module m_vstring
   integer, save :: vstring_number_of_strings = 0
 contains
   !
+  ! vstring_new_empty --
+  !   Constructor based on an empty string.
+  !   The created vstring has length 0 and no character.
+  !
+  subroutine vstring_new_empty ( this )
+    type(t_vstring), intent(inout) :: this
+    call vstring_new_from_charstring ( this , "" )
+  end subroutine vstring_new_empty
+  !
   ! vstring_new_from_charstring --
-  !   Constructor based on a character(len=*)
+  !   Constructor based on a character(len=*).
+  ! Arguments
+  !   char_string : the new vstring is filled with the 
+  !     characters found in char_string.
   !
   subroutine vstring_new_from_charstring ( this , char_string )
     type(t_vstring), intent(inout) :: this
@@ -190,7 +334,7 @@ contains
   end subroutine vstring_new_from_charstring
   !
   ! vstring_new_from_vstring --
-  !   Constructor based on a vstring
+  !   Constructor based on a vstring ( simple copy ).
   !
   subroutine vstring_new_from_vstring ( this , vstring )
     type(t_vstring), intent(inout) :: this
@@ -318,7 +462,8 @@ contains
   !   Destructor.
   ! NOTE :
   !   The use of the destructor is OPTIONAL.
-  !   See the thread " New ISO_VARYING_STRING implementation (without memory leaks)" on comp.lang.fortran :
+  !   See the thread " New ISO_VARYING_STRING implementation 
+  !   (without memory leaks)" on comp.lang.fortran :
   !   "On most systems, memory is memory :-).  However, there is a
   !   difference between how ALLOCATABLE variables and POINTER
   !   variables are handled.  ALLOCATABLE variables are always
@@ -501,21 +646,17 @@ contains
   ! vstring_tocharstring_fixed --
   !   Convert a varying string into a character string
   !   (fixed length)
+  !   If the number of characters is not sufficient, the 
+  !   string is truncated.
   !
   subroutine vstring_tocharstring_fixed ( this , length , char_string )
     type(t_vstring), intent(in) :: this
     integer, intent(in)              :: length
     character ( LEN = length ) , intent(out) :: char_string
     integer :: length_this
-    character ( len = 300 ) :: message
     integer :: icharacter
     length_this = vstring_length ( this )
-    if ( length < length_this ) then
-       write ( message , * ) "The given character string is of length ", length , &
-            " which smaller than the number of characters in the varying string ", length_this
-       call vstring_error ( this , message )
-    endif
-    do icharacter = 1, length_this
+    do icharacter = 1, min ( length_this , length )
        char_string ( icharacter : icharacter ) = this % chars ( icharacter )
     end do
     !
@@ -529,15 +670,31 @@ contains
   ! vstring_tocharstring_auto --
   !   Convert a varying string into a character string
   !   (automatic length)
+  !   If the number of characters is not sufficient, the 
+  !   string is truncated.
   !
   subroutine vstring_tocharstring_auto ( this , char_string )
     type(t_vstring), intent(in) :: this
     character ( LEN = * ) , intent(out) :: char_string
     integer :: length_this
     integer :: icharacter
+    integer :: charlength
+    !
+    ! Compute lengths
+    !
     length_this = vstring_length ( this )
-    do icharacter = 1, length_this
+    charlength = len ( char_string )
+    !
+    ! Fill with characters
+    !
+    do icharacter = 1, min ( length_this , charlength )
        char_string ( icharacter : icharacter ) = this % chars ( icharacter )
+    end do
+    !
+    ! Pad with white spaces
+    !
+    do icharacter = length_this + 1 , charlength
+       char_string ( icharacter : icharacter ) = VSTRING_SPACE
     end do
   end subroutine vstring_tocharstring_auto
   !
@@ -974,7 +1131,7 @@ contains
   end function vstring_index
   !
   ! vstring_toupper --
-  !   Returns a value equal to string except that all lower (or title) case letters have been 
+  !   Returns a vstring except that all lower (or title) case letters have been 
   !   converted to upper case. If first is specified, it refers to the first char index in the string 
   !   to start modifying. If last is specified, it refers to the char index in the string to stop 
   !   at (inclusive).
@@ -1018,7 +1175,7 @@ contains
   end function vstring_toupper
   !
   ! vstring_tolower --
-  !   Returns a value equal to string except that all upper (or title) case letters have been 
+  !   Returns a vstring except that all upper (or title) case letters have been 
   !   converted to lower case. If first is specified, it refers to the first char index in the string 
   !   to start modifying. If last is specified, it refers to the char index in the string to stop 
   !   at (inclusive).
@@ -1063,8 +1220,8 @@ contains
   end function vstring_tolower
   !
   ! vstring_totitle --
-  !   Returns a value equal to string except that the first character in string is converted 
-  !   to upper case. and the rest of the string is converted to lower case. If first is specified, it refers 
+  !   Returns a vstring except that the first character in string is converted 
+  !   to upper case, and the rest of the string is converted to lower case. If first is specified, it refers 
   !   to the first char index in the string to start modifying. If last is specified, it refers 
   !   to the char index in the string to stop at (inclusive).
   !
@@ -1954,11 +2111,12 @@ contains
   !   splitChars. The numberOfComponents is zero if string contains adjacent 
   !   characters in splitChars. If splitChars is an empty string then each character of string 
   !   becomes a separate element of the result list. SplitChars defaults to the 
-  !   standard white-space characters.
+  !   standard white-space characters (space, newline, carriage return and tab).
   ! Arguments:
   !   this   The current string to process
-  !   numberOfComponents : the number of items in the list of components
-  !   splitted   The array of splitted names.
+  !   numberOfComponents the number of items in the list of components
+  !   listOfComponents The array of splitted names
+  !   splitChars The string containing the characters where to split
   !
   subroutine vstring_split ( this , numberOfComponents , listOfComponents  , splitChars )
     implicit none
@@ -2062,6 +2220,655 @@ contains
     !
     call vstring_free ( splitChars_real )
   end subroutine vstring_split
+  !
+  ! vstring_join --
+  !   This command returns the string formed by joining all 
+  !   of the elements of list together with joinString separating 
+  !   each adjacent pair of elements. 
+  !   The joinString argument defaults to a space character.
+  ! Arguments:
+  !   listOfComponents : the array of string
+  !   joinString : the string which is used to join the elements
+  !
+  function vstring_join ( listOfComponents , joinString ) result ( newstring )
+    implicit none
+    type(t_vstring), dimension (:), intent(in) :: listOfComponents
+    type(t_vstring), intent(in), optional :: joinString
+    type(t_vstring) :: newstring
+    integer :: numberOfComponents
+    type(t_vstring) :: joinString_real
+    integer :: icomponent
+    !
+    ! Process options
+    !
+    if ( present ( joinString ) ) then
+       call vstring_new ( joinString_real , joinString )
+    else
+       call vstring_new ( joinString_real , VSTRING_SPACE )
+    endif
+    !
+    ! Initialize
+    !
+    numberOfComponents = size ( listOfComponents )
+    call vstring_new ( newstring )
+    if ( numberOfComponents > 0 ) then
+       !
+       ! Join the elements
+       !
+       do icomponent = 1 , numberOfComponents - 1
+          call vstring_append ( newstring , listOfComponents ( icomponent ) )
+          call vstring_append ( newstring , joinString_real )
+       enddo
+       !
+       ! Last but not the least
+       !
+       call vstring_append ( newstring , listOfComponents ( numberOfComponents ) )
+    endif
+    !
+    ! Clean-up
+    !
+    call vstring_free ( joinString_real )
+  end function vstring_join
+  !
+  ! vstring_is --
+  !   Returns .true. if string is a valid member of the specified character class, 
+  !   otherwise returns .false.. 
+  !   If strict is provided and .true., then an empty string returns .false..
+  !   If strict is provided and .false., or not provided, an empty string returns .true..
+  !   If failindex is provided, then if the function returns .false., the index in the 
+  !   string where the class was no longer valid will be stored in the variable failindex. 
+  !   The following character classes are recognized (the class name can be abbreviated):
+  !     alpha
+  !         Any alphabet character, that is [a-zA-Z].
+  !     alnum
+  !         Any alphabet or digit character, that is [a-zA-Z0-9].
+  !     ascii
+  !         Any character with a value less than 128 (those that are in the 7-bit ascii range).
+  !     control
+  !         Any control character. Control chars are in the 
+  !         ranges 00..1F and 7F..9F, that is from ascii #0 to #31 and from #127 to #159
+  !     digit
+  !         Any digit character. Note that this includes characters outside of the [0-9] range.
+  !     false
+  !         Any of the forms allowed where the logical is false.
+  !     graph
+  !         Any printing character, except space that is from ascii #33 to #126.
+  !     integer
+  !         Any of the valid forms for an ordinary integer in Fortran, with optional surrounding whitespace. 
+  !     logical
+  !         Any valid Fortran logical
+  !     lower
+  !         Any lower case alphabet character, that is [a-z].
+  !     punct
+  !         Any punctuation character, that is _,;:.?![](){}@"'
+  !     print
+  !         Any printing character, including space that is from ascii #32 to #126.
+  !     real
+  !         Any of the valid forms for a real in Fortran, with optional surrounding whitespace. 
+  !     space
+  !         Any space character, that is white space, tab, newline or carriage return.
+  !     true
+  !         Any of the forms allowed where the logical is true.
+  !     upper
+  !         Any upper case alphabet character, that is [A-Z].
+  !     xdigit
+  !         Any hexadecimal digit character ([0-9A-Fa-f]). 
+  !     wordchar
+  !         Any word character. That is any alphanumeric character (upper case,
+  !         lower case, or digit), or any connector punctuation characters (e.g. underscore).
+  ! Note
+  !   This implementation is based on vstring_isincharset and vstring_isinasciirange.
+  !
+  logical function vstring_is ( this , class , strict , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    character(len=*), intent(in) :: class
+    logical, intent(in) , optional :: strict
+    integer, intent(out) , optional :: failindex
+    character(len=200) :: message
+    logical :: strict_real
+    integer :: length
+    integer :: failindex_real
+    !
+    ! Process options
+    !
+    if ( present ( strict ) ) then
+       strict_real = strict
+    else
+       strict_real = .false.
+    endif
+    !
+    ! By default, it is of no class
+    !
+    vstring_is = .false.
+    !
+    ! Now search a class
+    !
+    if ( class=="digit" ) then
+       vstring_is = vstring_isdigit ( this , failindex_real )
+    elseif ( class=="integer" ) then
+       vstring_is = vstring_isinteger ( this , failindex_real )
+    elseif ( class=="alpha" ) then
+       vstring_is = vstring_isalpha ( this , failindex_real )
+    elseif ( class=="alnum" ) then
+       vstring_is = vstring_isalnum ( this , failindex_real )
+    elseif ( class=="logical" ) then
+       vstring_is = vstring_islogical ( this , failindex_real )
+    elseif ( class=="real" ) then
+       vstring_is = vstring_isreal ( this , failindex_real )
+    elseif ( class=="true" ) then
+       vstring_is = vstring_istrue ( this , failindex_real )
+    elseif ( class=="false" ) then
+       vstring_is = vstring_isfalse ( this , failindex_real )
+    elseif ( class=="lower" ) then
+       vstring_is = vstring_islower ( this , failindex_real )
+    elseif ( class=="upper" ) then
+       vstring_is = vstring_isupper ( this , failindex_real )
+    elseif ( class=="space" ) then
+       vstring_is = vstring_isspace ( this , failindex_real )
+    elseif ( class=="punct" ) then
+       vstring_is = vstring_ispunct ( this , failindex_real )
+    elseif ( class=="xdigit" ) then
+       vstring_is = vstring_isxdigit ( this , failindex_real )
+    elseif ( class=="ascii" ) then
+       vstring_is = vstring_isascii ( this , failindex_real )
+    elseif ( class=="control" ) then
+       vstring_is = vstring_iscontrol ( this , failindex_real )
+    elseif ( class=="print" ) then
+       vstring_is = vstring_isprint ( this , failindex_real )
+    elseif ( class=="graph" ) then
+       vstring_is = vstring_isgraph ( this , failindex_real )
+    elseif ( class=="wordchar" ) then
+       vstring_is = vstring_iswordchar ( this , failindex_real )
+    else
+       write ( message , * ) "Unknown class:" , class
+       call vstring_error ( this , message , "vstring_is" )
+    endif
+    !
+    ! Process the special case where the string is empty.
+    ! Caution !
+    !   This is done after all other tests, to make sure that the class is known.
+    !
+    length = vstring_length ( this )
+    if ( length == 0 ) then
+       if ( strict_real ) then
+          vstring_is = .false.
+       else
+          vstring_is = .true.
+       endif
+    endif
+    !
+    ! Get failing index
+    !
+    if ( present ( failindex ) ) then
+       failindex = failindex_real
+    endif
+       
+  end function vstring_is
+  !
+  ! vstring_isdigit --
+  !   Returns 1 if string is a valid digit. 
+  !
+  logical function vstring_isdigit ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    call vstring_new ( characterset , VSTRING_DIGITS )
+    vstring_isdigit = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+  end function vstring_isdigit
+  !
+  ! vstring_isinteger --
+  !   Returns 1 if string is a valid integer, with optional surrounding whitespace. 
+  !
+  logical function vstring_isinteger ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    type(t_vstring) :: space
+    call vstring_new ( characterset , VSTRING_DIGITS )
+    call vstring_new ( space , VSTRING_SPACE )
+    call vstring_append ( characterset , space )
+    vstring_isinteger = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+    call vstring_free ( space )
+  end function vstring_isinteger
+  !
+  ! vstring_isalpha --
+  !   Returns 1 if string is a alphabet character.
+  !
+  logical function vstring_isalpha ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    type(t_vstring) :: upper
+    call vstring_new ( characterset , VSTRING_LOWER )
+    call vstring_new ( upper , VSTRING_UPPER )
+    call vstring_append ( characterset , upper )
+    vstring_isalpha = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+    call vstring_free ( upper )
+  end function vstring_isalpha
+  !
+  ! vstring_isalnum --
+  !   Returns 1 if string is a alphabet or digit character.
+  !
+  logical function vstring_isalnum ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    type(t_vstring) :: upper
+    type(t_vstring) :: digit
+    call vstring_new ( characterset , VSTRING_LOWER )
+    call vstring_new ( upper , VSTRING_UPPER )
+    call vstring_append ( characterset , upper )
+    call vstring_new ( digit , VSTRING_DIGITS )
+    call vstring_append ( characterset , digit )
+    vstring_isalnum = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+    call vstring_free ( upper )
+    call vstring_free ( digit )
+  end function vstring_isalnum
+  !
+  ! vstring_islogical --
+  !   Returns .true. if string is a valid logical
+  !
+  logical function vstring_islogical ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    logical :: mylogical
+    character ( len = 7 ) :: logicalstring
+    call vstring_tocharstring ( this , logicalstring )
+    read ( logicalstring , * , err = 100 ) mylogical
+    vstring_islogical = .true.
+    return
+100 continue
+    ! This is not a logical
+    vstring_islogical = .false.
+    ! TODO : compute a finer value for failindex
+    failindex = 1
+  end function vstring_islogical
+  !
+  ! vstring_isreal --
+  !   Returns .true. if string is a valid real
+  !
+  logical function vstring_isreal ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    real :: mydata
+    character ( len = vstring_length ( this ) ) :: charstring
+    call vstring_tocharstring ( this , charstring )
+    read ( charstring , * , err = 100 ) mydata
+    vstring_isreal = .true.
+    failindex = VSTRING_INDEX_UNKNOWN
+    return
+100 continue
+    ! This is not a real
+    vstring_isreal = .false.
+    ! TODO : compute a finer value for failindex
+    failindex = 1
+  end function vstring_isreal
+  !
+  ! vstring_istrue --
+  !   Returns .true. if string is a valid logical true value
+  !
+  logical function vstring_istrue ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    logical :: mylogical
+    character ( len = 7 ) :: logicalstring
+    call vstring_tocharstring ( this , logicalstring )
+    read ( logicalstring , * , err = 100 ) mylogical
+    vstring_istrue = mylogical
+    ! TODO : compute a finer value for failindex
+    if ( vstring_istrue ) then
+       failindex = VSTRING_INDEX_UNKNOWN
+    else
+       failindex = 1
+    endif
+    return
+100 continue
+    ! This is not a logical
+    vstring_istrue = .false.
+    ! TODO : compute a finer value for failindex
+    failindex = 1
+  end function vstring_istrue
+  !
+  ! vstring_isfalse --
+  !   Returns .true. if string is a valid logical false value
+  !
+  logical function vstring_isfalse ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    logical :: mylogical
+    character ( len = 7 ) :: logicalstring
+    call vstring_tocharstring ( this , logicalstring )
+    read ( logicalstring , * , err = 100 ) mylogical
+    vstring_isfalse = .NOT.mylogical
+    if ( vstring_isfalse ) then
+       failindex = VSTRING_INDEX_UNKNOWN
+    else
+       failindex = 1
+    endif
+    return
+100 continue
+    ! This is not a logical
+    vstring_isfalse = .false.
+    ! TODO : compute a finer value for failindex
+    failindex = 1
+  end function vstring_isfalse
+  !
+  ! vstring_islower --
+  !   Returns .true. if string is a valid lower case character
+  !
+  logical function vstring_islower ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    call vstring_new ( characterset , VSTRING_LOWER )
+    vstring_islower = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+  end function vstring_islower
+  !
+  ! vstring_isupper --
+  !   Returns .true. if string is a valid upper case character
+  !
+  logical function vstring_isupper ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    call vstring_new ( characterset , VSTRING_UPPER )
+    vstring_isupper = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+  end function vstring_isupper
+  !
+  ! vstring_isspace --
+  !   Returns .true. if string is a valid space character
+  !
+  logical function vstring_isspace ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    call vstring_new ( characterset , VSTRING_WHITESPACE )
+    vstring_isspace = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+  end function vstring_isspace
+  !
+  ! vstring_ispunct --
+  !   Returns .true. if string is a valid punctuation character
+  !
+  logical function vstring_ispunct ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    call vstring_new ( characterset , VSTRING_PUNCTUATION )
+    vstring_ispunct = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+  end function vstring_ispunct
+  !
+  ! vstring_isxdigit --
+  !   Returns .true. if string is a valid hexadecimal string
+  !
+  logical function vstring_isxdigit ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    call vstring_new ( characterset , VSTRING_HEXDIGITS )
+    vstring_isxdigit = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+  end function vstring_isxdigit
+  !
+  ! vstring_isascii --
+  !   Returns .true. if string is a valid ascii string
+  !
+  logical function vstring_isascii ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    vstring_isascii = vstring_isinasciirange ( this , 0 , 127 , failindex )
+  end function vstring_isascii
+  !
+  ! vstring_iscontrol --
+  !   Returns .true. if string is a valid control string
+  ! Note
+  !   From ascii #0 to #31 and from #127 to #159.
+  !
+  logical function vstring_iscontrol ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    logical :: isinrange1
+    logical :: isinrange2
+    isinrange1 = vstring_isinasciirange ( this , 0 , 31 , failindex )
+    isinrange2 = vstring_isinasciirange ( this , 127 , 159 , failindex )
+    if ( isinrange1 ) then
+       ! This is control
+       vstring_iscontrol = .true.
+    elseif ( isinrange2 ) then
+       ! This is control
+       vstring_iscontrol = .true.
+    else
+       ! This is not control
+       vstring_iscontrol = .false.
+    endif
+  end function vstring_iscontrol
+  !
+  ! vstring_isprint --
+  !   Returns .true. if string is a valid print string, including white space
+  ! Note
+  !   From ascii #32 to #126
+  !
+  logical function vstring_isprint ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    vstring_isprint = vstring_isinasciirange ( this , 32 , 126 , failindex )
+  end function vstring_isprint
+  !
+  ! vstring_isgraph --
+  !   Returns .true. if string is a valid print string, excluding white space
+  ! Note
+  !   From ascii #33 to #126
+  !
+  logical function vstring_isgraph ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    vstring_isgraph = vstring_isinasciirange ( this , 33 , 126 , failindex )
+  end function vstring_isgraph
+  !
+  ! vstring_iswordchar --
+  !   Returns .true. if string is a valid wordchar character
+  !
+  logical function vstring_iswordchar ( this , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: failindex
+    type(t_vstring) :: characterset
+    type(t_vstring) :: lower
+    type(t_vstring) :: upper
+    type(t_vstring) :: digit
+    type(t_vstring) :: punct
+    call vstring_new ( lower , VSTRING_LOWER )
+    call vstring_new ( upper , VSTRING_UPPER )
+    call vstring_new ( digit , VSTRING_DIGITS )
+    call vstring_new ( punct , VSTRING_PUNCTUATION )
+    call vstring_new ( characterset )
+    call vstring_append ( characterset , lower )
+    call vstring_append ( characterset , upper )
+    call vstring_append ( characterset , digit )
+    call vstring_append ( characterset , punct )
+    vstring_iswordchar = vstring_isincharset ( this , characterset , failindex )
+    call vstring_free ( characterset )
+    call vstring_free ( lower )
+    call vstring_free ( upper )
+    call vstring_free ( digit )
+    call vstring_free ( punct )
+  end function vstring_iswordchar
+  !
+  ! vstring_isincharset --
+  !   Returns .true. if string is made of characters which all are in the 
+  !   given character set.
+  !   If failingindex is provided and the string in not in the character set,
+  !   the integer failingindex is the index in the string where the
+  !   character is not in the set.
+  ! Note
+  !   This is an alternative implementation for vstring_verify.
+  ! Arguments
+  !   characterset The character set.
+  !   failindex The index of the first character not in the set.
+  !
+  logical function vstring_isincharset ( this , characterset , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    type(t_vstring), intent(in) :: characterset
+    integer, intent(out), optional :: failindex
+    integer :: icharacter
+    integer :: length
+    type(t_vstring) :: currentchar
+    integer :: charindex
+    !
+    ! Initialize
+    !
+    length = vstring_length ( this )
+    !
+    ! By default, it is in the character set.
+    !
+    vstring_isincharset = .true.
+    !
+    ! Now find the cases when it is not in the character set.
+    !
+    do icharacter = 1 , length
+       currentchar = vstring_index ( this , icharacter )
+       charindex = vstring_first ( characterset , currentchar )
+       call vstring_free ( currentchar )
+       if ( charindex == VSTRING_INDEX_UNKNOWN ) then
+          vstring_isincharset = .false.
+          exit
+       endif
+    enddo
+    !
+    ! Process failing index
+    !
+    if ( present ( failindex ) ) then
+       if ( vstring_isincharset ) then
+          failindex = VSTRING_INDEX_UNKNOWN
+       else
+          failindex = icharacter
+       endif
+    endif
+  end function vstring_isincharset
+  !
+  ! vstring_isinasciirange --
+  !   Returns .true. if string is in the given ascii range from min to max.
+  !
+  logical function vstring_isinasciirange ( this , asciimin , asciimax , failindex )
+    implicit none
+    type(t_vstring), intent(in) :: this
+    integer , intent(in) :: asciimin , asciimax
+    integer, intent(out), optional :: failindex
+    integer :: icharacter
+    integer :: length
+    type(t_vstring) :: currentchar
+    integer :: charindex
+    !
+    ! Initialize
+    !
+    length = vstring_length ( this )
+    !
+    ! By default, it is in the ascii character set.
+    !
+    vstring_isinasciirange = .true.
+    !
+    ! Now find the cases when it is not in the character set.
+    !
+    do icharacter = 1 , length
+       currentchar = vstring_index ( this , icharacter )
+       charindex = vstring_iachar ( currentchar )
+       call vstring_free ( currentchar )
+       if ( charindex < asciimin .OR. charindex > asciimax ) then
+          ! This is not in the range
+          vstring_isinasciirange = .false.
+          exit
+       endif
+    enddo
+    !
+    ! Process failindex
+    !
+    if ( present ( failindex ) ) then
+       if ( vstring_isinasciirange ) then 
+          failindex = VSTRING_INDEX_UNKNOWN
+       else
+          failindex = icharacter
+       endif
+    endif
+  end function vstring_isinasciirange
+  !
+  ! TODO :
+  ! vstring_read --
+  !   Returns the vstring which is read on the given unit number,
+  !   or on the standard input if no unit is given.
+  ! Arguments
+  !   unitnumber : the unit number where the string is to read
+  ! Note
+  !   Possible implementation : see get_unit_set_CH 
+  !   in iso_varying_string.f90
+  !
+
+  !
+  ! TODO :
+  ! vstring_write --
+  !   Writes the current vstring on the given unit number,
+  !   or on the standard output if no unit is given.
+  ! Arguments
+  !   unitnumber : the unit number where the string is to write
+  !   iostat, optional : the I/O status of the write statement
+  ! Note
+  !   Possible implementation : see put_unit_CH 
+  !   in iso_varying_string.f90
+  !    if(PRESENT(iostat)) then
+  !       write(*, FMT='(A,/)', ADVANCE='NO', IOSTAT=iostat) string
+  !    else
+  !       write(*, FMT='(A,/)', ADVANCE='NO') string
+  !    endif
+  !
+  
+  !
+  ! TODO :
+  ! vstring_wordend --
+  !   Returns the index of the character just after the last one in the word 
+  !   containing character charIndex of string. A word is considered to be any contiguous range of 
+  !   alphanumeric (letters or decimal digits) or underscore (connector punctuation) 
+  !   characters, or any single character other than these.
+  ! Arguments
+  !   charIndex : the string containing the separator
+  !
+
+  !
+  ! TODO :
+  ! vstring_wordstart --
+  !   Returns the index of the first character in the word containing character charIndex 
+  !   of string. charIndex may be specified as for the index method. A word is considered 
+  !   to be any contiguous range of alphanumeric (letters or decimal digits) or underscore 
+  !   (connector punctuation) characters, or any single character other than these.
+  ! Arguments
+  !   charIndex : the string containing the separator
+  !
+
+
   !
   ! vstring_check_index --
   !   Check that the given index is correct and generates an error if not.
