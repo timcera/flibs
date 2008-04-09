@@ -654,6 +654,8 @@ contains
   subroutine assert_shutdown ( )
     implicit none
     character (len= 200 ) :: msg
+    call logmsg ( "**********************" )
+    call logmsg ( "End of tests." )
     write ( msg , * ) "Total number of success tests : ", assertTotalTestSuccess
     call logmsg ( msg )
     write ( msg , * ) "Total number of failing tests : ", assertTotalTestFail
