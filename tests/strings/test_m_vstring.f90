@@ -1,5 +1,5 @@
 !
-! This program is a testing component for the module iso_varying_string
+! This program is a testing component for the module m_vstring.
 !
 program test_m_vstring
   use m_vstring, only : &
@@ -38,7 +38,9 @@ program test_m_vstring
        vstring_match, &
        vstring_split, &
        vstring_adjustl ,&
-       vstring_adjustr
+       vstring_adjustr ,&
+       vstring_join , &
+       vstring_is
   implicit none
   integer :: assertTotalTestSuccess
   integer :: assertTotalTestFail
@@ -81,23 +83,26 @@ contains
     !
     ! Test interfaces to standard fortran
     !
-    call test_m_vstring_stdfortran ()
+    !call test_m_vstring_stdfortran ()
     !
-    ! Test string splitting
+    ! Test string splitting : joining
     !
     call test_m_vstring_split ()
     !
     ! Test string matching
+    ! Fails with gfortran 2007
     !
     call test_m_vstring_match ()
     !
+    ! Test string is
+    !
+    call test_m_vstring_is ()
+    !
     ! TODO :
     ! Extend to match Tcl string:
-    ! vstring_is class , 
     ! string wordend, 
     ! string wordstart,
     ! string bytelength
-    ! string_join
     !
     ! Check the number of strings references
     !
@@ -134,6 +139,12 @@ contains
     type ( t_vstring ) :: string3
     integer :: length
     character ( len = 1) , dimension( 1:5), parameter :: mychararray = (/"m","y"," ","s","t"/)
+    !
+    ! test #1.0
+    !
+    call logmsg ( "Test #1.0 : new emty" )
+    call vstring_new ( string1 )
+    call vstring_free ( string1 )
     !
     ! test #1.1
     !
@@ -525,6 +536,16 @@ contains
     call vstring_free ( string1 )
     call vstring_free ( pattern )
     !
+    ! Typical use
+    !
+    call logmsg ( "Typical use" )
+    call vstring_new ( string1 , "m_vstring.f90" )
+    call vstring_new ( pattern , 'm_*.f90' )
+    match = vstring_match ( string1 , pattern )
+    call assert ( match , "Wrong vstring_match" )
+    call vstring_free ( string1 )
+    call vstring_free ( pattern )
+    !
     ! Check the number of strings references
     !
     call string_reference_check ()
@@ -548,6 +569,7 @@ contains
     type ( t_vstring ), dimension(1:4) :: map_new1
     integer :: imap
     character ( len = 4 ) :: char_string2
+    character ( len = 10 ) :: char_string3
     
     !
     ! test #2.1 -> generates an error, as expected
@@ -902,8 +924,31 @@ contains
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
-
-    
+    !
+    ! test #23.3
+    !
+    call logmsg ( "Test #23.3 : vstring_tocharstring with auto length and needed blanks" )
+    call vstring_new ( string1 , "toto" )
+    char_string3 = "@@@@@@@@@@"
+    call vstring_tocharstring ( string1 , char_string3 )
+    call vstring_new ( string2 , char_string3 )
+    call vstring_new ( string3 , "toto      " )
+    call assertVstring ( string2 , string3 , "Wrong vstring_tocharstring" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    call vstring_free ( string3 )
+    !
+    ! test #23.4
+    !
+    call logmsg ( "Test #23.4 : vstring_tocharstring with auto length and truncation" )
+    call vstring_new ( string1 , "toto      @" )
+    call vstring_tocharstring ( string1 , char_string3 )
+    call vstring_new ( string2 , char_string3 )
+    call vstring_new ( string3 , "toto      " )
+    call assertVstring ( string2 , string3 , "Wrong vstring_tocharstring" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    call vstring_free ( string3 )
     !
     ! test #27.1
     !
@@ -1715,6 +1760,25 @@ contains
     ! Check the number of strings references
     !
     call string_reference_check ()
+    !
+    call logmsg ( "Test : vstring_join with default split char " )
+    allocate ( listOfComponents ( 3 ) )
+    call vstring_new ( listOfComponents ( 1 ) , "comp" )
+    call vstring_new ( listOfComponents ( 2 ) , "lang" )
+    call vstring_new ( listOfComponents ( 3 ) , "fortran" )
+    string1 = vstring_join ( listOfComponents )
+    call vstring_new ( string2, "comp lang fortran" )
+    call assertVstring ( string1 , string1 , "Wrong vstring_join." )
+    call vstring_free ( listOfComponents ( 1 ) )
+    call vstring_free ( listOfComponents ( 2 ) )
+    call vstring_free ( listOfComponents ( 3 ) )
+    deallocate ( listOfComponents )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
   end subroutine test_m_vstring_split
   !
   ! Test vstring_first , vstring_last
@@ -1870,6 +1934,7 @@ contains
   end subroutine test_m_vstring_firstlast
   !
   ! Test all interfaces to standard fortran
+  ! Fail with IVF8
   !
   subroutine test_m_vstring_stdfortran ()
     type ( t_vstring ) :: string1
@@ -1991,6 +2056,454 @@ contains
     !
     call string_reference_check ()
   end subroutine test_m_vstring_stdfortran
+  !
+  ! Test vstring_is
+  !
+  subroutine test_m_vstring_is ()
+    type ( t_vstring ) :: string1
+    logical :: stringis
+    integer :: charindex
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! String is digit
+    !
+    call logmsg ( "Test digit true" )
+    call vstring_new ( string1 , "2008" )
+    stringis = vstring_is ( string1 , "digit" )
+    call assert ( stringis , "Wrong vstring_is digit" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test digit false" )
+    call vstring_new ( string1 , "2008 " )
+    stringis = vstring_is ( string1 , "digit" )
+    call assert ( .NOT. stringis , "Wrong vstring_is digit" )
+    call vstring_free ( string1 )
+    !
+    ! String is integer
+    !
+    call logmsg ( "Test integer true" )
+    call vstring_new ( string1 , "2008 " )
+    stringis = vstring_is ( string1 , "integer" )
+    call assert ( stringis , "Wrong vstring_is integer" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test integer false" )
+    call vstring_new ( string1 , "2.5" )
+    stringis = vstring_is ( string1 , "integer" )
+    call assert ( .NOT.stringis , "Wrong vstring_is integer" )
+    call vstring_free ( string1 )
+    !
+    ! String is alpha
+    !
+    call logmsg ( "Test alpha true" )
+    call vstring_new ( string1 , "aB" )
+    stringis = vstring_is ( string1 , "alpha" )
+    call assert ( stringis , "Wrong vstring_is alpha" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test alpha false" )
+    call vstring_new ( string1 , "aB." )
+    stringis = vstring_is ( string1 , "alpha" )
+    call assert ( .NOT.stringis , "Wrong vstring_is alpha" )
+    call vstring_free ( string1 )
+    !
+    ! String is alnum
+    !
+    call logmsg ( "Test alnum true" )
+    call vstring_new ( string1 , "aB1" )
+    stringis = vstring_is ( string1 , "alnum" )
+    call assert ( stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test alnum false" )
+    call vstring_new ( string1 , "aB1." )
+    stringis = vstring_is ( string1 , "alnum" )
+    call assert ( .NOT.stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    ! String is logical
+    !
+    call logmsg ( "Test logical true" )
+    call vstring_new ( string1 , ".true." )
+    stringis = vstring_is ( string1 , "logical" )
+    call assert ( stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test logical true" )
+    call vstring_new ( string1 , ".false." )
+    stringis = vstring_is ( string1 , "logical" )
+    call assert ( stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test logical true" )
+    call vstring_new ( string1 , "T" )
+    stringis = vstring_is ( string1 , "logical" )
+    call assert ( stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test logical true" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "logical" )
+    call assert ( stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test logical false" )
+    call vstring_new ( string1 , "aB1." )
+    stringis = vstring_is ( string1 , "logical" )
+    call assert ( .NOT.stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test logical false" )
+    call vstring_new ( string1 , "not a logical at all" )
+    stringis = vstring_is ( string1 , "logical" )
+    call assert ( .NOT.stringis , "Wrong vstring_is alnum" )
+    call vstring_free ( string1 )
+    !
+    ! String is real
+    ! Fails with IFV8
+    !
+#ifndef _IVF8
+    call logmsg ( "Test real true" )
+    call vstring_new ( string1 , "1.5" )
+    stringis = vstring_is ( string1 , "real" )
+    call assert ( stringis , "Wrong vstring_is real" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test real true" )
+    call vstring_new ( string1 , "1.5" )
+    stringis = vstring_is ( string1 , "real" )
+    call assert ( stringis , "Wrong vstring_is real" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test real false" )
+    call vstring_new ( string1 , "A" )
+    stringis = vstring_is ( string1 , "real" )
+    call assert ( .NOT.stringis , "Wrong vstring_is real" )
+    call vstring_free ( string1 )
+#endif
+    !
+    ! String is true
+    !
+    call logmsg ( "Test true true" )
+    call vstring_new ( string1 , "T" )
+    stringis = vstring_is ( string1 , "true" )
+    call assert ( stringis , "Wrong vstring_is true" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test true false" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "true" )
+    call assert ( .NOT.stringis , "Wrong vstring_is true" )
+    call vstring_free ( string1 )
+    !
+    ! String is false
+    !
+    call logmsg ( "Test false true" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "false" )
+    call assert ( stringis , "Wrong vstring_is false" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test false false" )
+    call vstring_new ( string1 , "T" )
+    stringis = vstring_is ( string1 , "false" )
+    call assert ( .NOT.stringis , "Wrong vstring_is false" )
+    call vstring_free ( string1 )
+    !
+    ! String is upper
+    !
+    call logmsg ( "Test upper true" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "upper" )
+    call assert ( stringis , "Wrong vstring_is upper" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test upper false" )
+    call vstring_new ( string1 , "f" )
+    stringis = vstring_is ( string1 , "upper" )
+    call assert ( .NOT.stringis , "Wrong vstring_is upper" )
+    call vstring_free ( string1 )
+    !
+    ! String is lower
+    !
+    call logmsg ( "Test lower true" )
+    call vstring_new ( string1 , "f" )
+    stringis = vstring_is ( string1 , "lower" )
+    call assert ( stringis , "Wrong vstring_is lower" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test lower false" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "lower" )
+    call assert ( .NOT.stringis , "Wrong vstring_is lower" )
+    call vstring_free ( string1 )
+    !
+    ! String is space
+    !
+    call logmsg ( "Test space true" )
+    call vstring_new ( string1 , " " )
+    stringis = vstring_is ( string1 , "space" )
+    call assert ( stringis , "Wrong vstring_is space" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test space false" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "space" )
+    call assert ( .NOT.stringis , "Wrong vstring_is space" )
+    call vstring_free ( string1 )
+    !
+    ! String is punct
+    !
+    call logmsg ( "Test punct true" )
+    call vstring_new ( string1 , "," )
+    stringis = vstring_is ( string1 , "punct" )
+    call assert ( stringis , "Wrong vstring_is punct" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test punct false" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "punct" )
+    call assert ( .NOT.stringis , "Wrong vstring_is punct" )
+    call vstring_free ( string1 )
+    !
+    ! String is xdigit
+    !
+    call logmsg ( "Test xdigit true" )
+    call vstring_new ( string1 , "0123456789abcdefABCDEF" )
+    stringis = vstring_is ( string1 , "xdigit" )
+    call assert ( stringis , "Wrong vstring_is xdigit" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test xdigit false" )
+    call vstring_new ( string1 , "Z" )
+    stringis = vstring_is ( string1 , "xdigit" )
+    call assert ( .NOT.stringis , "Wrong vstring_is xdigit" )
+    call vstring_free ( string1 )
+    !
+    ! String is ascii
+    !
+    call logmsg ( "Test ascii true" )
+    call vstring_new ( string1 , "0123456789abcdefABCDEF" )
+    stringis = vstring_is ( string1 , "ascii" )
+    call assert ( stringis , "Wrong vstring_is ascii" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test ascii false" )
+    string1 = vstring_char ( 129 )
+    stringis = vstring_is ( string1 , "ascii" )
+    call assert ( .NOT.stringis , "Wrong vstring_is ascii" )
+    call vstring_free ( string1 )
+    !
+    ! String is control
+    !
+    call logmsg ( "Test control true" )
+    string1 = vstring_char ( 12 )
+    stringis = vstring_is ( string1 , "control" )
+    call assert ( stringis , "Wrong vstring_is control" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test control false" )
+    string1 = vstring_char ( 52 )
+    stringis = vstring_is ( string1 , "control" )
+    call assert ( .NOT.stringis , "Wrong vstring_is control" )
+    call vstring_free ( string1 )
+    !
+    ! String is print
+    !
+    call logmsg ( "Test print true" )
+    call vstring_new ( string1 , "A" )
+    stringis = vstring_is ( string1 , "print" )
+    call assert ( stringis , "Wrong vstring_is print" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test print true" )
+    call vstring_new ( string1 , " " )
+    stringis = vstring_is ( string1 , "print" )
+    call assert ( stringis , "Wrong vstring_is print" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test print false" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "print" )
+    call assert ( .NOT.stringis , "Wrong vstring_is print" )
+    call vstring_free ( string1 )
+    !
+    ! String is graph
+    !
+    call logmsg ( "Test graph true" )
+    call vstring_new ( string1 , "A" )
+    stringis = vstring_is ( string1 , "graph" )
+    call assert ( stringis , "Wrong vstring_is graph" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test graph false" )
+    call vstring_new ( string1 , " " )
+    stringis = vstring_is ( string1 , "graph" )
+    call assert ( .NOT.stringis , "Wrong vstring_is graph" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test graph false" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "graph" )
+    call assert ( .NOT.stringis , "Wrong vstring_is graph" )
+    call vstring_free ( string1 )
+    !
+    ! String is wordchar
+    !
+    call logmsg ( "Test wordchar true" )
+    call vstring_new ( string1 , "A" )
+    stringis = vstring_is ( string1 , "wordchar" )
+    call assert ( stringis , "Wrong vstring_is wordchar" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test wordchar false" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "wordchar" )
+    call assert ( .NOT.stringis , "Wrong vstring_is wordchar" )
+    call vstring_free ( string1 )
+    !
+    ! String is wordchar strict
+    !
+    call logmsg ( "Test wordchar true" )
+    call vstring_new ( string1 , "" )
+    stringis = vstring_is ( string1 , "wordchar" )
+    call assert ( stringis , "Wrong vstring_is wordchar" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test wordchar false" )
+    call vstring_new ( string1 , "" )
+    stringis = vstring_is ( string1 , "wordchar" , strict = .true. )
+    call assert ( .NOT.stringis , "Wrong vstring_is wordchar" )
+    call vstring_free ( string1 )
+    !
+    ! Get failing index for all classes
+    !
+    call logmsg ( "Test wordchar failing index" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "wordchar" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is wordchar failing index" )
+    call assert ( charindex == 1 , "Wrong vstring_is wordchar failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test digit failing index" )
+    call vstring_new ( string1 , "2008 " )
+    stringis = vstring_is ( string1 , "digit" , .false. , charindex )
+    call assert ( .NOT. stringis , "Wrong vstring_is digit" )
+    call assert ( charindex == 5 , "Wrong vstring_is digit failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test integer failing index" )
+    call vstring_new ( string1 , "2.5" )
+    stringis = vstring_is ( string1 , "integer" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is integer" )
+    call assert ( charindex == 2 , "Wrong vstring_is integer failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test alpha failing index" )
+    call vstring_new ( string1 , "aB." )
+    stringis = vstring_is ( string1 , "alpha" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is alpha" )
+    call assert ( charindex == 3 , "Wrong vstring_is alpha failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test logical failing index" )
+    call vstring_new ( string1 , "aB1." )
+    stringis = vstring_is ( string1 , "logical" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is alnum" )
+    call assert ( charindex == 1 , "Wrong vstring_is alpha failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test true failing index" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "true" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is true" )
+    call assert ( charindex == 1 , "Wrong vstring_is alpha failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test false failing index" )
+    call vstring_new ( string1 , "T" )
+    stringis = vstring_is ( string1 , "false" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is false" )
+    call assert ( charindex == 1 , "Wrong vstring_is false failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test upper failing index" )
+    call vstring_new ( string1 , "f" )
+    stringis = vstring_is ( string1 , "upper" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is upper" )
+    call assert ( charindex == 1 , "Wrong vstring_is upper failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test lower failing index" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "lower" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is lower" )
+    call assert ( charindex == 1 , "Wrong vstring_is lower failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test space failing index" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "space" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is space" )
+    call assert ( charindex == 1 , "Wrong vstring_is space failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test punct failing index" )
+    call vstring_new ( string1 , "F" )
+    stringis = vstring_is ( string1 , "punct" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is punct" )
+    call assert ( charindex == 1 , "Wrong vstring_is punct failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test xdigit failing index" )
+    call vstring_new ( string1 , "Z" )
+    stringis = vstring_is ( string1 , "xdigit" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is xdigit" )
+    call assert ( charindex == 1 , "Wrong vstring_is xdigit failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test ascii failing index" )
+    string1 = vstring_char ( 129 )
+    stringis = vstring_is ( string1 , "ascii" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is ascii" )
+    call assert ( charindex == 1 , "Wrong vstring_is ascii failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test control failing index" )
+    string1 = vstring_char ( 52 )
+    stringis = vstring_is ( string1 , "control" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is control" )
+    call assert ( charindex == 1 , "Wrong vstring_is control failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test print failing index" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "print" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is print" )
+    call assert ( charindex == 1 , "Wrong vstring_is print failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test graph failing index" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "graph" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is graph" )
+    call assert ( charindex == 1 , "Wrong vstring_is graph failing index" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test wordchar failing index" )
+    string1 = vstring_char ( 10 )
+    stringis = vstring_is ( string1 , "wordchar" , .false. , charindex )
+    call assert ( .NOT.stringis , "Wrong vstring_is wordchar" )
+    call assert ( charindex == 1 , "Wrong vstring_is wordchar failing index" )
+    call vstring_free ( string1 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+  end subroutine test_m_vstring_is
   !
   ! assert --
   !   Check that the given test is true and updates the assertion system.
