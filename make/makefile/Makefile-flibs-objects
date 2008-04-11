@@ -43,6 +43,7 @@ $(libdir)/globmatch.o \
 $(libdir)/stringmanip.o \
 $(libdir)/stringquery.o \
 $(libdir)/m_vstring.o \
+$(libdir)/m_vstringlist.o \
 $(libdir)/textstr.o
 # Objects from /src/platform
 objects_9 = \

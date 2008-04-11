@@ -66,6 +66,10 @@ $(libdir)/stringmanip.o:
 
 $(libdir)/stringquery.o:
 
+$(libdir)/m_vstring.o:
+
+$(libdir)/m_vstringlist.o:$(libdir)/m_vstring.o
+
 $(libdir)/textstr.o:
 
 $(libdir)/tokenize.o:
@@ -76,5 +80,7 @@ $(libdir)/test_platform.o:$(libdir)/m_platform.o
 
 $(libdir)/test_vstring.o:$(libdir)/m_vstring.o
 
+$(libdir)/test_vstringlist.o:$(libdir)/m_vstringlist.o \
+$(libdir)/m_vstring.o
 
 
