@@ -23,6 +23,7 @@ testdir = $(PROJECTDIR)/tests
 EXE_TEST_FILSYS = $(bindir)/test_m_filedir.exe
 EXE_TEST_PLATFORM = $(bindir)/test_m_platform.exe
 EXE_TEST_VSTRING = $(bindir)/test_m_vstring.exe
+EXE_TEST_VSTRINGLIST = $(bindir)/test_m_vstringlist.exe
 #
 # List of the archive files
 #
@@ -33,7 +34,8 @@ all: $(archive) tests
 
 archive: $(libdir) $(bindir) $(archive_flibs) 
 
-tests: $(libdir) $(bindir) $(archive_flibs) $(EXE_TEST_FILSYS) $(EXE_TEST_PLATFORM) $(EXE_TEST_VSTRING)
+tests: $(libdir) $(bindir) $(archive_flibs) $(EXE_TEST_FILSYS) $(EXE_TEST_PLATFORM) \
+$(EXE_TEST_VSTRING) $(EXE_TEST_VSTRINGLIST)
 
 $(libdir): 
 	$(MKDIR) -p $(libdir)
@@ -65,7 +67,12 @@ $(EXE_TEST_FILSYS): $(libdir)/test_m_filedir.o $(objects)
 $(EXE_TEST_PLATFORM): $(libdir)/test_m_platform.o $(objects)
 	$(ECHO) "Linking : $(shell basename $@)"
 	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
+
 $(EXE_TEST_VSTRING): $(libdir)/test_m_vstring.o $(objects)
+	$(ECHO) "Linking : $(shell basename $@)"
+	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
+
+$(EXE_TEST_VSTRINGLIST): $(libdir)/test_m_vstringlist.o $(objects)
 	$(ECHO) "Linking : $(shell basename $@)"
 	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
 

@@ -1,0 +1,182 @@
+  Number of strings :           0
+  -> Test #           1 PASS
+  Number of strings :           0
+  -> Test #           2 PASS
+ Test : new from emty
+  -> Test #           3 PASS
+  Number of strings :           0
+  -> Test #           4 PASS
+ Test : new from string
+  -> Test #           5 PASS
+  Number of strings :           0
+  -> Test #           6 PASS
+ Test : new from array
+  -> Test #           7 PASS
+ Test : new from list
+  -> Test #           8 PASS
+ Test : new from integer
+  -> Test #           9 PASS
+ Test : new from integer
+  -> Test #          10 PASS
+  Number of strings :           0
+  -> Test #          11 PASS
+  Number of strings :           0
+  -> Test #          12 PASS
+ Test : vstrlist_index
+  -> Test #          13 PASS
+ Test : vstrlist_concat a string
+  -> Test #          14 PASS
+  -> Test #          15 PASS
+  -> Test #          16 PASS
+  -> Test #          17 PASS
+  -> Test #          18 PASS
+ Test : vstrlist_concat a list
+  -> Test #          19 PASS
+  -> Test #          20 PASS
+  -> Test #          21 PASS
+  -> Test #          22 PASS
+  -> Test #          23 PASS
+  -> Test #          24 PASS
+ Test : vstrlist_append a string
+  -> Test #          25 PASS
+  -> Test #          26 PASS
+  -> Test #          27 PASS
+  -> Test #          28 PASS
+  -> Test #          29 PASS
+ Test : vstrlist_append a list
+  -> Test #          30 PASS
+  -> Test #          31 PASS
+  -> Test #          32 PASS
+  -> Test #          33 PASS
+  -> Test #          34 PASS
+  -> Test #          35 PASS
+  -> Test #          36 PASS
+  Number of strings :           0
+  -> Test #          37 PASS
+ Test : vstrlist_concat a string
+  -> Test #          38 PASS
+  -> Test #          39 PASS
+  Number of strings :           0
+  -> Test #          40 PASS
+ Test : vstrlist_append a charstring
+  -> Test #          41 PASS
+  -> Test #          42 PASS
+  Number of strings :           0
+  -> Test #          43 PASS
+ Test : vstrlist_insert a charstring
+  -> Test #          44 PASS
+  -> Test #          45 PASS
+  -> Test #          46 PASS
+  Number of strings :           0
+  -> Test #          47 PASS
+ Test : vstrlist_insert into an empty list
+  -> Test #          48 PASS
+  -> Test #          49 PASS
+ Test : vstrlist_range
+  -> Test #          50 PASS
+  -> Test #          51 PASS
+  -> Test #          52 PASS
+  -> Test #          53 PASS
+  -> Test #          54 PASS
+  Number of strings :           0
+  -> Test #          55 PASS
+ Test : vstrlist_set
+  -> Test #          56 PASS
+  -> Test #          57 PASS
+  Number of strings :           0
+  -> Test #          58 PASS
+  Number of strings :           0
+  -> Test #          59 PASS
+ Test : vstrlist_split with default split char
+  -> Test #          60 PASS
+  -> Test #          61 PASS
+  -> Test #          62 PASS
+  Number of strings :           0
+  -> Test #          63 PASS
+ Test : vstrlist_split with empty split char
+  -> Test #          64 PASS
+  -> Test #          65 PASS
+  -> Test #          66 PASS
+  -> Test #          67 PASS
+  -> Test #          68 PASS
+  Number of strings :           0
+  -> Test #          69 PASS
+ Test : vstrlist_split an empty string
+  -> Test #          70 PASS
+  Number of strings :           0
+  -> Test #          71 PASS
+ Test : vstrlist_split a blank space
+  -> Test #          72 PASS
+  -> Test #          73 PASS
+  Number of strings :           0
+  -> Test #          74 PASS
+ Test : vstrlist_split a word starting and ending with blank space
+  -> Test #          75 PASS
+  -> Test #          76 PASS
+  -> Test #          77 PASS
+  -> Test #          78 PASS
+  Number of strings :           0
+  -> Test #          79 PASS
+ Test : vstrlist_split a regular string with no space
+  -> Test #          80 PASS
+  -> Test #          81 PASS
+  Number of strings :           0
+  -> Test #          82 PASS
+ Test : vstrlist_split a regular string with dot as separator
+  -> Test #          83 PASS
+  -> Test #          84 PASS
+  -> Test #          85 PASS
+  -> Test #          86 PASS
+  Number of strings :           0
+  -> Test #          87 PASS
+ Test : vstrlist_join with default split char
+  -> Test #          88 PASS
+  Number of strings :           0
+  -> Test #          89 PASS
+ Test : vstrlist_join with default split char
+  -> Test #          90 PASS
+  Number of strings :           0
+  -> Test #          91 PASS
+  Number of strings :           0
+  -> Test #          92 PASS
+  Number of strings :           0
+  -> Test #          93 PASS
+ Test : vstrlist_search
+  -> Test #          94 PASS
+ Test : vstrlist_search and not found
+  -> Test #          95 PASS
+ Test : vstrlist_search starting at 2
+  -> Test #          96 PASS
+ Test : vstrlist_search starting at 2
+  -> Test #          97 PASS
+ Test : vstrlist_search with notmatch option
+  -> Test #          98 PASS
+ Test : vstrlist_search with notmatch option = true
+  -> Test #          99 PASS
+ Test : vstrlist_search with notmatch option = false
+  -> Test #         100 PASS
+ Test : vstrlist_search with exact option
+  -> Test #         101 PASS
+ Test : vstrlist_search with exact option
+  -> Test #         102 PASS
+ Test : vstrlist_search with a list as result
+  -> Test #         103 PASS
+  -> Test #         104 PASS
+ Test : vstrlist_search with a list as result
+  -> Test #         105 PASS
+ Test : vstrlist_search with a list as result
+  -> Test #         106 PASS
+  -> Test #         107 PASS
+  -> Test #         108 PASS
+ Test : vstrlist_search with a list as result
+  -> Test #         109 PASS
+  -> Test #         110 PASS
+  Number of strings :           0
+  -> Test #         111 PASS
+  Number of strings :           0
+  -> Test #         112 PASS
+ Test suite completed
+ **********************
+ End of tests.
+  Total number of success tests :          112
+  Total number of failing tests :            0
