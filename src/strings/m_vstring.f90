@@ -9,6 +9,7 @@
 !   See in test_m_vstring to see a complete example of the 
 !   services provided.
 !
+!   Overview
 !   A vstring is an array of characters. 
 !   The simplest way to create a vstring is with vstring_new 
 !   from a "character(len=<something>)" string.
@@ -27,12 +28,14 @@
 !     length = vstring_length (string1)
 !     call vstring_free( string1 )
 !
+!   Creating a string
 !   With vstring_new, one can also create a new vstring as a copy 
 !   of an existing vstring.
 !   With vstring_new, one can also create a new vstring with an 
 !   array of characters or with a repeated copy of an existing vstring.
 !   Destroy the vstring with vstring_free.
 !
+!   Concatenate two strings
 !   Two vstrings can be concatenated in two ways.
 !   The vstring_concat method returns a new vstring computed by the 
 !   concatenation of the two strings.
@@ -44,6 +47,7 @@
 !     call vstring_new ( string2 , " is very interesting" )
 !     string3 = vstring_concat ( string1 , string2 )
 !
+!   Modify the case
 !   The user can modify the case of a vstring.
 !   The vstring_tolower creates a new vstring with lower case characters.
 !   The vstring_toupper creates a new vstring with upper case characters.
@@ -57,16 +61,7 @@
 !   One can transform one vstring into a new one using a map with
 !   vstring_map.
 !
-!   The vstring_split method allows to split a vstring into an array 
-!   of vstrings each time one character is found in a vstring. 
-!   The vstring_join method concatenates an array of vstrings,
-!   using a vstring as the join between the components.
-!   In the following example, the string is split at each dot 
-!   and the number of components is 3 :
-!
-!     call vstring_new ( string1 , "comp.lang.fortran" )
-!     call vstring_split ( string1 , numberOfComponents , listOfComponents )
-!
+!   Pattern matching
 !   The vstring_match method provides string-matching services in the glob-style.
 !   It manages "*" pattern (which matches 0 or more characters), 
 !   the "?" pattern (which matches exactly one character),
@@ -77,6 +72,7 @@
 !     call vstring_new ( pattern , 'm_*.f90' )
 !     match = vstring_match ( string1 , pattern )
 !
+!   Validating a string
 !   The vstring_is method provides a way of validating data by 
 !   computing whether the vstring is in a class of data, for example 
 !   integer, real, digit, alphanumeric, etc...
@@ -89,14 +85,56 @@
 !     if ( .NOT. isinteger ) then
 !       ! Generate an error
 !     endif
-!    
+!
 !   If the character set under use is not in one the pre-defined classes 
 !   of vstring_is, the user can directly call vstring_isincharset or 
 !   vstring_isinasciirange, which are the basic blocks of vstring_is.
 !
+!   Second string argument may be character string
+!   The design choice has been made to design the subroutines/functions
+!   so that their dummy arguments are generally only of type t_vstring.
+!   Another choice would have been to allways take as dummy arguments both
+!   t_vstring and "character (len=*)" strings, with module procedure 
+!   interfaces to make them generic.
+!   The last choice ease the work of the client of the current component,
+!   which can use directly standard fortran constant strings (for example,
+!
+!     equals = vstring_equals ( string1 , "toto" )
+!
+!   instead of
+!
+!     type ( t_vstring ) :: string2
+!     call vstring_new ( string2 , "toto" )
+!     equals = vstring_equals ( string1 , string2 )
+!     call vstring_free ( string2 )
+!
+!   that is to say 5 lines instead of 1.
+!
+!   The main drawback is that the number of interfaces is at least 
+!   multiplied by 2, if not 4 or 8 when the number of string arguments is more 
+!   than 2. This makes the unit tests multiplied by the same number, if one 
+!   want to exercise all the possible interfaces. That way was chosen
+!   by the original iso_varying_string module and lead to a heavy component,
+!   with a large number of lines and a small number of features, because 
+!   all the time was lost in the management of such an heavy module.
+!   The other drawback is that is breaks the object oriented design
+!   so that the "type bound" procedure of F2003 cannot be used.
+!   The current choice is to focus mainly on the services provided,
+!   not the ease of use. That allows to provide much more features than
+!   in the original component, but complicates a little more the 
+!   use in the client code. 
+!   The choice done here is that the first argument is allways of type 
+!   vstring (and called "this"), while the second argument (if any), mays 
+!   by either of type vstring or of type "character (len=*).
+!   That solution allows to keep both consistency and ease of use at 
+!   the maximum possible level.
+!   Several methods are designed this way, for example, vstring_equals, 
+!   vstring_compare, vstring_append, vstring_concat and others.
+!
+!   Allocatable or pointer
 !   Two implementation of m_vstring are provided, depending on the compiler used :
 !   - the allocatable array of characters with the pre-processing macro _VSTRING_ALLOCATABLE,
-!   - the pointer array of characters with the pre-processing macro _VSTRING_POINTERS
+!   - the pointer array of characters with the pre-processing macro _VSTRING_POINTER
 !   If none of the macros are defined, the default implementation is _VSTRING_ALLOCATABLE.
 !   The two implementations provide exactly the same services.
 !   But the "allocatable" implementation allows to manage the vstring
@@ -107,11 +145,11 @@
 !   created).
 !   The current version of m_vstring has been tested with the 
 !   following compilers and versions !
-!   - Intel Visual Fortran 8 : tested with _VSTRING_ALLOCATABLE and _VSTRING_POINTERS
+!   - Intel Visual Fortran 8 : tested with _VSTRING_ALLOCATABLE and _VSTRING_POINTER
 !       But the allocatable version allows to debug more easily.
-!   - gfortran 2007/04/16 : tested with _VSTRING_POINTERS (works fine,
+!   - gfortran 2007/04/16 : tested with _VSTRING_POINTER (works fine,
 !       except for vstring_match)
-!   - g95 May  3 2007 : tested with _VSTRING_POINTERS, OK
+!   - g95 May  3 2007 : tested with _VSTRING_POINTER, OK
 !
 !   Limitations
 !     - No regular expression algorithm is provided.
@@ -171,54 +209,37 @@ module m_vstring
   implicit none
   private
   !
-  ! Type definitions
+  ! t_vstring --
+  !   A vstring is implemented as an array of characters.
+  !   The length of the string is not stored. Instead,
+  !   it is computed by vstring_length each time it is 
+  !   necessary with the intrinsic "size". It the length
+  !   was stored explicitely, it should be managed, which 
+  !   could lead to bugs.
   !
-  ! Choose your dynamic string system between _VSTRING_ALLOCATABLE , _VSTRING_POINTERS
+  ! Choose your dynamic string system between _VSTRING_ALLOCATABLE , _VSTRING_POINTER
   ! Allocatable arrays should be used by default.
   ! But for compatibility of older fortran 90 compilers, pointers are also available.
   ! These are the recommended settings :
-  ! _VSTRING_ALLOCATABLE (default) : gfortran, g95
-  ! _VSTRING_POINTERS : Intel Fortran 8.0
+  ! _VSTRING_POINTER : gfortran, g95
+  ! _VSTRING_ALLOCATABLE : Intel Fortran 8.0
   !
-#ifndef _VSTRING_POINTERS
-#ifndef _VSTRING_ALLOCATABLE
-#define _VSTRING_ALLOCATABLE
-#endif
-#endif
   type, public :: t_vstring
      private
 #ifdef _VSTRING_ALLOCATABLE
      character(LEN=1), dimension(:), allocatable :: chars
 #endif
-#ifdef _VSTRING_POINTERS
+#ifdef _VSTRING_POINTER
      character(LEN=1), dimension(:), pointer :: chars => NULL()
 #endif
   end type t_vstring
   !
-  ! vstring_new --
-  ! Constructor
-  !
-  interface vstring_new
-     module procedure vstring_new_empty
-     module procedure vstring_new_from_charstring
-     module procedure vstring_new_from_vstring
-     module procedure vstring_new_from_chararray
-     module procedure vstring_new_from_integer
-  end interface vstring_new
-  !
-  ! Methods
-  !
-  !
   ! Public methods
   !
-  interface vstring_tocharstring
-     module procedure vstring_tocharstring_fixed
-     module procedure vstring_tocharstring_auto
-  end interface vstring_tocharstring
   public :: vstring_achar
   public :: vstring_adjustl
   public :: vstring_adjustr
-  public :: vstring_allocated
+  public :: vstring_exists
   public :: vstring_append
   public :: vstring_char
   public :: vstring_charindex
@@ -241,7 +262,6 @@ module m_vstring
   public :: vstring_replace
   public :: vstring_reverse
   public :: vstring_scan
-  public :: vstring_split
   public :: vstring_tocharstring
   public :: vstring_tolower
   public :: vstring_totitle
@@ -250,10 +270,109 @@ module m_vstring
   public :: vstring_trimleft
   public :: vstring_trimright
   public :: vstring_verify
-  public :: vstring_join
   public :: vstring_is
   public :: vstring_isincharset
   public :: vstring_isinasciirange
+  public :: vstring_set_stoponerror
+  !
+  ! vstring_new --
+  !   Generic constructor
+  !
+  interface vstring_new
+     module procedure vstring_new_empty
+     module procedure vstring_new_from_charstring
+     module procedure vstring_new_from_vstring
+     module procedure vstring_new_from_chararray
+     module procedure vstring_new_from_integer
+  end interface vstring_new
+  !
+  ! vstring_tocharstring --
+  !   Generic converter from a vstring to a charstring
+  !
+  interface vstring_tocharstring
+     module procedure vstring_tocharstring_fixed
+     module procedure vstring_tocharstring_auto
+  end interface vstring_tocharstring
+  !
+  ! vstring_equals --
+  !   Generic comparison between two strings
+  !
+  interface vstring_equals
+     module procedure vstring_equals_vstring
+     module procedure vstring_equals_charstring
+  end interface vstring_equals
+  !
+  ! vstring_compare --
+  !   Generic comparison between two strings.
+  !
+  interface vstring_compare
+     module procedure vstring_compare_vstring
+     module procedure vstring_compare_charstring
+  end interface vstring_compare
+  !
+  ! vstring_append --
+  !   Generic append to a vstring.
+  !
+  interface vstring_append
+     module procedure vstring_append_vstring
+     module procedure vstring_append_charstring
+  end interface vstring_append
+  !
+  ! vstring_concat --
+  !   Generic concatenate to a vstring.
+  !
+  interface vstring_concat
+     module procedure vstring_concat_vstring
+     module procedure vstring_concat_charstring
+  end interface vstring_concat
+  !
+  ! vstring_match --
+  !   Generic string matching.
+  !
+  interface vstring_match
+     module procedure vstring_match_vstring
+     module procedure vstring_match_charstring
+  end interface vstring_match
+  !
+  ! vstring_trim --
+  !   Generic string trim.
+  !
+  interface vstring_trim
+     module procedure vstring_trim_vstring
+     module procedure vstring_trim_charstring
+  end interface vstring_trim
+  !
+  ! vstring_trimleft --
+  !   Generic string trim.
+  !
+  interface vstring_trimleft
+     module procedure vstring_trimleft_vstring
+     module procedure vstring_trimleft_charstring
+  end interface vstring_trimleft
+  !
+  ! vstring_trimright --
+  !   Generic string trim.
+  !
+  interface vstring_trimright
+     module procedure vstring_trimright_vstring
+     module procedure vstring_trimright_charstring
+  end interface vstring_trimright
+  !
+  ! vstring_first --
+  !   Generic string search first.
+  !
+  interface vstring_first
+     module procedure vstring_first_vstring
+     module procedure vstring_first_charstring
+  end interface vstring_first
+  !
+  ! vstring_last --
+  !   Generic string search last.
+  !
+  interface vstring_last
+     module procedure vstring_last_vstring
+     module procedure vstring_last_charstring
+  end interface vstring_last
   !
   ! Constants
   !
@@ -261,33 +380,43 @@ module m_vstring
   integer, parameter, public :: VSTRING_COMPARE_EQUAL = 0
   integer, parameter, public :: VSTRING_COMPARE_GREATER = 1
   integer, parameter, public :: VSTRING_INDEX_UNKNOWN = 0
-  character(len=*), parameter, private :: VSTRING_DIGITS = "0123456789"
-  character(len=*), parameter, private :: VSTRING_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  character(len=*), parameter, private :: VSTRING_LOWER = "abcdefghijklmnopqrstuvwxyz"
-  character(len=*), parameter, private :: VSTRING_CHARACTERSET = VSTRING_LOWER//VSTRING_DIGITS
-  character(len=*), parameter, private :: VSTRING_SPACE           = achar(32)
+  character(len=*), parameter, public :: VSTRING_DIGITS = "0123456789"
+  character(len=*), parameter, public :: VSTRING_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  character(len=*), parameter, public :: VSTRING_LOWER = "abcdefghijklmnopqrstuvwxyz"
+  character(len=*), parameter, public :: VSTRING_CHARACTERSET = VSTRING_LOWER//VSTRING_DIGITS
+  character(len=*), parameter, public :: VSTRING_SPACE           = achar(32)
   ! Ascii char #10 -> corresponds to \n : line_feed
-  character(len=*), parameter, private :: VSTRING_NEWLINE         = achar(10)
+  character(len=*), parameter, public :: VSTRING_NEWLINE         = achar(10)
   ! Ascii char #13 -> corresponds to \r : carriage return
-  character(len=*), parameter, private :: VSTRING_CARRIAGE_RETURN = achar(13)
+  character(len=*), parameter, public :: VSTRING_CARRIAGE_RETURN = achar(13)
   ! Ascii char #9 -> corresponds to \t : tab
-  character(len=*), parameter, private :: VSTRING_TAB             = achar(9)
+  character(len=*), parameter, public :: VSTRING_TAB             = achar(9)
   ! Ascii char #34 -> corresponds to "
-  character(len=*), parameter, private :: VSTRING_DOUBLEQUOTE             = achar(34)
+  character(len=*), parameter, public :: VSTRING_DOUBLEQUOTE             = achar(34)
   ! Ascii char #39 -> corresponds to '
-  character(len=*), parameter, private :: VSTRING_SINGLEQUOTE             = achar(39)
-  character(len=*), parameter, private :: VSTRING_WHITESPACE = VSTRING_SPACE//VSTRING_NEWLINE//VSTRING_CARRIAGE_RETURN//VSTRING_TAB
-  character(len=*), parameter, private :: VSTRING_HEXDIGITS = "abcdefABCDEF"//VSTRING_DIGITS
-  character(len=*), parameter, private :: VSTRING_PUNCTUATION = "_,;:.?![](){}@"//VSTRING_DOUBLEQUOTE//VSTRING_SINGLEQUOTE
+  character(len=*), parameter, public :: VSTRING_SINGLEQUOTE             = achar(39)
+  character(len=*), parameter, public :: VSTRING_WHITESPACE = VSTRING_SPACE//VSTRING_NEWLINE//VSTRING_CARRIAGE_RETURN//VSTRING_TAB
+  character(len=*), parameter, public :: VSTRING_HEXDIGITS = "abcdefABCDEF"//VSTRING_DIGITS
+  character(len=*), parameter, public :: VSTRING_PUNCTUATION = "_,;:.?![](){}@"//VSTRING_DOUBLEQUOTE//VSTRING_SINGLEQUOTE
   !
   ! Static parameters
   !
   logical, save :: random_process_initialize = .false.
+  !
   ! Total number of currently available (allocated) strings.
   ! Note :
   ! This is mainly for debugging purposes of the vstring module itself or client algorithms.
   ! It allows to check the consistency of vstring_new/vstring_free statements.
   integer, save :: vstring_number_of_strings = 0
+  !
+  ! Set to true to stop whenever an error comes in the vstring component.
+  logical, save :: vstring_stoponerror = .true.
+  ! 
+  ! TODO : Flags for error management.
+  !
+  integer, parameter :: VSTRING_ERROR_OK = 0
+  integer, parameter :: VSTRING_ERROR_WRONGINDEX = 1
+  integer, parameter :: VSTRING_ERROR_STRINGNOTCREATED = 2
 contains
   !
   ! vstring_new_empty --
@@ -316,7 +445,7 @@ contains
     !
     ! Check that the data is empty
     !
-    isallocated = vstring_allocated ( this )
+    isallocated = vstring_exists ( this )
     if ( isallocated ) then
        this_length = vstring_length(this)
        write ( message , * ) "Object is allready associated with size ", this_length
@@ -343,11 +472,15 @@ contains
     character ( len = 200) :: message
     integer :: icharacter
     integer :: this_length
-    call vstring_check_string ( vstring , "vstring_new_from_vstring" )
+    integer :: status
+    call vstring_check_string ( vstring , "vstring_new_from_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     !
     ! Check that the data is empty
     !
-    if ( vstring_allocated ( this ) ) then
+    if ( vstring_exists ( this ) ) then
        this_length = vstring_length(this)
        write ( message , * ) "Object is allready associated with size ", this_length , &
             " in vstring_new_from_charstring"
@@ -377,7 +510,7 @@ contains
     !
     ! Check that the data is empty
     !
-    if ( vstring_allocated ( this ) ) then
+    if ( vstring_exists ( this ) ) then
        this_length = vstring_length(this)
        write ( message , * ) "Object is allready associated with size ", this_length , &
             " in vstring_new_from_chararray"
@@ -415,7 +548,7 @@ contains
     !
     ! Check that the data is empty
     !
-    if ( vstring_allocated ( this ) ) then
+    if ( vstring_exists ( this ) ) then
        this_length = vstring_length(this)
        write ( message , * ) "Object is allready associated with size ", this_length , &
             " in vstring_new_from_chararray"
@@ -478,14 +611,14 @@ contains
     logical :: string_allocated
     character ( len = 300 ) :: message
     integer :: status
-    string_allocated = vstring_allocated ( this )
+    string_allocated = vstring_exists ( this )
     if ( string_allocated ) then
        deallocate ( this % chars , stat=status )
        if ( status /= 0 ) then
           write ( message , * ) "There was an error while deallocating the string."
           call vstring_error ( this , message , "vstring_free" )
        endif
-#ifdef _VSTRING_POINTERS
+#ifdef _VSTRING_POINTER
        nullify ( this % chars )
 #endif
        !
@@ -519,42 +652,34 @@ contains
   !
   ! vstring_reference_get --
   !   Static method.
-  !   Decrease the counter of currently referenced strings.
+  !   Returns the number of currently referenced strings.
   !
   integer function vstring_reference_get ( )
     implicit none
     vstring_reference_get = vstring_number_of_strings
   end function vstring_reference_get
   !
-  ! vstring_allocated --
+  ! vstring_exists --
   !   Returns .true. if the string is allocated.
   !
-  pure logical function vstring_allocated ( this )
+  pure logical function vstring_exists ( this )
     type(t_vstring), intent(in) :: this
 #ifdef _VSTRING_ALLOCATABLE
-    if ( allocated ( this%chars) ) then
-       vstring_allocated = .true.
-    else
-       vstring_allocated = .false.
-    endif
+    vstring_exists = allocated ( this%chars )
 #endif
-#ifdef _VSTRING_POINTERS
-    if ( associated ( this%chars) ) then
-       vstring_allocated = .true.
-    else
-       vstring_allocated = .false.
-    endif
+#ifdef _VSTRING_POINTER
+    vstring_exists = associated ( this%chars)
 #endif
-  end function vstring_allocated
+  end function vstring_exists
   !
-  ! vstring_equals --
+  ! vstring_equals_vstring --
   !   Perform a character-by-character comparison of strings string1 and string2.
   !   Returns true if this and string2 are identical, or .false when not.
   !   If nocase is set to true, the case of the characters is not taken into account.
   !   The default behaviour is to take into account for case of characters.
   !   If length is specified, then only the first length characters are used in the comparison.
   !
-  function vstring_equals ( this , string_b , nocase , length ) result (op_eq)
+  function vstring_equals_vstring ( this , string_b , nocase , length ) result (op_eq)
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in) :: string_b
     logical , intent (in), optional :: nocase
@@ -572,8 +697,15 @@ contains
     integer :: length_min
     integer :: last
     character ( len = 300 ) :: message
-    call vstring_check_string ( this , "vstring_equals" )
-    call vstring_check_string ( string_b , "vstring_equals" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_equals" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( string_b , "vstring_equals" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     !
     ! Process options
     !
@@ -641,7 +773,22 @@ contains
           endif
        enddo
     endif
-  end function vstring_equals
+  end function vstring_equals_vstring
+  !
+  ! vstring_equals_charstring --
+  !   Interface to vstring_equals_vstring to manage character string.
+  !
+  function vstring_equals_charstring ( this , string_b , nocase , length ) result (op_eq)
+    type(t_vstring), intent(in) :: this
+    character(len=*), intent(in) :: string_b
+    logical , intent ( in ), optional :: nocase
+    integer , intent ( in ), optional :: length
+    logical                          :: op_eq
+    type(t_vstring) :: vstring_b
+    call vstring_new ( vstring_b , string_b )
+    op_eq = vstring_equals_vstring ( this , vstring_b , nocase , length )
+    call vstring_free ( vstring_b )
+  end function vstring_equals_charstring
   !
   ! vstring_tocharstring_fixed --
   !   Convert a varying string into a character string
@@ -705,7 +852,7 @@ contains
     type(t_vstring), intent(in) :: this
     integer                          :: length
     logical :: string_allocated
-    string_allocated = vstring_allocated ( this )
+    string_allocated = vstring_exists ( this )
     if ( string_allocated ) then
        length = SIZE(this%chars)
     else
@@ -718,31 +865,51 @@ contains
     endif
   end function vstring_length
   !
-  ! vstring_concat --
+  ! vstring_concat_vstring --
   !   Returns a new string made by the concatenation of two varying strings.
   !
-  function vstring_concat ( this , string_b ) result (concat_string)
+  function vstring_concat_vstring ( this , string_b ) result (concat_string)
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in) :: string_b
     type(t_vstring)             :: concat_string
     integer                          :: len_string_a
     integer :: concat_length
-    call vstring_check_string ( this , "vstring_concat" )
-    call vstring_check_string ( string_b , "vstring_concat" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_concat" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( string_b , "vstring_concat" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     len_string_a = vstring_length(this)
     concat_length = len_string_a+vstring_length(string_b)
     call vstring_new ( concat_string , concat_length )
     concat_string % chars(:len_string_a) = this%chars
     concat_string % chars(len_string_a+1:) = string_b%chars
-  end function vstring_concat
+  end function vstring_concat_vstring
   !
-  ! vstring_compare --
+  ! vstring_concat_charstring --
+  !   Interface to vstring_concat_vstring to manage character strings
+  !
+  function vstring_concat_charstring ( this , string_b ) result (concat_string)
+    type(t_vstring), intent(in) :: this
+    character(len=*), intent(in) :: string_b
+    type(t_vstring)             :: concat_string
+    type(t_vstring) :: vstring_b
+    call vstring_new ( vstring_b , string_b )
+    concat_string = vstring_concat_vstring ( this , vstring_b )
+    call vstring_free ( vstring_b )
+  end function vstring_concat_charstring
+  !
+  ! vstring_compare_vstring --
   !   Perform a character-by-character comparison of strings string1 and string2.
   !   Returns -1, 0, or 1, depending on whether string1 is lexicographically less
   !   than, equal to, or greater than string2.
   !   If -length is specified, then only the first length characters are used in the comparison.
   !
-  function vstring_compare ( this , string_b , nocase , length ) result ( compare )
+  function vstring_compare_vstring ( this , string_b , nocase , length ) result ( compare )
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in) :: string_b
     logical , intent (in), optional :: nocase
@@ -758,6 +925,7 @@ contains
     type(t_vstring) :: char1_case
     type(t_vstring) :: char2_case
     character (len=300) :: message
+    integer :: status
     !
     ! Process options
     !
@@ -766,8 +934,14 @@ contains
     else
        nocase_real = .false.
     endif
-    call vstring_check_string ( this , "vstring_compare" )
-    call vstring_check_string ( string_b , "vstring_compare" )
+    call vstring_check_string ( this , "vstring_compare" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( string_b , "vstring_compare" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     !
     ! Initialize
     !
@@ -841,21 +1015,45 @@ contains
           endif
        endif
     endif
-  end function vstring_compare
+  end function vstring_compare_vstring
   !
-  ! vstring_trim --
-  !   Returns a new string except that any leading or trailing characters from the set given by chars are removed.
-  !   If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).
+  ! vstring_compare_charstring --
+  !   Interface to vstring_compare_vstring to manage character string.
   !
-  function vstring_trim ( this , chars ) result ( trim_string )
+  function vstring_compare_charstring ( this , string_b , nocase , length ) result ( compare )
+    type(t_vstring), intent(in) :: this
+    character (len=*), intent(in) :: string_b
+    logical , intent ( in ), optional :: nocase
+    integer , intent ( in ), optional :: length
+    integer                     :: compare
+    type(t_vstring) :: vstring_b
+    call vstring_new ( vstring_b , string_b )
+    compare = vstring_compare_vstring ( this , vstring_b , nocase , length )
+    call vstring_free ( vstring_b )
+  end function vstring_compare_charstring
+  !
+  ! vstring_trim_vstring --
+  !   Returns a new string except that any leading or trailing characters 
+  !   from the set given by chars are removed.
+  !   If chars is not specified then white space is removed (spaces, tabs, 
+  !   newlines, and carriage returns).
+  !
+  function vstring_trim_vstring ( this , chars ) result ( trim_string )
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in), optional :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring)             :: chars_real
     type(t_vstring) :: trimmedLeft
-    call vstring_check_string ( this , "vstring_trim" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_trim_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     if (present ( chars )) then
-       call vstring_check_string ( chars , "vstring_trim" )
+       call vstring_check_string ( chars , "vstring_trim_vstring" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        call vstring_new ( chars_real , chars )
     else
        call vstring_new ( chars_real , VSTRING_WHITESPACE )
@@ -873,13 +1071,28 @@ contains
     !
     call vstring_free ( chars_real )
     call vstring_free ( trimmedLeft )
-  end function vstring_trim
+  end function vstring_trim_vstring
   !
-  ! vstring_trimleft --
-  !   Returns a new string except that any leading characters from the set given by chars are removed.
-  !   If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).
+  ! vstring_trim_charstring --
+  !   Interface to vstring_trim_vstring to manage character strings.
   !
-  function vstring_trimleft ( this , chars ) result ( trim_string )
+  function vstring_trim_charstring ( this , chars ) result ( trim_string )
+    type(t_vstring), intent(in) :: this
+    character (len=*), intent(in) :: chars
+    type(t_vstring)             :: trim_string
+    type(t_vstring) :: vchars
+    call vstring_new ( vchars , chars )
+    trim_string = vstring_trim_vstring ( this , vchars )
+    call vstring_free ( vchars )
+  end function vstring_trim_charstring
+  !
+  ! vstring_trimleft_vstring --
+  !   Returns a new string except that any leading characters 
+  !   from the set given by chars are removed.
+  !   If chars is not specified then white space is removed 
+  !   (spaces, tabs, newlines, and carriage returns).
+  !
+  function vstring_trimleft_vstring ( this , chars ) result ( trim_string )
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in), optional :: chars
     type(t_vstring)             :: trim_string
@@ -890,9 +1103,16 @@ contains
     type(t_vstring) :: current_char
     integer :: first
     logical :: first_found
-    call vstring_check_string ( this , "vstring_trimleft" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_trimleft_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     if (present ( chars )) then
-       call vstring_check_string ( chars , "vstring_trimleft" )
+       call vstring_check_string ( chars , "vstring_trimleft_vstring" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        call vstring_new ( chars_real , chars )
     else
        call vstring_new ( chars_real , VSTRING_WHITESPACE )
@@ -927,13 +1147,26 @@ contains
     ! 3. Cleanup
     !
     call vstring_free ( chars_real )
-  end function vstring_trimleft
+  end function vstring_trimleft_vstring
+  !
+  ! vstring_trimleft_charstring --
+  !   Interface to vstring_trimleft_vstring to manage character strings.
+  !
+  function vstring_trimleft_charstring ( this , chars ) result ( trim_string )
+    type(t_vstring), intent(in) :: this
+    character (len=*), intent(in) :: chars
+    type(t_vstring)             :: trim_string
+    type(t_vstring) :: vchars
+    call vstring_new ( vchars , chars )
+    trim_string = vstring_trimleft_vstring ( this , vchars )
+    call vstring_free ( vchars )
+  end function vstring_trimleft_charstring
   !
   ! vstring_trimright --
   !   Returns a value equal to string except that any trailing characters from the set given by chars are removed.
   !   If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).
   !
-  function vstring_trimright ( this , chars ) result ( trim_string )
+  function vstring_trimright_vstring ( this , chars ) result ( trim_string )
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in), optional :: chars
     type(t_vstring)             :: trim_string
@@ -944,9 +1177,16 @@ contains
     type(t_vstring) :: current_char
     integer :: last
     logical :: last_found
-    call vstring_check_string ( this , "vstring_trimright" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_trimright_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     if (present ( chars )) then
-       call vstring_check_string ( chars , "vstring_trimright" )
+       call vstring_check_string ( chars , "vstring_trimright_vstring" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        call vstring_new ( chars_real , chars )
     else
        call vstring_new ( chars_real , VSTRING_WHITESPACE )
@@ -981,16 +1221,29 @@ contains
     ! 3. Cleanup
     !
     call vstring_free ( chars_real )
-  end function vstring_trimright
+  end function vstring_trimright_vstring
   !
-  ! vstring_first --
+  ! vstring_trimright_charstring --
+  !   Interface to vstring_trimright_vstring to manage character strings.
+  !
+  function vstring_trimright_charstring ( this , chars ) result ( trim_string )
+    type(t_vstring), intent(in) :: this
+    character (len=*), intent(in) :: chars
+    type(t_vstring)             :: trim_string
+    type(t_vstring) :: vchars
+    call vstring_new ( vchars , chars )
+    trim_string = vstring_trimright_vstring ( this , vchars )
+    call vstring_free ( vchars )
+  end function vstring_trimright_charstring
+  !
+  ! vstring_first_vstring --
   !   Search in the current string for a sequence of characters that exactly match the characters in string2.
   !   If found, return the index of the first character in the first such match within the current string.
   !   If not found, return 0.
   !   If first is specified, then the search is constrained to start with the character 
   !   in the current string specified by the index.
   !
-  function vstring_first ( this , string2 , first ) result ( firstIndex )
+  function vstring_first_vstring ( this , string2 , first ) result ( firstIndex )
     type(t_vstring), intent(in)   :: this
     type(t_vstring), intent(in)   :: string2
     integer, intent(in), optional :: first
@@ -1002,8 +1255,15 @@ contains
     integer :: endIndex
     type(t_vstring)   :: substring
     logical :: equals
-    call vstring_check_string ( this , "vstring_first" )
-    call vstring_check_string ( string2 , "vstring_first" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_first_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( string2 , "vstring_first_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     if (present( first )) then
        call vstring_check_index ( this , first )
        startIndex = first
@@ -1034,16 +1294,30 @@ contains
           exit
        endif
     enddo
-  end function vstring_first
+  end function vstring_first_vstring
   !
-  ! vstring_last --
+  ! vstring_first_charstring --
+  !   Interface to vstring_first_vstring to manage character strings
+  !
+  function vstring_first_charstring ( this , string2 , first ) result ( firstIndex )
+    type(t_vstring), intent(in)   :: this
+    character(len=*), intent(in)   :: string2
+    integer, intent(in), optional :: first
+    integer                       :: firstIndex
+    type(t_vstring) :: vstring2
+    call vstring_new ( vstring2 , string2 )
+    firstIndex = vstring_first_vstring ( this , vstring2 , first )
+    call vstring_free ( vstring2 )
+  end function vstring_first_charstring
+  !
+  ! vstring_last_vstring --
   !   Search in the current string for a sequence of characters that exactly match the characters in string2.
   !   If found, return the index of the last character in the first such match within the current string.
   !   If not found, return 0.
   !   If last is specified, then the search is constrained to start with the character in the current 
   !   string specified by the index.
   !
-  function vstring_last ( this , string2 , last ) result ( first )
+  function vstring_last_vstring ( this , string2 , last ) result ( first )
     type(t_vstring), intent(in)   :: this
     type(t_vstring), intent(in)   :: string2
     integer, intent(in), optional :: last
@@ -1055,8 +1329,15 @@ contains
     integer :: endIndex
     type(t_vstring)   :: substring
     logical :: equals
-    call vstring_check_string ( this , "vstring_last" )
-    call vstring_check_string ( string2  , "vstring_last" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_last_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( string2  , "vstring_last_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     length = vstring_length ( this )
     if (present( last )) then
        call vstring_check_index ( this , last )
@@ -1087,7 +1368,21 @@ contains
           exit
        endif
     enddo
-  end function vstring_last
+  end function vstring_last_vstring
+  !
+  ! vstring_last_charstring --
+  !   Interface to vstring_last_vstring to manage character strings
+  !
+  function vstring_last_charstring ( this , string2 , first ) result ( firstIndex )
+    type(t_vstring), intent(in)   :: this
+    character(len=*), intent(in)   :: string2
+    integer, intent(in), optional :: first
+    integer                       :: firstIndex
+    type(t_vstring) :: vstring2
+    call vstring_new ( vstring2 , string2 )
+    firstIndex = vstring_last_vstring ( this , vstring2 , first )
+    call vstring_free ( vstring2 )
+  end function vstring_last_charstring
   !
   ! vstring_range --
   !   Returns a range of consecutive characters from string,
@@ -1103,9 +1398,19 @@ contains
     integer, intent(in)         :: first , last
     type(t_vstring)             :: string_range
     character ( len = 200) :: message
-    call vstring_check_string ( this , "vstring_range" )
-    call vstring_check_index ( this , first , "vstring_range" )
-    call vstring_check_index ( this , last , "vstring_range" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_range" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_index ( this , first , "vstring_range" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_index ( this , last , "vstring_range" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     if ( first > last ) then
        write ( message , * ) "First index ", first , " is greater than last ", last, &
             " in vstring_range"
@@ -1125,8 +1430,15 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(in)         :: charIndex
     type(t_vstring)             :: string_index
-    call vstring_check_string ( this , "vstring_index" )
-    call vstring_check_index ( this , charIndex , "vstring_index" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_index" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_index ( this , charIndex , "vstring_index" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     call vstring_new ( string_index , this % chars ( charIndex : charIndex ) )
   end function vstring_index
   !
@@ -1145,18 +1457,28 @@ contains
     integer :: last_real
     integer :: icharacter
     integer :: firstindex
+    integer :: status
     !
     ! Get options
     !
-    call vstring_check_string ( this , "vstring_toupper" )
+    call vstring_check_string ( this , "vstring_toupper" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     if (present( first )) then
-       call vstring_check_index ( this , first , "vstring_toupper" )
+       call vstring_check_index ( this , first , "vstring_toupper" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        first_real = first
     else
        first_real = 1
     endif
     if (present( last )) then
-       call vstring_check_index ( this , last , "vstring_toupper" )
+       call vstring_check_index ( this , last , "vstring_toupper" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        last_real = last
     else
        last_real = vstring_length ( this )
@@ -1190,19 +1512,29 @@ contains
     integer :: icharacter
     integer :: firstindex
     integer :: length
+    integer :: status
     !
     ! Get options
     !
-    call vstring_check_string ( this , "vstring_tolower" )
+    call vstring_check_string ( this , "vstring_tolower" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     length = vstring_length ( this )
     if (present( first )) then
-       call vstring_check_index ( this , first , "vstring_tolower" )
+       call vstring_check_index ( this , first , "vstring_tolower" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        first_real = first
     else
        first_real = 1
     endif
     if (present( last )) then
-       call vstring_check_index ( this , last , "vstring_tolower" )
+       call vstring_check_index ( this , last , "vstring_tolower" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
        last_real = last
     else
        last_real = length
@@ -1233,6 +1565,7 @@ contains
     integer :: first_real
     integer :: last_real
     integer :: length
+    integer :: status
     !
     ! The new string is made of 4 parts :
     ! - before the first letter to update (left unchanged)
@@ -1246,19 +1579,28 @@ contains
     type(t_vstring) :: subpart4
     type(t_vstring) :: subpartToUpper
     type(t_vstring) :: subpartToLower
-    call vstring_check_string ( this , "vstring_totitle" )
+    call vstring_check_string ( this , "vstring_totitle" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     !
     ! Get options
     !
     if (present( first )) then
-       call vstring_check_index ( this , first , "vstring_totitle" )
+       call vstring_check_index ( this , first , "vstring_totitle" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
        first_real = first
     else
        first_real = 1
     endif
     length = vstring_length ( this )
     if (present( last )) then
-       call vstring_check_index ( this , last , "vstring_totitle" )
+       call vstring_check_index ( this , last , "vstring_totitle" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
        last_real = last
     else
        last_real = length
@@ -1327,7 +1669,11 @@ contains
     type(t_vstring) :: new_reverse
     integer :: icharacter
     integer :: length
-    call vstring_check_string ( this , "vstring_reverse" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_reverse" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     length = vstring_length ( this )
     call vstring_new ( new_reverse , this )
     do icharacter = 1 , length
@@ -1452,7 +1798,7 @@ contains
     new_ichar = ichar ( thechar )
   end function vstring_ichar
   !
-  ! vstring_append --
+  ! vstring_append_vstring --
   !   Append the given string at the end of the current string.
   !   If the given string (string_b) is of length greater than zero,
   !   that means that the length of the current string will be greater
@@ -1461,17 +1807,36 @@ contains
   !   That method can be called as a convenient alternative to vstring_concat,
   !   when the concat is to be done "in place".
   !
-  subroutine vstring_append ( this , string_b )
+  subroutine vstring_append_vstring ( this , string_b )
     type(t_vstring), intent(inout) :: this
     type(t_vstring), intent(in) :: string_b
     type(t_vstring) :: old_string
-    call vstring_check_string ( this , "vstring_append" )
-    call vstring_check_string ( string_b , "vstring_append" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_append_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( string_b , "vstring_append_vstring" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     call vstring_new ( old_string , this )
     call vstring_free ( this )
     this = vstring_concat ( old_string , string_b )
     call vstring_free ( old_string )
-  end subroutine vstring_append
+  end subroutine vstring_append_vstring
+  !
+  ! vstring_append_charstring --
+  !   Interface to manage character strings
+  !
+  subroutine vstring_append_charstring ( this , string_b )
+    type(t_vstring), intent(inout) :: this
+    character(len=*), intent(in) :: string_b
+    type(t_vstring) :: vstring_b
+    call vstring_new ( vstring_b , string_b )
+    call vstring_append_vstring ( this , vstring_b )
+    call vstring_free ( vstring_b )
+  end subroutine vstring_append_charstring
   !
   ! vstring_map --
   !   Replaces substrings in string based on the mapping defined by the couple (map_old , map_new). 
@@ -1514,10 +1879,14 @@ contains
     logical :: nocase_real
     type(t_vstring) :: stringmap_lower
     type(t_vstring) :: mapold_lower
+    integer :: status
     !
     ! Check input data
     !
-    call vstring_check_string ( this , "vstring_map" )
+    call vstring_check_string ( this , "vstring_map" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     map_length = size ( map_old )
     map_length_new = size ( map_new )
     if ( map_length /= map_length_new ) then
@@ -1539,8 +1908,14 @@ contains
     ! Check map content
     !
     do imap = 1 , map_length
-       call vstring_check_string ( map_old ( imap ) , "vstring_map" )
-       call vstring_check_string ( map_new ( imap ) , "vstring_map" )
+       call vstring_check_string ( map_old ( imap ) , "vstring_map" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
+       call vstring_check_string ( map_new ( imap ) , "vstring_map" , status )
+       if ( status /= VSTRING_ERROR_OK ) then
+          return
+       endif
     enddo
     !
     ! Apply map
@@ -1621,9 +1996,19 @@ contains
     type(t_vstring) :: part2
     type(t_vstring) :: newstring_real
     integer :: length
-    call vstring_check_string ( this , "vstring_replace" )
-    call vstring_check_index ( this , first , "vstring_replace" )
-    call vstring_check_index ( this , last , "vstring_replace" )
+    integer :: status
+    call vstring_check_string ( this , "vstring_replace" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_index ( this , first , "vstring_replace" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_index ( this , last , "vstring_replace" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     !
     ! Get optional arguments
     !
@@ -1774,7 +2159,7 @@ contains
     call vstring_new ( newstring , adjusted )
   end function vstring_adjustr
   !
-  ! vstring_match --
+  ! vstring_match_vstring --
   !   See if pattern matches string; return 1 if it does, 0 if it doesn't. 
   !   If -nocase is specified, then the pattern attempts to match against the 
   !   string in a case insensitive manner. 
@@ -1796,7 +2181,7 @@ contains
   !       Matches the single character x. 
   !       This provides a way of avoiding the special interpretation of the characters *?[]\ in pattern.
   !
-  recursive function vstring_match ( this , pattern , nocase ) result ( match )
+  recursive function vstring_match_vstring ( this , pattern , nocase ) result ( match )
     type(t_vstring), intent(in) :: this
     type(t_vstring), intent(in) :: pattern
     logical , intent(in) , optional :: nocase
@@ -1822,6 +2207,7 @@ contains
     logical :: nocase_real
     type(t_vstring) :: this_char1lower
     type(t_vstring) :: chars_lower
+    integer :: status
     !
     ! Process options
     !
@@ -1833,8 +2219,14 @@ contains
     !
     ! Initialize
     !
-    call vstring_check_string ( this , "Check string in vstring_match." )
-    call vstring_check_string ( pattern , "Check pattern in vstring_match." )
+    call vstring_check_string ( this , "Check string in vstring_match_vstring." , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
+    call vstring_check_string ( pattern , "Check pattern in vstring_match_vstring." , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     call vstring_new ( charstar , "*" )
     call vstring_new ( backslash , "\" )
     call vstring_new ( question , "?" )
@@ -1898,7 +2290,7 @@ contains
                 else
                    call vstring_new ( pattern_substring2 , "" )
                 endif
-                match = vstring_match ( this_substring , pattern_substring2 , nocase = nocase_real )
+                match = vstring_match_vstring ( this_substring , pattern_substring2 , nocase = nocase_real )
                 call vstring_free ( pattern_substring2 )
                 if ( match ) then
                    exit
@@ -1914,14 +2306,14 @@ contains
           !
           ! Solution #1 : Compare the string against the end of the pattern
           !
-          match = vstring_match ( this , pattern_substring , nocase = nocase_real )
+          match = vstring_match_vstring ( this , pattern_substring , nocase = nocase_real )
           if ( match ) then
              exit
           endif
           !
           ! Solution #2 : Compare the end of the string against the pattern
           !
-          match = vstring_match ( this_substring , pattern , nocase = nocase_real )
+          match = vstring_match_vstring ( this_substring , pattern , nocase = nocase_real )
           if ( match ) then
              exit
           endif
@@ -1935,7 +2327,7 @@ contains
           !
           ! Compare the end of the string against the end of the pattern.
           !
-          match = vstring_match ( this_substring , pattern_substring , nocase = nocase_real )
+          match = vstring_match_vstring ( this_substring , pattern_substring , nocase = nocase_real )
           if ( match ) then
              exit
           endif
@@ -1988,7 +2380,7 @@ contains
                 else
                    call vstring_new ( pattern_substring2 , "" )
                 endif
-                match = vstring_match ( this_substring , pattern_substring2 , nocase = nocase_real )
+                match = vstring_match_vstring ( this_substring , pattern_substring2 , nocase = nocase_real )
                 call vstring_free ( pattern_substring2 )
                 if ( match ) then
                    exit
@@ -2006,7 +2398,7 @@ contains
           !
           ! Compare the end of the string against the end of the pattern
           !
-          match = vstring_match ( this_substring , pattern_substring , nocase = nocase_real )
+          match = vstring_match_vstring ( this_substring , pattern_substring , nocase = nocase_real )
           if ( match ) then
              exit
           endif
@@ -2025,7 +2417,21 @@ contains
     call vstring_free ( pattern_substring )
     call vstring_free ( leftbracket )
     call vstring_free ( rightbracket )
-  end function vstring_match
+  end function vstring_match_vstring
+  !
+  ! vstring_match_charstring --
+  !   Interface to vstring_match_vstring to manage character strings.
+  !
+  recursive function vstring_match_charstring ( this , pattern , nocase ) result ( match )
+    type(t_vstring), intent(in) :: this
+    character(len=*), intent(in) :: pattern
+    logical , intent(in) , optional :: nocase
+    logical :: match
+    type(t_vstring) :: vpattern
+    call vstring_new ( vpattern , pattern )
+    match = vstring_match_vstring ( this , vpattern , nocase )
+    call vstring_free ( vpattern )
+  end function vstring_match_charstring
   !
   ! vstring_expandcharset --
   !   Consider that the current string is a character set and returns 
@@ -2055,10 +2461,14 @@ contains
     type(t_vstring) :: asciichar
     type(t_vstring) :: this_substring
     type(t_vstring) :: expanded_end
+    integer :: status
     !
     ! Initialize
     !
-    call vstring_check_string ( this , "vstring_expandcharset" )
+    call vstring_check_string ( this , "vstring_expandcharset" , status )
+    if ( status /= VSTRING_ERROR_OK ) then
+       return
+    endif
     call vstring_new ( minus , "-" )
     this_length = vstring_length ( this )
     !
@@ -2102,173 +2512,6 @@ contains
     !
     call vstring_free ( minus )
   end function vstring_expandcharset
-  !
-  ! vstring_split --
-  !   Computes an array whose elements are the components in the current string.
-  !   Returns an array created by splitting string at each character that is in 
-  !   the splitChars argument. Each element of the result array will consist of 
-  !   the characters from string that lie between instances of the characters in 
-  !   splitChars. The numberOfComponents is zero if string contains adjacent 
-  !   characters in splitChars. If splitChars is an empty string then each character of string 
-  !   becomes a separate element of the result list. SplitChars defaults to the 
-  !   standard white-space characters (space, newline, carriage return and tab).
-  ! Arguments:
-  !   this   The current string to process
-  !   numberOfComponents the number of items in the list of components
-  !   listOfComponents The array of splitted names
-  !   splitChars The string containing the characters where to split
-  !
-  subroutine vstring_split ( this , numberOfComponents , listOfComponents  , splitChars )
-    implicit none
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in), optional :: splitChars
-    integer , intent ( out ) :: numberOfComponents
-    type(t_vstring), dimension (:), pointer :: listOfComponents
-    
-    integer :: firstsplitchar
-    integer , parameter :: numberOfSteps = 2
-    integer :: istep
-    type(t_vstring) :: splitChars_real
-    type(t_vstring) :: component
-    integer :: splitChars_real_length
-    integer :: this_length
-    integer :: icharacter
-    type(t_vstring) :: current_char
-    integer :: component_length
-    !
-    ! Process options
-    !
-    if ( present ( splitChars ) ) then
-       call vstring_new ( splitChars_real , splitChars )
-    else
-       call vstring_new ( splitChars_real , VSTRING_WHITESPACE )
-    endif
-    !
-    ! Initialization
-    !
-    splitChars_real_length = vstring_length ( splitChars_real )
-    this_length = vstring_length ( this )
-    !
-    ! Process the special case where the splitchars is empty
-    !
-    if ( splitChars_real_length == 0 ) then
-       !
-       ! There are no characters in the string to split.
-       ! Split at every character.
-       !
-       numberOfComponents = this_length
-       allocate ( listOfComponents ( 1 : numberOfComponents ) )
-       do icharacter = 1 , this_length
-          component = vstring_index ( this , icharacter )
-          call vstring_new ( listOfComponents ( icharacter ) , component )
-          call vstring_free ( component )
-       enddo
-    else
-       !
-       ! Algorithm is in two steps :
-       ! Step #1 : count the number of components
-       ! Step #2 : store the components
-       !
-       do istep = 1 , numberOfSteps
-          numberOfComponents = 0
-          call vstring_new ( component , "" )
-          !
-          ! Loop over the characters of the current string.
-          !
-          do icharacter = 1 , this_length
-             current_char = vstring_index ( this , icharacter )
-             firstsplitchar = vstring_first ( splitChars_real , current_char )
-             if ( firstsplitchar /= 0 ) then
-                !
-                ! Current character is a separator
-                !
-                numberOfComponents = numberOfComponents + 1
-                if ( istep == 2 ) then
-                   call vstring_new ( listOfComponents ( numberOfComponents ) , component )
-                endif
-                call vstring_free ( component )
-                call vstring_new ( component , "" )
-             else
-                call vstring_append ( component , current_char )
-             endif
-             call vstring_free ( current_char )
-          enddo
-          if ( istep == 1 ) then
-             !
-             ! Allocate the array
-             !
-             ! This is because of the last component.
-             component_length = vstring_length ( component )
-             if ( component_length > 0 ) then
-                numberOfComponents = numberOfComponents + 1
-             endif
-             allocate ( listOfComponents ( 1 : numberOfComponents ) )
-          endif
-          if ( istep == 2 ) then
-             ! Store the last component
-             component_length = vstring_length ( component )
-             if ( component_length > 0 ) then
-                numberOfComponents = numberOfComponents + 1
-                call vstring_new ( listOfComponents ( numberOfComponents ) , component )
-             endif
-          endif
-          call vstring_free ( component )
-       enddo
-    endif
-    !
-    ! Clean-up
-    !
-    call vstring_free ( splitChars_real )
-  end subroutine vstring_split
-  !
-  ! vstring_join --
-  !   This command returns the string formed by joining all 
-  !   of the elements of list together with joinString separating 
-  !   each adjacent pair of elements. 
-  !   The joinString argument defaults to a space character.
-  ! Arguments:
-  !   listOfComponents : the array of string
-  !   joinString : the string which is used to join the elements
-  !
-  function vstring_join ( listOfComponents , joinString ) result ( newstring )
-    implicit none
-    type(t_vstring), dimension (:), intent(in) :: listOfComponents
-    type(t_vstring), intent(in), optional :: joinString
-    type(t_vstring) :: newstring
-    integer :: numberOfComponents
-    type(t_vstring) :: joinString_real
-    integer :: icomponent
-    !
-    ! Process options
-    !
-    if ( present ( joinString ) ) then
-       call vstring_new ( joinString_real , joinString )
-    else
-       call vstring_new ( joinString_real , VSTRING_SPACE )
-    endif
-    !
-    ! Initialize
-    !
-    numberOfComponents = size ( listOfComponents )
-    call vstring_new ( newstring )
-    if ( numberOfComponents > 0 ) then
-       !
-       ! Join the elements
-       !
-       do icomponent = 1 , numberOfComponents - 1
-          call vstring_append ( newstring , listOfComponents ( icomponent ) )
-          call vstring_append ( newstring , joinString_real )
-       enddo
-       !
-       ! Last but not the least
-       !
-       call vstring_append ( newstring , listOfComponents ( numberOfComponents ) )
-    endif
-    !
-    ! Clean-up
-    !
-    call vstring_free ( joinString_real )
-  end function vstring_join
   !
   ! vstring_is --
   !   Returns .true. if string is a valid member of the specified character class, 
@@ -2427,13 +2670,10 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
-    type(t_vstring) :: space
     call vstring_new ( characterset , VSTRING_DIGITS )
-    call vstring_new ( space , VSTRING_SPACE )
-    call vstring_append ( characterset , space )
+    call vstring_append ( characterset , VSTRING_SPACE )
     vstring_isinteger = vstring_isincharset ( this , characterset , failindex )
     call vstring_free ( characterset )
-    call vstring_free ( space )
   end function vstring_isinteger
   !
   ! vstring_isalpha --
@@ -2444,13 +2684,10 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
-    type(t_vstring) :: upper
     call vstring_new ( characterset , VSTRING_LOWER )
-    call vstring_new ( upper , VSTRING_UPPER )
-    call vstring_append ( characterset , upper )
+    call vstring_append ( characterset , VSTRING_UPPER )
     vstring_isalpha = vstring_isincharset ( this , characterset , failindex )
     call vstring_free ( characterset )
-    call vstring_free ( upper )
   end function vstring_isalpha
   !
   ! vstring_isalnum --
@@ -2461,17 +2698,11 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
-    type(t_vstring) :: upper
-    type(t_vstring) :: digit
     call vstring_new ( characterset , VSTRING_LOWER )
-    call vstring_new ( upper , VSTRING_UPPER )
-    call vstring_append ( characterset , upper )
-    call vstring_new ( digit , VSTRING_DIGITS )
-    call vstring_append ( characterset , digit )
+    call vstring_append ( characterset , VSTRING_UPPER )
+    call vstring_append ( characterset , VSTRING_DIGITS )
     vstring_isalnum = vstring_isincharset ( this , characterset , failindex )
     call vstring_free ( characterset )
-    call vstring_free ( upper )
-    call vstring_free ( digit )
   end function vstring_isalnum
   !
   ! vstring_islogical --
@@ -2698,25 +2929,13 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
-    type(t_vstring) :: lower
-    type(t_vstring) :: upper
-    type(t_vstring) :: digit
-    type(t_vstring) :: punct
-    call vstring_new ( lower , VSTRING_LOWER )
-    call vstring_new ( upper , VSTRING_UPPER )
-    call vstring_new ( digit , VSTRING_DIGITS )
-    call vstring_new ( punct , VSTRING_PUNCTUATION )
     call vstring_new ( characterset )
-    call vstring_append ( characterset , lower )
-    call vstring_append ( characterset , upper )
-    call vstring_append ( characterset , digit )
-    call vstring_append ( characterset , punct )
+    call vstring_append ( characterset , VSTRING_LOWER )
+    call vstring_append ( characterset , VSTRING_UPPER )
+    call vstring_append ( characterset , VSTRING_DIGITS )
+    call vstring_append ( characterset , VSTRING_PUNCTUATION )
     vstring_iswordchar = vstring_isincharset ( this , characterset , failindex )
     call vstring_free ( characterset )
-    call vstring_free ( lower )
-    call vstring_free ( upper )
-    call vstring_free ( digit )
-    call vstring_free ( punct )
   end function vstring_iswordchar
   !
   ! vstring_isincharset --
@@ -2873,16 +3092,30 @@ contains
   ! vstring_check_index --
   !   Check that the given index is correct and generates an error if not.
   !
-  subroutine vstring_check_index ( this , charIndex , origin )
+  subroutine vstring_check_index ( this , charIndex , origin , status )
     implicit none
     type(t_vstring), intent(in) :: this
     integer, intent(in)         :: charIndex
     character ( len = * ), intent(in), optional :: origin
     character ( len = 200 ) :: message
+    integer, intent(out), optional :: status
     integer :: length
-    call vstring_check_string ( this , "vstring_check_index" )
+    integer :: local_status
+    if ( present ( status ) ) then
+       status = VSTRING_ERROR_OK
+    endif
+    call vstring_check_string ( this , "vstring_check_index" , local_status )
+    if ( local_status /= VSTRING_ERROR_OK ) then
+       if ( present ( status ) ) then
+          status = local_status
+       endif
+       return
+    endif
     length = vstring_length ( this )
     if ( charIndex < 1 ) then
+       if ( present ( status ) ) then
+          status = VSTRING_ERROR_WRONGINDEX
+       endif
        write ( message , * ) "Character index ", charIndex , " is less that 1 in vstring_check_index"
        if ( present ( origin ) ) then
           call vstring_error ( this , message , origin )
@@ -2890,6 +3123,9 @@ contains
           call vstring_error ( this , message )
        endif
     elseif ( charIndex > length ) then
+       if ( present ( status ) ) then
+          status = VSTRING_ERROR_WRONGINDEX
+       endif
        write ( message , * ) "Character index ", charIndex , " is greater that the length ", length , &
             " in vstring_check_index"
        if ( present ( origin ) ) then
@@ -2903,13 +3139,20 @@ contains
   ! vstring_check_string --
   !   Check that the given string is correct and generates an error if not.
   !
-  subroutine vstring_check_string ( this , origin )
+  subroutine vstring_check_string ( this , origin , status )
     type(t_vstring), intent(in) :: this
     character ( len = 200) :: message
     character ( len = * ), intent(in), optional :: origin
+    integer, intent(out), optional :: status
     logical :: stringallocated
-    stringallocated = vstring_allocated ( this )
+    if ( present ( status ) ) then
+       status = VSTRING_ERROR_OK
+    endif
+    stringallocated = vstring_exists ( this )
     if ( .NOT.stringallocated ) then
+       if ( present ( status ) ) then
+          status = VSTRING_ERROR_STRINGNOTCREATED
+       endif
        write ( message , * ) "String is not allocated, size :", size ( this % chars ) , &
             " in vstring_check_string"
        if ( present ( origin ) ) then
@@ -2931,28 +3174,42 @@ contains
     integer :: length
     integer, parameter :: length_max = 40
     logical :: isallocated
-    write ( 6 , * ) "Internal error in m_vstring"
+    write ( * , * ) "Internal error in m_vstring"
     if ( present ( origin ) ) then
-       write ( 6 , * ) "Origin : ", origin
+       write ( * , * ) "Origin : ", origin
     endif
     length =  vstring_length ( this )
-    isallocated = vstring_allocated ( this )
+    isallocated = vstring_exists ( this )
     if ( isallocated ) then
-       write ( 6 , * ) "Length:" , length
+       write ( * , * ) "Length:" , length
        if ( length < length_max ) then
-          write ( 6 , * ) "Content:", this % chars
+          write ( * , * ) "Content:", this % chars
        else
-          write ( 6 , * ) "Content:", this % chars(1:length_max), "..."
+          write ( * , * ) "Content:", this % chars(1:length_max), "..."
        endif
     endif
 #ifdef _VSTRING_ALLOCATABLE
-    write ( 6 , * ) "Version : allocatable"
+    write ( * , * ) "Version : allocatable"
 #endif
-#ifdef _VSTRING_POINTERS
-    write ( 6 , * ) "Version : pointer"
+#ifdef _VSTRING_POINTER
+    write ( * , * ) "Version : pointer"
 #endif
-    write ( 6 , * ) "Message :", trim( message )
-    STOP
+    write ( * , * ) "Message :", trim( message )
+    if ( vstring_stoponerror ) then
+       STOP
+    endif
   end subroutine vstring_error
+  ! 
+  ! vstring_set_stoponerror --
+  !   Configure the behaviour of the component whenever an 
+  !   error is met.
+  !   If stoponerror is true, then the execution stops if an error is encountered.
+  !   If stoponerror is false, then the execution continues if an error is encountered.
+  !   In both cases, a message is displayed on standard output.
+  ! 
+  subroutine vstring_set_stoponerror ( stoponerror )
+    logical , intent(in) :: stoponerror
+    vstring_stoponerror = stoponerror
+  end subroutine vstring_set_stoponerror
 end module m_vstring
 

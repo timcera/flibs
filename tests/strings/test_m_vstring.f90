@@ -36,17 +36,18 @@ program test_m_vstring
        vstring_scan, &
        vstring_verify, &
        vstring_match, &
-       vstring_split, &
        vstring_adjustl ,&
        vstring_adjustr ,&
-       vstring_join , &
        vstring_is
   implicit none
   integer :: assertTotalTestSuccess
   integer :: assertTotalTestFail
   integer :: assertTestIndex
   integer , parameter :: log_unit = 12
-
+  interface assertVstring
+     module procedure assertVstring_vstring
+     module procedure assertVstring_charstring
+  end interface assertVstring
   call test_main ()
 contains
   
@@ -83,11 +84,9 @@ contains
     !
     ! Test interfaces to standard fortran
     !
-    !call test_m_vstring_stdfortran ()
-    !
-    ! Test string splitting : joining
-    !
-    call test_m_vstring_split ()
+#ifndef _IVF8
+    call test_m_vstring_stdfortran ()
+#endif
     !
     ! Test string matching
     ! Fails with gfortran 2007
@@ -136,7 +135,6 @@ contains
     implicit none
     type ( t_vstring ) :: string1
     type ( t_vstring ) :: string2
-    type ( t_vstring ) :: string3
     integer :: length
     character ( len = 1) , dimension( 1:5), parameter :: mychararray = (/"m","y"," ","s","t"/)
     !
@@ -185,10 +183,8 @@ contains
     !
     call logmsg ( "Test #1.4 : new from integer" )
     call vstring_new ( string1 , 10 )
-    call vstring_new ( string2 , "          " )
-    call assertVstring ( string1 , string2 , "Wrong vstring_new. (4)" )
+    call assertVstring ( string1 , "          " , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
-    call vstring_free ( string2 )
     !
     ! Check the number of strings references
     !
@@ -199,11 +195,9 @@ contains
     call logmsg ( "Test #1.5 : new from integer and string" )
     call vstring_new ( string1 , "to" )
     call vstring_new ( string2 , 2 , string = string1 )
-    call vstring_new ( string3 , "toto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_new. (4)" )
+    call assertVstring ( string2 , "toto" , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
-    call vstring_free ( string3 )
     !
     ! Check the number of strings references
     !
@@ -213,10 +207,8 @@ contains
     !
     call logmsg ( "Test #1.4 : new from zero integer" )
     call vstring_new ( string1 , 0 )
-    call vstring_new ( string2 , "" )
-    call assertVstring ( string1 , string2 , "Wrong vstring_new. (4)" )
+    call assertVstring ( string1 , "" , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
-    call vstring_free ( string2 )
     !
     ! Check the number of strings references
     !
@@ -227,11 +219,9 @@ contains
     call logmsg ( "Test #1.7 : new from integer and string" )
     call vstring_new ( string1 , "to" )
     call vstring_new ( string2 , 3 , string = string1 )
-    call vstring_new ( string3 , "tototo" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_new. (4)" )
+    call assertVstring ( string2 , "tototo" , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
-    call vstring_free ( string3 )
     !
     ! Check the number of strings references
     !
@@ -255,6 +245,14 @@ contains
     call assert ( match , "Wrong vstring_match" )
     call vstring_free ( string1 )
     call vstring_free ( pattern )
+    !
+    ! Test #40.1.b
+    !
+    call logmsg ( "Test #40.1.b vstring_match with char string pattern" )
+    call vstring_new ( string1 , "1abcaababcabababc" )
+    match = vstring_match ( string1 , "*" )
+    call assert ( match , "Wrong vstring_match" )
+    call vstring_free ( string1 )
     !
     ! Check the number of strings references
     !
@@ -483,6 +481,7 @@ contains
     ! Check the number of strings references
     !
     call string_reference_check ()
+#ifndef _IVF8
     !
     ! Test #41.7
     !
@@ -493,6 +492,7 @@ contains
     call assert ( match , "Wrong vstring_match" )
     call vstring_free ( string1 )
     call vstring_free ( pattern )
+#endif
     !
     ! Check the number of strings references
     !
@@ -613,6 +613,14 @@ contains
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
+    ! test #5.2.b
+    !
+    call logmsg ( "Test #5.2.b : equals with a constant string" )
+    call vstring_new ( string1 , "my string" )
+    equals = vstring_equals ( string1, "my string " )
+    call assert ( .NOT.equals , "Wrong string content. (5)" )
+    call vstring_free ( string1 )
+    !
     ! Check the number of strings references
     !
     call string_reference_check ()
@@ -704,6 +712,17 @@ contains
     call vstring_free ( string3 )
     call vstring_free ( string4 )
     !
+    ! test #8.b
+    !
+    call logmsg ( "Test #8.b : concat with char string" )
+    call vstring_new ( string1 , "my string" )
+    string3 = vstring_concat ( string1 , " is very interesting" )
+    call assertVstring ( string3 , "my string is very interesting" , "Wrong string content. (3)" )
+    length = vstring_length ( string3 )
+    call assert ( length==29 , "Wrong string length. (2)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string3 )
+    !
     ! Check the number of strings references
     !
     call string_reference_check ()
@@ -717,6 +736,14 @@ contains
     call assert ( compare == 1 , "Wrong compare. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
+    !
+    ! test #9.1.b
+    !
+    call logmsg ( "Test #9.1.b : compare with char string" )
+    call vstring_new ( string1 , "my string" )
+    compare = vstring_compare ( string1 , "is very interesting" )
+    call assert ( compare == 1 , "Wrong compare. (1)" )
+    call vstring_free ( string1 )
     !
     ! Check the number of strings references
     !
@@ -1076,6 +1103,14 @@ contains
     call vstring_free ( string2 )
     call vstring_free ( string3 )
     !
+    ! test #34.b
+    !
+    call logmsg ( "Test #34.b vstring_append charstring" )
+    call vstring_new ( string1 , "fortran" )
+    call vstring_append ( string1 , " is evil" )
+    call assertVstring ( string1 , "fortran is evil" , "Wrong vstring_append" )
+    call vstring_free ( string1 )
+    !
     ! Test #36.1
     !
     call logmsg ( "Test #36.1 vstring_map" )
@@ -1411,6 +1446,19 @@ contains
     !
     call string_reference_check ()
     !
+    ! test #20.2.b
+    !
+    call logmsg ( "Test #20.2.b : trim left with chars argument" )
+    call vstring_new ( string1 , "*/*/*/my string***" )
+    string3 = vstring_trimleft ( string1 , chars = "*/" )
+    call assertVstring ( string3 , "my string***" ,"Wrong trim. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string3 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
     ! test #20.3
     !
     call logmsg ( "Test #20.3 : trim left with a string allready trimmed" )
@@ -1471,6 +1519,19 @@ contains
     !
     call string_reference_check ()
     !
+    ! test #21.2.b
+    !
+    call logmsg ( "Test #21.2.b : trim with chars argument" )
+    call vstring_new ( string1 , "*/*/*/my string***" )
+    string3 = vstring_trim ( string1 , chars = "*/" )
+    call assertVstring ( string3 , "my string" , "Wrong trim left. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string3 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
     ! test #21.3
     !
     call logmsg ( "Test #21.3 : trim with a string allready trimmed" )
@@ -1516,6 +1577,19 @@ contains
     !
     call string_reference_check ()
     !
+    ! test #22.2.b
+    !
+    call logmsg ( "Test #22.2.b : trim right with chars argument" )
+    call vstring_new ( string1 , "*/*/*/my string***" )
+    string3 = vstring_trimright ( string1 , chars = "*/" )
+    call assertVstring ( string3 , "*/*/*/my string" , "Wrong trim left. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string3 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
     ! test #22.3
     !
     call logmsg ( "Test #22.3 : trim right with a string allready trimmed" )
@@ -1546,241 +1620,6 @@ contains
     call string_reference_check ()
   end subroutine test_m_vstring_trim
   !
-  ! Test vstring_split
-  !
-  subroutine test_m_vstring_split ()
-    type ( t_vstring ) :: string1
-    type ( t_vstring ), dimension(:), pointer :: listOfComponents
-    integer :: numberOfComponents
-    integer :: icomponent
-    type ( t_vstring ) :: string2
-    type ( t_vstring ) :: string3
-    type ( t_vstring ) :: splitChars
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split with default split char " )
-    call vstring_new ( string1 , "my string" ) 
-    call vstring_split ( string1 , numberOfComponents , listOfComponents )
-    call assert ( numberOfComponents==2 , "Wrong vstring_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       call vstring_new ( string2 , listOfComponents ( icomponent ) )
-       select case (icomponent)
-       case (1)
-          call vstring_new ( string3 , "my" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (2)
-          call vstring_new ( string3 , "string" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-       call vstring_free ( string3 )
-    enddo
-    call vstring_free ( string1 )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split with empty split char " )
-    call vstring_new ( string1 , "my s" )
-    call vstring_new ( splitChars , "" )
-    call vstring_split ( string1 , numberOfComponents , listOfComponents , splitChars )
-    call assert ( numberOfComponents==4 , "Wrong vstring_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       call vstring_new ( string2 , listOfComponents ( icomponent ) )
-       select case (icomponent)
-       case (1)
-          call vstring_new ( string3 , "m" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (2)
-          call vstring_new ( string3 , "y" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (3)
-          call vstring_new ( string3 , " " )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (4)
-          call vstring_new ( string3 , "s" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-       call vstring_free ( string3 )
-    enddo
-    call vstring_free ( string1 )
-    call vstring_free ( splitChars )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split an empty string" )
-    call vstring_new ( string1 , "" )
-    call vstring_split ( string1 , numberOfComponents , listOfComponents )
-    call assert ( numberOfComponents==0 , "Wrong vstring_split (1)." )
-    call vstring_free ( string1 )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split a blank space" )
-    call vstring_new ( string1 , " " )
-    call vstring_split ( string1 , numberOfComponents , listOfComponents )
-    call assert ( numberOfComponents==1 , "Wrong vstring_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       call vstring_new ( string2 , listOfComponents ( icomponent ) )
-       select case (icomponent)
-       case (1)
-          call vstring_new ( string3 , "" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-       call vstring_free ( string3 )
-    enddo
-    call vstring_free ( string1 )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split a word starting and ending with blank space" )
-    call vstring_new ( string1 , " my string " )
-    call vstring_split ( string1 , numberOfComponents , listOfComponents )
-    call assert ( numberOfComponents==3 , "Wrong vstring_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       call vstring_new ( string2 , listOfComponents ( icomponent ) )
-       select case (icomponent)
-       case (1)
-          call vstring_new ( string3 , "" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (2)
-          call vstring_new ( string3 , "my" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (3)
-          call vstring_new ( string3 , "string" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-       call vstring_free ( string3 )
-    enddo
-    call vstring_free ( string1 )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split a regular string with no space" )
-    call vstring_new ( string1 , "comp.lang.fortran" )
-    call vstring_split ( string1 , numberOfComponents , listOfComponents )
-    call assert ( numberOfComponents==1 , "Wrong vstring_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       call vstring_new ( string2 , listOfComponents ( icomponent ) )
-       select case (icomponent)
-       case (1)
-          call vstring_new ( string3 , "comp.lang.fortran" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-       call vstring_free ( string3 )
-    enddo
-    call vstring_free ( string1 )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_split a regular string with dot as separator" )
-    call vstring_new ( string1 , "comp.lang.fortran" )
-    call vstring_new ( splitChars , "." )
-    call vstring_split ( string1 , numberOfComponents , listOfComponents , splitChars )
-    call assert ( numberOfComponents==3 , "Wrong vstring_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       call vstring_new ( string2 , listOfComponents ( icomponent ) )
-       select case (icomponent)
-       case (1)
-          call vstring_new ( string3 , "comp" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (2)
-          call vstring_new ( string3 , "lang" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case (3)
-          call vstring_new ( string3 , "fortran" )
-          call assertVstring ( string2 , string3 , "Wrong vstring_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-       call vstring_free ( string3 )
-    enddo
-    call vstring_free ( string1 )
-    call vstring_free ( splitChars )
-    do icomponent = 1 , numberOfComponents
-       call vstring_free ( listOfComponents ( icomponent ) )
-    enddo
-    deallocate ( listOfComponents )
-    !
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    call logmsg ( "Test : vstring_join with default split char " )
-    allocate ( listOfComponents ( 3 ) )
-    call vstring_new ( listOfComponents ( 1 ) , "comp" )
-    call vstring_new ( listOfComponents ( 2 ) , "lang" )
-    call vstring_new ( listOfComponents ( 3 ) , "fortran" )
-    string1 = vstring_join ( listOfComponents )
-    call vstring_new ( string2, "comp lang fortran" )
-    call assertVstring ( string1 , string1 , "Wrong vstring_join." )
-    call vstring_free ( listOfComponents ( 1 ) )
-    call vstring_free ( listOfComponents ( 2 ) )
-    call vstring_free ( listOfComponents ( 3 ) )
-    deallocate ( listOfComponents )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-  end subroutine test_m_vstring_split
-  !
   ! Test vstring_first , vstring_last
   !
   subroutine test_m_vstring_firstlast
@@ -1801,6 +1640,18 @@ contains
     call assert ( charindex==1 , "Wrong string_first. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #16.b
+    !
+    call logmsg ( "Test #16.b : first with character string" )
+    call vstring_new ( string1 , "my string" )
+    charindex = vstring_first ( string1 , "m" )
+    call assert ( charindex==1 , "Wrong string_first. (1)" )
+    call vstring_free ( string1 )
     !
     ! Check the number of strings references
     !
@@ -1885,6 +1736,18 @@ contains
     call assert ( charindex==8 , "Wrong string_last. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #19.1.b
+    !
+    call logmsg ( "Test #19.1.b : string last" )
+    call vstring_new ( string1 , "my strimg" )
+    charindex = vstring_last ( string1 , "m" )
+    call assert ( charindex==8 , "Wrong string_last. (1)" )
+    call vstring_free ( string1 )
     !
     ! Check the number of strings references
     !
@@ -2590,11 +2453,11 @@ contains
     call assert ( test , message )
   end subroutine assertString
   !
-  ! assertVstring --
+  ! assertVstring_vstring --
   !   Check that the computed vstring is equal to the expected string
   !   and updates the assertion system.
   !
-  subroutine assertVstring ( computedString , expectedString , message )
+  subroutine assertVstring_vstring ( computedString , expectedString , message )
     implicit none
     type ( t_vstring ), intent(in) :: computedString
     type ( t_vstring ), intent(in) :: expectedString
@@ -2614,7 +2477,21 @@ contains
        call logmsg ( msg )
     endif
     call assert ( equals , message )
-  end subroutine assertVstring
+  end subroutine assertVstring_vstring
+  !
+  ! assertVstring_charstring --
+  !   Interface to assertVstring_vstring.
+  !
+  subroutine assertVstring_charstring ( computedString , expectedString , message )
+    implicit none
+    type ( t_vstring ), intent(in) :: computedString
+    character(len=*), intent(in) :: expectedString
+    character(len=*), intent(in) :: message
+    type ( t_vstring ) :: expectedVString
+    call vstring_new ( expectedVString , expectedString )
+    call assertVstring_vstring ( computedString , expectedVString , message )
+    call vstring_free ( expectedVString )
+  end subroutine assertVstring_charstring
   !
   ! assertString --
   !   Check that the computed character is equal to the expected character
