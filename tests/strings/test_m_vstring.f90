@@ -38,16 +38,13 @@ program test_m_vstring
        vstring_match, &
        vstring_adjustl ,&
        vstring_adjustr ,&
-       vstring_is
+       vstring_is , &
+       vstring_set_stoponerror
   implicit none
   integer :: assertTotalTestSuccess
   integer :: assertTotalTestFail
   integer :: assertTestIndex
   integer , parameter :: log_unit = 12
-  interface assertVstring
-     module procedure assertVstring_vstring
-     module procedure assertVstring_charstring
-  end interface assertVstring
   call test_main ()
 contains
   
@@ -55,7 +52,7 @@ contains
     implicit none
     call log_startup ( "test_m_vstring.log" )
     call assert_startup ( )
-    
+    call vstring_set_stoponerror ( .false. )
     !
     ! Test #0
     ! Check the number of strings references
@@ -159,7 +156,7 @@ contains
     call logmsg ( "Test #1.2 : new from vstring" )
     call vstring_new ( string1 , "my string" )
     call vstring_new ( string2 , string1 )
-    call assertVstring ( string1 , string2 , "Wrong string content. (4)" )
+    call assertVstring_vstring ( string1 , string2 , "Wrong string content. (4)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -183,7 +180,7 @@ contains
     !
     call logmsg ( "Test #1.4 : new from integer" )
     call vstring_new ( string1 , 10 )
-    call assertVstring ( string1 , "          " , "Wrong vstring_new. (4)" )
+    call assertVstring_charstring ( string1 , "          " , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
     !
     ! Check the number of strings references
@@ -195,7 +192,7 @@ contains
     call logmsg ( "Test #1.5 : new from integer and string" )
     call vstring_new ( string1 , "to" )
     call vstring_new ( string2 , 2 , string = string1 )
-    call assertVstring ( string2 , "toto" , "Wrong vstring_new. (4)" )
+    call assertVstring_charstring ( string2 , "toto" , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -207,7 +204,7 @@ contains
     !
     call logmsg ( "Test #1.4 : new from zero integer" )
     call vstring_new ( string1 , 0 )
-    call assertVstring ( string1 , "" , "Wrong vstring_new. (4)" )
+    call assertVstring_charstring ( string1 , "" , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
     !
     ! Check the number of strings references
@@ -219,7 +216,7 @@ contains
     call logmsg ( "Test #1.7 : new from integer and string" )
     call vstring_new ( string1 , "to" )
     call vstring_new ( string2 , 3 , string = string1 )
-    call assertVstring ( string2 , "tototo" , "Wrong vstring_new. (4)" )
+    call assertVstring_charstring ( string2 , "tototo" , "Wrong vstring_new. (4)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -595,7 +592,7 @@ contains
     call logmsg ( "Test #5.1 : equals vstring == vstring " )
     call vstring_new ( string1 , "my string" )
     call vstring_new ( string2 , "my string" )
-    call assertVstring ( string1 , string2 , "Wrong string content. (3)" )
+    call assertVstring_vstring ( string1 , string2 , "Wrong string content. (3)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -704,7 +701,7 @@ contains
     call vstring_new ( string2 , " is very interesting" )
     string3 = vstring_concat ( string1 , string2 )
     call vstring_new ( string4 , "my string is very interesting" )
-    call assertVstring ( string3 , string4 , "Wrong string content. (3)" )
+    call assertVstring_vstring ( string3 , string4 , "Wrong string content. (3)" )
     length = vstring_length( string3 )
     call assert ( length==29 , "Wrong string length. (2)" )
     call vstring_free ( string1 )
@@ -717,7 +714,7 @@ contains
     call logmsg ( "Test #8.b : concat with char string" )
     call vstring_new ( string1 , "my string" )
     string3 = vstring_concat ( string1 , " is very interesting" )
-    call assertVstring ( string3 , "my string is very interesting" , "Wrong string content. (3)" )
+    call assertVstring_charstring ( string3 , "my string is very interesting" , "Wrong string content. (3)" )
     length = vstring_length ( string3 )
     call assert ( length==29 , "Wrong string length. (2)" )
     call vstring_free ( string1 )
@@ -919,7 +916,7 @@ contains
     call vstring_new ( string1 , "my string" )
     string2 = vstring_index ( string1 , 4 )
     call vstring_new ( string3 , "s" )
-    call assertVstring ( string2 , string3 , "Wrong string_index. (1)" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong string_index. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -935,7 +932,7 @@ contains
     call vstring_tocharstring ( string1 , len ( char_string1 ) , char_string1 )
     call vstring_new ( string3 , char_string1 )
     call vstring_new ( string2 , "toto      " )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tocharstring" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -947,7 +944,7 @@ contains
     call vstring_tocharstring ( string1 , char_string2 )
     call vstring_new ( string2 , char_string2 )
     call vstring_new ( string3 , "toto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tocharstring" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -960,7 +957,7 @@ contains
     call vstring_tocharstring ( string1 , char_string3 )
     call vstring_new ( string2 , char_string3 )
     call vstring_new ( string3 , "toto      " )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tocharstring" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -972,7 +969,7 @@ contains
     call vstring_tocharstring ( string1 , char_string3 )
     call vstring_new ( string2 , char_string3 )
     call vstring_new ( string3 , "toto      " )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tocharstring" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -983,7 +980,7 @@ contains
     call vstring_new ( string1 , "fortran" )
     string2 = vstring_reverse ( string1 )
     call vstring_new ( string3 , "nartrof" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_reverse" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_reverse" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1018,7 +1015,7 @@ contains
     call vstring_new ( string1 , "fortran" )
     string2 = vstring_replace ( string1 , 2 , 3 )
     call vstring_new ( string3 , "ftran" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_replace" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_replace" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1035,7 +1032,7 @@ contains
     call vstring_new ( string2 , "java" )
     string3 = vstring_replace ( string1 , 1 , 7 , string2 )
     call vstring_new ( string4 , "java" )
-    call assertVstring ( string3 , string4 , "Wrong vstring_replace" )
+    call assertVstring_vstring ( string3 , string4 , "Wrong vstring_replace" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1052,7 +1049,7 @@ contains
     call vstring_new ( string2 , "Java" )
     string3 = vstring_replace ( string1 , 25 , 31 , string2 )
     call vstring_new ( string4 , "My favorite language is Java, not Tcl." )
-    call assertVstring ( string3 , string4 , "Wrong vstring_replace" )
+    call assertVstring_vstring ( string3 , string4 , "Wrong vstring_replace" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1064,7 +1061,7 @@ contains
     call vstring_new ( string1 , "My favorite language is fortran, not Tcl." )
     string2 = vstring_replace ( string1 , 1 , 41 )
     call vstring_new ( string3 , "" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_replace" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_replace" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1074,7 +1071,7 @@ contains
     call logmsg ( "Test #30. : vstring_achar" )
     string1 = vstring_achar ( 64 )
     call vstring_new ( string2 , "@" )
-    call assertVstring ( string1 , string1 , "Wrong vstring_achar" )
+    call assertVstring_vstring ( string1 , string1 , "Wrong vstring_achar" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -1087,7 +1084,7 @@ contains
     call logmsg ( "Test #31. : vstring_char" )
     string1 = vstring_char ( 64 )
     call vstring_new ( string2 , "@" )
-    call assertVstring ( string1 , string1 , "Wrong vstring_char" )
+    call assertVstring_vstring ( string1 , string1 , "Wrong vstring_char" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -1098,7 +1095,7 @@ contains
     call vstring_new ( string2 , " is evil" )
     call vstring_append ( string1 , string2 )
     call vstring_new ( string3 , "fortran is evil" )
-    call assertVstring ( string1 , string3 , "Wrong vstring_append" )
+    call assertVstring_vstring ( string1 , string3 , "Wrong vstring_append" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1108,7 +1105,7 @@ contains
     call logmsg ( "Test #34.b vstring_append charstring" )
     call vstring_new ( string1 , "fortran" )
     call vstring_append ( string1 , " is evil" )
-    call assertVstring ( string1 , "fortran is evil" , "Wrong vstring_append" )
+    call assertVstring_charstring ( string1 , "fortran is evil" , "Wrong vstring_append" )
     call vstring_free ( string1 )
     !
     ! Test #36.1
@@ -1125,7 +1122,7 @@ contains
     call vstring_new ( map_new1 ( 4 ) , "0" )
     string2 = vstring_map( string1 , map_old1 , map_new1 )
     call vstring_new ( string3 , "01321221" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_map" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_map" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1148,7 +1145,7 @@ contains
     call vstring_new ( map_new1 ( 4 ) , "1" )
     string2 = vstring_map( string1 , map_old1 , map_new1 )
     call vstring_new ( string3 , "02c322c222c" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_map" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_map" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1171,7 +1168,7 @@ contains
     call vstring_new ( map_new1 ( 4 ) , "1" )
     string2 = vstring_map ( string1 , map_old1 , map_new1 , nocase = .true.)
     call vstring_new ( string3 , "02c322c222c" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_map" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_map" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1226,7 +1223,7 @@ contains
     call vstring_new ( string1 , "toto" )
     string2 = vstring_toupper ( string1 )
     call vstring_new ( string3 , "TOTO" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_toupper" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_toupper" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1241,7 +1238,7 @@ contains
     call vstring_new ( string1 , "toto" )
     string2 = vstring_toupper ( string1 , 2)
     call vstring_new ( string3 , "tOTO" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_toupper" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_toupper" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1256,7 +1253,7 @@ contains
     call vstring_new ( string1 , "toto" )
     string2 = vstring_toupper ( string1 , 2, 3)
     call vstring_new ( string3 , "tOTo" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_toupper" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_toupper" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1271,7 +1268,7 @@ contains
     call vstring_new ( string1 , "TOTO" )
     string2 = vstring_tolower ( string1 )
     call vstring_new ( string3 , "toto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tolower" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tolower" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1286,7 +1283,7 @@ contains
     call vstring_new ( string1 , "TOTO" )
     string2 = vstring_tolower ( string1 , 2)
     call vstring_new ( string3 , "Toto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tolower" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tolower" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1301,7 +1298,7 @@ contains
     call vstring_new ( string1 , "TOTO" )
     string2 = vstring_tolower ( string1 , 2, 3)
     call vstring_new ( string3 , "TotO" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_tolower" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tolower" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1316,7 +1313,7 @@ contains
     call vstring_new ( string1 , "toto" )
     string2 = vstring_totitle ( string1 )
     call vstring_new ( string3 , "Toto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_totitle" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_totitle" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1331,7 +1328,7 @@ contains
     call vstring_new ( string1 , "tOTO" )
     string2 = vstring_totitle ( string1 , 2)
     call vstring_new ( string3 , "tOto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_totitle" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_totitle" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1346,7 +1343,7 @@ contains
     call vstring_new ( string1 , "TOTO" )
     string2 = vstring_totitle ( string1 , 2, 3)
     call vstring_new ( string3 , "TOtO" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_totitle" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_totitle" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1361,7 +1358,7 @@ contains
     call vstring_new ( string1 , "" )
     string2 = vstring_totitle ( string1 )
     call vstring_new ( string3 , "" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_totitle" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_totitle" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1376,7 +1373,7 @@ contains
     call vstring_new ( string1 , "t" )
     string2 = vstring_totitle ( string1 )
     call vstring_new ( string3 , "T" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_totitle" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_totitle" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1392,7 +1389,7 @@ contains
     call vstring_new ( string1 , "t" )
     string2 = vstring_totitle ( string1 , 1 )
     call vstring_new ( string3 , "T" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_totitle" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_totitle" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1420,7 +1417,7 @@ contains
     call vstring_new ( string1 , "  my string   " )
     string2 = vstring_trimleft ( string1 )
     call vstring_new ( string3 , "my string   " )
-    call assertVstring ( string2 , string3 ,"Wrong trim. (1)" )
+    call assertVstring_vstring ( string2 , string3 ,"Wrong trim. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1436,7 +1433,7 @@ contains
     call vstring_new ( string2 , "*/" )
     string3 = vstring_trimleft ( string1 , chars = string2 )
     call vstring_new ( string4 , "my string***" )
-    call assertVstring ( string3 , string4 ,"Wrong trim. (1)" )
+    call assertVstring_vstring ( string3 , string4 ,"Wrong trim. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1451,7 +1448,7 @@ contains
     call logmsg ( "Test #20.2.b : trim left with chars argument" )
     call vstring_new ( string1 , "*/*/*/my string***" )
     string3 = vstring_trimleft ( string1 , chars = "*/" )
-    call assertVstring ( string3 , "my string***" ,"Wrong trim. (1)" )
+    call assertVstring_charstring ( string3 , "my string***" ,"Wrong trim. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string3 )
     !
@@ -1464,7 +1461,7 @@ contains
     call logmsg ( "Test #20.3 : trim left with a string allready trimmed" )
     call vstring_new ( string1 , "my string" )
     string2 = vstring_trimleft ( string1 )
-    call assertVstring ( string1 , string2 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string1 , string2 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -1478,7 +1475,7 @@ contains
     call vstring_new ( string1 , "         " )
     string2 = vstring_trimleft ( string1 )
     call vstring_new ( string3 , "" )
-    call assertVstring ( string2 , string3 , "Wrong trim left. (2)" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong trim left. (2)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1493,7 +1490,7 @@ contains
     call vstring_new ( string1 , "  my string   " )
     string2 = vstring_trim ( string1 )
     call vstring_new ( string3 , "my string" )
-    call assertVstring ( string2 , string3 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1509,7 +1506,7 @@ contains
     call vstring_new ( string2 , "*/" )
     string3 = vstring_trim ( string1 , chars = string2 )
     call vstring_new ( string4 , "my string" )
-    call assertVstring ( string3 , string4 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string3 , string4 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1524,7 +1521,7 @@ contains
     call logmsg ( "Test #21.2.b : trim with chars argument" )
     call vstring_new ( string1 , "*/*/*/my string***" )
     string3 = vstring_trim ( string1 , chars = "*/" )
-    call assertVstring ( string3 , "my string" , "Wrong trim left. (1)" )
+    call assertVstring_charstring ( string3 , "my string" , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string3 )
     !
@@ -1537,7 +1534,7 @@ contains
     call logmsg ( "Test #21.3 : trim with a string allready trimmed" )
     call vstring_new ( string1 , "my string" )
     string2 = vstring_trim ( string1 )
-    call assertVstring ( string1 , string2 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string1 , string2 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -1551,7 +1548,7 @@ contains
     call vstring_new ( string1 , "  my string   " )
     string2 = vstring_trimright ( string1 )
     call vstring_new ( string3 , "  my string" )
-    call assertVstring ( string2 , string3 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1567,7 +1564,7 @@ contains
     call vstring_new ( string2 , "*/" )
     string3 = vstring_trimright ( string1 , chars = string2 )
     call vstring_new ( string4 , "*/*/*/my string" )
-    call assertVstring ( string3 , string4 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string3 , string4 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1582,7 +1579,7 @@ contains
     call logmsg ( "Test #22.2.b : trim right with chars argument" )
     call vstring_new ( string1 , "*/*/*/my string***" )
     string3 = vstring_trimright ( string1 , chars = "*/" )
-    call assertVstring ( string3 , "*/*/*/my string" , "Wrong trim left. (1)" )
+    call assertVstring_charstring ( string3 , "*/*/*/my string" , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string3 )
     !
@@ -1595,7 +1592,7 @@ contains
     call logmsg ( "Test #22.3 : trim right with a string allready trimmed" )
     call vstring_new ( string1 , "my string" )
     string2 = vstring_trimright ( string1 )
-    call assertVstring ( string1 , string2 , "Wrong trim left. (1)" )
+    call assertVstring_vstring ( string1 , string2 , "Wrong trim left. (1)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -1609,7 +1606,7 @@ contains
     call vstring_new ( string1 , "         " )
     string2 = vstring_trimright ( string1 )
     call vstring_new ( string3 , "" )
-    call assertVstring ( string2 , string3 , "Wrong trim right. (2)" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong trim right. (2)" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1815,7 +1812,7 @@ contains
     call vstring_new ( string1 , "       toto  " )
     string2 = vstring_adjustl ( string1 )
     call vstring_new ( string3 , "toto         " )
-    call assertVstring ( string2 , string3 , "Wrong vstring_adjustl" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_adjustl" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -1830,7 +1827,7 @@ contains
     call vstring_new ( string1 , "       toto  " )
     string2 = vstring_adjustr ( string1 )
     call vstring_new ( string3 , "         toto" )
-    call assertVstring ( string2 , string3 , "Wrong vstring_adjustr" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_adjustr" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -2452,46 +2449,7 @@ contains
     !
     call assert ( test , message )
   end subroutine assertString
-  !
-  ! assertVstring_vstring --
-  !   Check that the computed vstring is equal to the expected string
-  !   and updates the assertion system.
-  !
-  subroutine assertVstring_vstring ( computedString , expectedString , message )
-    implicit none
-    type ( t_vstring ), intent(in) :: computedString
-    type ( t_vstring ), intent(in) :: expectedString
-    character(len=*), intent(in) :: message
-    character ( len = 200 ) :: msg
-    character ( len = 200 ) :: char_string
-    logical :: equals
-    equals = vstring_equals ( computedString , expectedString )
-    call vstring_tocharstring ( expectedString , len ( char_string ) , char_string )
-    ! CAUTION !
-    ! The trim removes the blanks so that the blanks of the real string are not displayed !
-    if ( .NOT.equals ) then
-       write ( msg , * ) "String expected :-", trim ( char_string ), "-"
-       call logmsg ( msg )
-       call vstring_tocharstring ( computedString , len ( char_string ) , char_string )
-       write ( msg , * ) "String computed :-", trim ( char_string ) , "-"
-       call logmsg ( msg )
-    endif
-    call assert ( equals , message )
-  end subroutine assertVstring_vstring
-  !
-  ! assertVstring_charstring --
-  !   Interface to assertVstring_vstring.
-  !
-  subroutine assertVstring_charstring ( computedString , expectedString , message )
-    implicit none
-    type ( t_vstring ), intent(in) :: computedString
-    character(len=*), intent(in) :: expectedString
-    character(len=*), intent(in) :: message
-    type ( t_vstring ) :: expectedVString
-    call vstring_new ( expectedVString , expectedString )
-    call assertVstring_vstring ( computedString , expectedVString , message )
-    call vstring_free ( expectedVString )
-  end subroutine assertVstring_charstring
+
   !
   ! assertString --
   !   Check that the computed character is equal to the expected character
@@ -2579,5 +2537,46 @@ contains
     call vstring_tocharstring ( string , len ( msg ) , msg )
     call logmsg ( msg )
   end subroutine log_vstring
+  !
+  ! assertVstring_vstring --
+  !   Check that the computed vstring is equal to the expected string
+  !   and updates the assertion system.
+  !
+  subroutine assertVstring_vstring ( computedString , expectedString , message )
+    implicit none
+    type ( t_vstring ), intent(in) :: computedString
+    type ( t_vstring ), intent(in) :: expectedString
+    character(len=*), intent(in) :: message
+    character ( len = 200 ) :: msg
+    character ( len = 200 ) :: char_string
+    logical :: equals
+    equals = vstring_equals ( computedString , expectedString )
+    call vstring_tocharstring ( expectedString , len ( char_string ) , char_string )
+    ! CAUTION !
+    ! The trim removes the blanks so that the blanks of the real string are not displayed !
+    if ( .NOT.equals ) then
+       write ( msg , * ) "String expected :-", trim ( char_string ), "-"
+       call logmsg ( msg )
+       call vstring_tocharstring ( computedString , len ( char_string ) , char_string )
+       write ( msg , * ) "String computed :-", trim ( char_string ) , "-"
+       call logmsg ( msg )
+    endif
+    call assert ( equals , message )
+  end subroutine assertVstring_vstring
+  !
+  ! assertVstring_charstring --
+  !   Interface to assertVstring_vstring.
+  !
+  subroutine assertVstring_charstring ( computedString , expectedString , message )
+    implicit none
+    type ( t_vstring ), intent(in) :: computedString
+    character(len=*), intent(in) :: expectedString
+    character(len=*), intent(in) :: message
+    type ( t_vstring ) :: expectedVString
+    call vstring_new ( expectedVString , expectedString )
+    call assertVstring_vstring ( computedString , expectedVString , message )
+    call vstring_free ( expectedVString )
+  end subroutine assertVstring_charstring
 end program test_m_vstring
+
 

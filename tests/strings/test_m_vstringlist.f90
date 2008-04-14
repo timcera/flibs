@@ -36,10 +36,6 @@ program test_m_vstringlist
   integer :: assertTotalTestFail
   integer :: assertTestIndex
   integer , parameter :: log_unit = 12
-  interface assertVstring
-     module procedure assertVstring_vstring
-     module procedure assertVstring_charstring
-  end interface assertVstring
   call test_main ()
 contains
   
@@ -208,7 +204,7 @@ contains
     call logmsg ( "Test : vstrlist_index" )
     string1 = vstrlist_index ( list1 , 1 )
     call vstring_new ( string2 , "fortran" )
-    call assertVstring ( string1 , string2 , "Wrong string index 1." )
+    call assertVstring_vstring ( string1 , string2 , "Wrong string index 1." )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     !
@@ -220,19 +216,19 @@ contains
     call assert ( length == 4, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "fortran" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "fortran" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Check #2
     string1 = vstrlist_index ( list2 , 2 )
-    call assertVstring ( string1 , "tcl" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "tcl" , "Wrong string index 2." )
     call vstring_free ( string1 )
     ! Check #3
     string1 = vstrlist_index ( list2 , 3 )
-    call assertVstring ( string1 , "algol" , "Wrong string index 3." )
+    call assertVstring_charstring ( string1 , "algol" , "Wrong string index 3." )
     call vstring_free ( string1 )
     ! Check #4
     string1 = vstrlist_index ( list2 , 4 )
-    call assertVstring ( string1 , "java" , "Wrong string index 4." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 4." )
     call vstring_free ( string1 )
     ! Clean-up
     call vstrlist_free ( list2 )
@@ -249,23 +245,23 @@ contains
     call assert ( length == 5, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list3 , 1 )
-    call assertVstring ( string1 , "fortran" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "fortran" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Check #2
     string1 = vstrlist_index ( list3 , 2 )
-    call assertVstring ( string1 , "tcl" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "tcl" , "Wrong string index 2." )
     call vstring_free ( string1 )
     ! Check #3
     string1 = vstrlist_index ( list3 , 3 )
-    call assertVstring ( string1 , "algol" , "Wrong string index 3." )
+    call assertVstring_charstring ( string1 , "algol" , "Wrong string index 3." )
     call vstring_free ( string1 )
     ! Check #4
     string1 = vstrlist_index ( list3 , 4 )
-    call assertVstring ( string1 , "java" , "Wrong string index 4." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 4." )
     call vstring_free ( string1 )
     ! Check #5
     string1 = vstrlist_index ( list3 , 5 )
-    call assertVstring ( string1 , "C++" , "Wrong string index 5." )
+    call assertVstring_charstring ( string1 , "C++" , "Wrong string index 5." )
     call vstring_free ( string1 )
     ! Clean-up
     call vstrlist_free ( list3 )
@@ -278,19 +274,19 @@ contains
     call assert ( length == 4, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list1 , 1 )
-    call assertVstring ( string1 , "fortran" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "fortran" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Check #2
     string1 = vstrlist_index ( list1 , 2 )
-    call assertVstring ( string1 , "tcl" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "tcl" , "Wrong string index 2." )
     call vstring_free ( string1 )
     ! Check #3
     string1 = vstrlist_index ( list1 , 3 )
-    call assertVstring ( string1 , "algol" , "Wrong string index 3." )
+    call assertVstring_charstring ( string1 , "algol" , "Wrong string index 3." )
     call vstring_free ( string1 )
     ! Check #4
     string1 = vstrlist_index ( list1 , 4 )
-    call assertVstring ( string1 , "java" , "Wrong string index 4." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 4." )
     call vstring_free ( string1 )
     !
     call logmsg ( "Test : vstrlist_append a list" )
@@ -305,27 +301,27 @@ contains
     call assert ( length == 6, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list1 , 1 )
-    call assertVstring ( string1 , "fortran" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "fortran" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Check #2
     string1 = vstrlist_index ( list1 , 2 )
-    call assertVstring ( string1 , "tcl" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "tcl" , "Wrong string index 2." )
     call vstring_free ( string1 )
     ! Check #3
     string1 = vstrlist_index ( list1 , 3 )
-    call assertVstring ( string1 , "algol" , "Wrong string index 3." )
+    call assertVstring_charstring ( string1 , "algol" , "Wrong string index 3." )
     call vstring_free ( string1 )
     ! Check #4
     string1 = vstrlist_index ( list1 , 4 )
-    call assertVstring ( string1 , "java" , "Wrong string index 4." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 4." )
     call vstring_free ( string1 )
     ! Check #5
     string1 = vstrlist_index ( list1 , 5 )
-    call assertVstring ( string1 , "C++" , "Wrong string index 5." )
+    call assertVstring_charstring ( string1 , "C++" , "Wrong string index 5." )
     call vstring_free ( string1 )
     ! Check #6
     string1 = vstrlist_index ( list1 , 6 )
-    call assertVstring ( string1 , "C#" , "Wrong string index 6." )
+    call assertVstring_charstring ( string1 , "C#" , "Wrong string index 6." )
     call vstring_free ( string1 )
     !
     ! Free the list
@@ -345,7 +341,7 @@ contains
     call assert ( length == 1, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "java" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Clean-up
     call vstrlist_free ( list2 )
@@ -363,7 +359,7 @@ contains
     call assert ( length == 1, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "java" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 1." )
     call vstring_free ( string1 )
     call vstrlist_free ( list2 )
 #endif
@@ -380,11 +376,11 @@ contains
     call assert ( length == 2 , "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "java" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Check #2
     string1 = vstrlist_index ( list2 , 2 )
-    call assertVstring ( string1 , "fortran" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "fortran" , "Wrong string index 2." )
     call vstring_free ( string1 )
     ! Clean-up
     call vstrlist_free ( list2 )
@@ -402,7 +398,7 @@ contains
     call assert ( length == 1, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "java" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Clean-up
     call vstrlist_free ( list2 )
@@ -422,17 +418,17 @@ contains
     call assert ( length == 4, "Wrong number of elements.")
     ! Check #1
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "java" , "Wrong string index 1." )
+    call assertVstring_charstring ( string1 , "java" , "Wrong string index 1." )
     call vstring_free ( string1 )
     ! Check #2
     string1 = vstrlist_index ( list2 , 2 )
-    call assertVstring ( string1 , "tcl" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "tcl" , "Wrong string index 2." )
     ! Check #3
     string1 = vstrlist_index ( list2 , 3 )
-    call assertVstring ( string1 , "C++" , "Wrong string index 3." )
+    call assertVstring_charstring ( string1 , "C++" , "Wrong string index 3." )
     ! Check #4
     string1 = vstrlist_index ( list2 , 4 )
-    call assertVstring ( string1 , "C#" , "Wrong string index 4." )
+    call assertVstring_charstring ( string1 , "C#" , "Wrong string index 4." )
     call vstring_free ( string1 )
     ! Cleanup
     call vstrlist_free ( list2 )
@@ -469,7 +465,7 @@ contains
     call assert ( length == 6, "Wrong number of elements.")
     ! Check #2
     string1 = vstrlist_index ( list1 , 2 )
-    call assertVstring ( string1 , "Python" , "Wrong string index 2." )
+    call assertVstring_charstring ( string1 , "Python" , "Wrong string index 2." )
     call vstring_free ( string1 )
     ! Cleanup
     call vstrlist_free ( list1 )
@@ -501,9 +497,9 @@ contains
        string2 = vstrlist_index ( listOfComponents , icomponent )
        select case (icomponent)
        case (1)
-          call assertVstring ( string2 , "my" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "my" , "Wrong vstrlist_split. (2)" )
        case (2)
-          call assertVstring ( string2 , "string" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "string" , "Wrong vstrlist_split. (2)" )
        case default
           write(6,*) "Unknown component index :" , icomponent
        end select
@@ -525,13 +521,13 @@ contains
        string2 = vstrlist_index ( listOfComponents , icomponent )
        select case (icomponent)
        case (1)
-          call assertVstring ( string2 , "m" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "m" , "Wrong vstrlist_split. (2)" )
        case (2)
-          call assertVstring ( string2 , "y" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "y" , "Wrong vstrlist_split. (2)" )
        case (3)
-          call assertVstring ( string2 , " " , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , " " , "Wrong vstrlist_split. (2)" )
        case (4)
-          call assertVstring ( string2 , "s" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "s" , "Wrong vstrlist_split. (2)" )
        case default
           write(6,*) "Unknown component index :" , icomponent
        end select
@@ -565,7 +561,7 @@ contains
        string2 = vstrlist_index ( listOfComponents , icomponent )
        select case (icomponent)
        case (1)
-          call assertVstring ( string2 , "" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "" , "Wrong vstrlist_split. (2)" )
        case default
           write(6,*) "Unknown component index :" , icomponent
        end select
@@ -587,11 +583,11 @@ contains
        string2 = vstrlist_index ( listOfComponents , icomponent )
        select case (icomponent)
        case (1)
-          call assertVstring ( string2 , "" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "" , "Wrong vstrlist_split. (2)" )
        case (2)
-          call assertVstring ( string2 , "my" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "my" , "Wrong vstrlist_split. (2)" )
        case (3)
-          call assertVstring ( string2 , "string" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "string" , "Wrong vstrlist_split. (2)" )
        case default
           write(6,*) "Unknown component index :" , icomponent
        end select
@@ -613,7 +609,7 @@ contains
        string2 = vstrlist_index ( listOfComponents , icomponent )
        select case (icomponent)
        case (1)
-          call assertVstring ( string2 , "comp.lang.fortran" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "comp.lang.fortran" , "Wrong vstrlist_split. (2)" )
        case default
           write(6,*) "Unknown component index :" , icomponent
        end select
@@ -636,11 +632,11 @@ contains
        string2 = vstrlist_index ( listOfComponents , icomponent )
        select case (icomponent)
        case (1)
-          call assertVstring ( string2 , "comp" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "comp" , "Wrong vstrlist_split. (2)" )
        case (2)
-          call assertVstring ( string2 , "lang" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "lang" , "Wrong vstrlist_split. (2)" )
        case (3)
-          call assertVstring ( string2 , "fortran" , "Wrong vstrlist_split. (2)" )
+          call assertVstring_charstring ( string2 , "fortran" , "Wrong vstrlist_split. (2)" )
        case default
           write(6,*) "Unknown component index :" , icomponent
        end select
@@ -660,7 +656,7 @@ contains
     call vstrlist_append ( listOfComponents , "lang" )
     call vstrlist_append ( listOfComponents , "fortran" )
     string1 = vstrlist_join ( listOfComponents )
-    call assertVstring ( string1 , "comp lang fortran" , "Wrong vstrlist_join." )
+    call assertVstring_charstring ( string1 , "comp lang fortran" , "Wrong vstrlist_join." )
     call vstrlist_free ( listOfComponents )
     call vstring_free ( string1 )
     !
@@ -674,7 +670,7 @@ contains
     call vstrlist_append ( listOfComponents , "lang" )
     call vstrlist_append ( listOfComponents , "fortran" )
     string1 = vstrlist_join ( listOfComponents , "." )
-    call assertVstring ( string1 , "comp.lang.fortran" , "Wrong vstrlist_join." )
+    call assertVstring_charstring ( string1 , "comp.lang.fortran" , "Wrong vstrlist_join." )
     call vstrlist_free ( listOfComponents )
     call vstring_free ( string1 )
     !
@@ -786,7 +782,7 @@ contains
     length = vstrlist_length ( list2 )
     call assert ( length == 1 , "Wrong vstrlist_search" )
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "lang" , "Wrong vstrlist_search (2)" )
+    call assertVstring_charstring ( string1 , "lang" , "Wrong vstrlist_search (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( list1 )
     call vstrlist_free ( list2 )
@@ -814,10 +810,10 @@ contains
     length = vstrlist_length ( list2 )
     call assert ( length == 2 , "Wrong vstrlist_search" )
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "C++" , "Wrong vstrlist_search (2)" )
+    call assertVstring_charstring ( string1 , "C++" , "Wrong vstrlist_search (2)" )
     call vstring_free ( string1 )
     string1 = vstrlist_index ( list2 , 2 )
-    call assertVstring ( string1 , "C#" , "Wrong vstrlist_search (2)" )
+    call assertVstring_charstring ( string1 , "C#" , "Wrong vstrlist_search (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( list1 )
     call vstrlist_free ( list2 )
@@ -834,7 +830,7 @@ contains
     length = vstrlist_length ( list2 )
     call assert ( length == 1 , "Wrong vstrlist_search" )
     string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring ( string1 , "C++" , "Wrong vstrlist_search (2)" )
+    call assertVstring_charstring ( string1 , "C++" , "Wrong vstrlist_search (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( list1 )
     call vstrlist_free ( list2 )
