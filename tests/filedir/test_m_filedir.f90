@@ -46,7 +46,16 @@ program test_filedir
        FS_PATHTYPE_RELATIVE, &
        FS_PATHTYPE_VOLUMERELATIVE , &
        filedir_pathtype, &
-       filedir_nativename
+       filedir_nativename , &
+       FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST , &
+       FS_ERROR_UNABLE_TO_OPEN_TARGET , &
+       FS_ERROR_OK , &
+       filedir_set_stoponerror, &
+       filedir_closeallopenunits, &
+       filedir_reportunit, &
+       filedir_displayopenunits , &
+       filedir_getallopenunits
+
   use m_platform, only : &
        platform_get_platform, &
        PLATFORM_PLATFORM_WINDOWS, &
@@ -67,10 +76,12 @@ contains
   subroutine test_m_filedir_all ()
     character (len= 100 ) :: cwd
     integer :: file_unit, other_file_unit
-    character (len= 200 ), parameter :: source_file = "declaration.txt"
+    character (len= 200 ), parameter :: source_file1 = "declaration.txt"
     character (len= 200 ), parameter :: target_file = "declaration_copy.txt"
     character (len= 200 ), parameter :: file_without_extension = "declaration"
     character (len= 200 ), parameter :: file_with_dot = "declaration."
+    character (len= 200 ), parameter :: inputfilenotexit1 = "foofoo"
+    character (len= 200 ), parameter :: source_file2 = "declaration2.txt"
     character (len= 200 ) :: normalized_source_file
     character (len= 200 ) :: result_file_name
     character (len= 200 ) :: computed
@@ -109,6 +120,10 @@ contains
     character (len= 100 ) :: cwd2
     integer :: pathtype
     integer :: current_platform
+    integer :: nbunits
+    integer , dimension(:) , pointer :: units
+    integer :: file_unit1
+    integer :: file_unit2
     !
     ! Initialize the test system
     !
@@ -116,6 +131,11 @@ contains
     call assert_startup ()
     !
     call filedir_init ()
+    call filedir_set_stoponerror ( .false. )
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! test #1 : current working directory
     !
@@ -127,6 +147,10 @@ contains
     write ( msg ,*) trim(cwd)
     call logmsg ( msg )
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! test #2 : get an unused file unit
     !
     call logmsg ( "Test #2 : get_unit" )
@@ -136,7 +160,7 @@ contains
     call assert (file_unit==1, "Wrong file unit. (1)")
     other_file_unit = filedir_get_unit (  )
     call assert (other_file_unit==1, "Wrong file unit. (2)")
-    open ( file_unit , file = source_file )
+    open ( file_unit , file = source_file1 )
     other_file_unit = filedir_get_unit (  )
     write ( msg ,*)  "Unused unit:", other_file_unit
     call logmsg ( msg )
@@ -145,31 +169,56 @@ contains
     other_file_unit = filedir_get_unit (  )
     call assert (other_file_unit==1, "Wrong file unit. (4)")
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #3
     !
     call logmsg ( "Test #3 : copy_std" )
-    call filedir_copy_std ( source_file , target_file , status )
-    call assert ( status==0 , "Error while copying the file (3)")
+    call filedir_copy_std ( source_file1 , target_file , status )
+    call assert ( status==FS_ERROR_OK , "Error while copying the file (3)")
     fexist = filedir_exists (target_file)
     call assert ( fexist , "File copy does not exist (3)")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
+    ! Test #3.2 with errors
+    !
+    call filedir_copy_std ( inputfilenotexit1 , target_file , status )
+    call assert ( status== FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST , "Error while copying the file (3)")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #4
     !
     call logmsg ( "Test #4 : copy" )
-    call filedir_copy ( source_file , target_file , status )
+    call filedir_copy ( source_file1 , target_file , status )
     fexist = filedir_exists (target_file)
     call assert ( fexist , "File copy does not exist (4)")
-    call assert ( status==0 , "Error while copying the file (4)")
+    call assert ( status==FS_ERROR_OK , "Error while copying the file (4)")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #5
     ! Prove that one can copy several times the same file with filedir_copy,
     ! therefore overwriting the same file the second time
     !
     call logmsg ( "Test #5 : copy with overwrite" )
-    call filedir_copy ( source_file , target_file , status )
+    call filedir_copy ( source_file1 , target_file , status )
     fexist = filedir_exists (target_file)
     call assert ( fexist , "File copy does not exist (5)")
-    call assert ( status==0 , "Error while copying the file (5)")
+    call assert ( status==FS_ERROR_OK , "Error while copying the file (5)")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #6
     !
@@ -178,53 +227,84 @@ contains
     fexist = filedir_exists (target_file)
     call assert ( .NOT.fexist , "File copy exists (6)")
     !
+    ! Copy with an error because target allready exist.
+    !
+    call filedir_copy_std ( source_file1 , source_file2 , status )
+    call assert ( status== FS_ERROR_UNABLE_TO_OPEN_TARGET , "Error while copying the file (5)")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #7
     !
     call logmsg ( "Test #7 : copy" )
-    call filedir_copy ( source_file , target_file , status )
+    call filedir_copy ( source_file1 , target_file , status )
     call filedir_delete ( target_file , status )
-    call assert ( status==0 , "Error while deleting file (7).")
+    call assert ( status==FS_ERROR_OK , "Error while deleting file (7).")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #8
     !
     call logmsg ( "Test #8 : rename" )
-    call filedir_rename ( source_file , target_file , status )
-    call assert ( status==0 , "Error while renaming file (8).")
+    call filedir_rename ( source_file1 , target_file )
+    call assert ( status==FS_ERROR_OK , "Error while renaming file (8).")
     fexist = filedir_exists ( target_file )
     call assert ( fexist , "File renamed does not exist (8)")
-    call filedir_rename ( target_file , source_file )
+    ! Rename back to the old name
+    call filedir_rename ( target_file , source_file1 , status )
+    call assert ( status==FS_ERROR_OK , "Error while renaming file (8).")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #9
     !
     call logmsg ( "Test #9 : atime" )
-    write ( msg ,*)  "File :", source_file
+    write ( msg ,*)  "File :", source_file1
     call logmsg ( msg )
-    atime = filedir_atime ( source_file )
+    atime = filedir_atime ( source_file1 )
     write ( msg ,*)  "Atime :", atime
     call logmsg ( msg )
     call assert ( atime>=0 , "Error while getting acces time (9).")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #10
     ! Try to force a copy.
     !
     call logmsg ( "Test #10 : copy -force" )
-    call filedir_copy_std ( source_file , target_file )
+    call filedir_copy_std ( source_file1 , target_file )
     force = .true.
-    call filedir_copy_std ( source_file , target_file , status , force )
+    call filedir_copy_std ( source_file1 , target_file , status , force )
     fexist = filedir_exists (target_file)
     call assert ( fexist , "File copy does not exist (10)")
-    call assert ( status==0 , "Error while copying the file (10)")
+    call assert ( status==FS_ERROR_OK , "Error while copying the file (10)")
     call filedir_delete ( target_file )
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #11 : file extension
     !
     call logmsg ( "Test #11 : file extension (1)" )
-    write ( msg ,*)  "File :", source_file
+    write ( msg ,*)  "File :", source_file1
     call logmsg ( msg )
-    fext = filedir_extension ( source_file )
+    fext = filedir_extension ( source_file1 )
     write ( msg ,*)  "Extension :", fext
     call logmsg ( msg )
     call assert ( fext(1:4)==".txt" , "Error in file extension.")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #12 : file extension, without extension
     !
@@ -236,26 +316,38 @@ contains
     call logmsg ( msg )
     call assert ( trim(fext)=="" , "Error in file extension (2).")
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #13 : file tail, without dirname
     !
     call logmsg ( "Test #13 : file tail without dirname (1)" )
-    write ( msg ,*)  "File :", source_file
+    write ( msg ,*)  "File :", source_file1
     call logmsg ( msg )
-    ftail = filedir_tail ( source_file )
+    ftail = filedir_tail ( source_file1 )
     write ( msg ,*)  "Tail :", ftail
     call logmsg ( msg )
     call assert ( trim(ftail)=="declaration.txt" , "Error in file tail (1).")
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #14 : file tail, with dirname (test also filedir_join)
     !
     call logmsg ( "Test #14 : file tail with dirname (2)" )
-    normalized_source_file = filedir_join ( cwd , source_file )
+    normalized_source_file = filedir_join ( cwd , source_file1 )
     write ( msg ,*)  "File :", normalized_source_file
     call logmsg ( msg )
     ftail = filedir_tail ( normalized_source_file )
     write ( msg ,*)  "Tail :", ftail
     call logmsg ( msg )
     call assert ( trim(ftail)=="declaration.txt" , "Error in file tail (1).")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #15 : add extension
     !
@@ -265,7 +357,11 @@ contains
     result_file_name = filedir_add_extension ( file_without_extension , ".txt" )
     write ( msg ,*)  "With extension :", result_file_name
     call logmsg ( msg )
-    call assert ( trim(source_file)==trim(result_file_name) , "Error in add extension (1).")
+    call assert ( trim(source_file1)==trim(result_file_name) , "Error in add extension (1).")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #16 : add extension to a file with allready one dot at the end
     !
@@ -275,19 +371,23 @@ contains
     result_file_name = filedir_add_extension ( file_with_dot , ".txt" )
     write ( msg ,*)  "With extension :", result_file_name
     call logmsg ( msg )
-    call assert ( trim(source_file)==trim(result_file_name) , "Error in add extension (2).")
+    call assert ( trim(source_file1)==trim(result_file_name) , "Error in add extension (2).")
     !
     ! Test #17 : normalize
     !
     call logmsg ( "Test #17 : normalize" )
-    write ( msg ,*)  "File :", source_file
+    write ( msg ,*)  "File :", source_file1
     call logmsg ( msg )
-    computed = filedir_normalize ( source_file )
+    computed = filedir_normalize ( source_file1 )
     write ( msg ,*)  "Normalized :", computed
     call logmsg ( msg )
     call filedir_pwd ( cwd )
-    expected = filedir_join ( cwd , source_file )
+    expected = filedir_join ( cwd , source_file1 )
     call assert ( trim(expected)==trim(computed) , "Error in normalize.")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #18 : get temporary directory
     !
@@ -295,6 +395,10 @@ contains
     call filedir_tempdir ( tmpdir )
     write ( msg ,*)  "Temporary directory :", tmpdir
     call logmsg ( msg )
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #19 : find files by pattern
     !
@@ -322,10 +426,14 @@ contains
     enddo
     deallocate( listOfFiles )
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #20 : split a file name
     !
     call logmsg ( "Test #20 : split a file name" )
-    normalized_source_file = filedir_normalize ( source_file )
+    normalized_source_file = filedir_normalize ( source_file1 )
     call filedir_split ( normalized_source_file , numberOfComponents , numberOfChars , &
          listOfComponents )
     write ( msg ,*)  "Number of components:", numberOfComponents
@@ -346,6 +454,10 @@ contains
     enddo
     deallocate ( listOfComponents )
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #21 : compute a temporary file name
     !
     call logmsg ( "Test #21 : computes a temporary file name" )
@@ -362,6 +474,10 @@ contains
     call filedir_delete ( tempfile )
     call filedir_delete ( tempfile2 )
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #22 : touch
     !
     call logmsg ( "Test #22 : touch files" )
@@ -376,6 +492,10 @@ contains
     !call assert ( mtime2 > mtime1 , "Error in filedir_touch (2)")
     call filedir_delete ( tempfile )
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #23 : change directory
     !
     call logmsg ( "Test #23 : change directories" )
@@ -389,7 +509,10 @@ contains
     call filedir_pwd ( cwd )
     dirtail = filedir_tail ( cwd )
     call assertString ( trim(dirtail) , "filedir" , "Error in platform_cd (2)")
-    
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()    
     !
     ! Test #24 : is directory
     !
@@ -434,6 +557,10 @@ contains
     isdir = filedir_isdirectory ( dirname1 )
     call assert ( .NOT.isdir , "Error in filedir_mkdir (2)")
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #28 : create / delete a non empty directory without / with the force option
     !
     call logmsg ( "Test #28 : file mkdir" )
@@ -451,6 +578,10 @@ contains
     isdir = filedir_isdirectory ( dirname1 )
     call assert ( .NOT.isdir , "Error in filedir_mkdir (4)")
     !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
     ! Test #29 : create a directory which allready exists
     !
     call logmsg ( "Test #29 : file mkdir" )
@@ -460,6 +591,10 @@ contains
     call filedir_mkdir ( dirname1 , status )
     call assert ( status/= 0, "Error in filedir_mkdir (5)")
     call filedir_delete ( dirname1 )
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #30 : compute the native name
     ! Caution !
@@ -471,6 +606,10 @@ contains
     tempfile = filedir_nativename ( "./toto.txt" )
     expected = ".\toto.txt"
     call assertString ( trim(tempfile) , trim(expected) , "Error in filedir_nativename (1)")
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Test #31 : compute the path type of one file
     !
@@ -492,6 +631,38 @@ contains
     else
        call assert ( pathtype==FS_PATHTYPE_ABSOLUTE , "Error in filedir_pathtype (6)")
     endif
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
+    ! Open several units and close all
+    !
+    file_unit1 = filedir_get_unit (  )
+    open ( unit = file_unit1 , file = source_file1 )
+    file_unit2 = filedir_get_unit (  )
+    open ( unit = file_unit2 , file = source_file2 )
+    call filedir_getallopenunits ( nbunits , units )
+    call assert ( nbunits == 3 , "Wrong number of units")
+    ! Unit #1 is the logger for the tests itself
+    call assert ( units ( 1 ) == file_unit1 , "Wrong unit #1")
+    call assert ( units ( 2 ) == file_unit2 , "Wrong unit #2")
+    deallocate ( units )
+    call filedir_reportunit ( log_unit , file_unit1 )
+    call filedir_reportunit ( log_unit , file_unit2 )
+    call filedir_displayopenunits ( log_unit )
+    ! We cannot do that here because of the logger for the tests !!!
+    ! But, yes, it works.
+    ! call filedir_closeallopenunits ()
+    close ( file_unit1 )
+    close ( file_unit2 )
+    call filedir_getallopenunits ( nbunits , units )
+    call assert ( nbunits == 1 , "Wrong number of units")
+    deallocate ( units )
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
     !
     ! Shutdown the tests
     !
@@ -656,11 +827,27 @@ contains
     character (len= 200 ) :: msg
     call logmsg ( "**********************" )
     call logmsg ( "End of tests." )
+    write ( msg , * ) "Total number of tests : ", assertTotalTestSuccess + assertTotalTestFail
+    call logmsg ( msg )
     write ( msg , * ) "Total number of success tests : ", assertTotalTestSuccess
     call logmsg ( msg )
     write ( msg , * ) "Total number of failing tests : ", assertTotalTestFail
     call logmsg ( msg )
   end subroutine assert_shutdown
+  !
+  ! check_fileunitsnb --
+  !   Check that the number of opened units is OK
+  !
+  subroutine check_fileunitsnb ()
+    integer :: nbunits
+    integer , dimension(:) , pointer :: units
+    call filedir_getallopenunits ( nbunits , units )
+    if ( nbunits /= 1 ) then
+       call filedir_displayopenunits ( log_unit )
+    endif
+    call assert ( nbunits == 1 , "Wrong number of units")
+    deallocate ( units )
+  end subroutine check_fileunitsnb
 end program test_filedir
 
 !

@@ -13,9 +13,188 @@
 !   The functions actually perform fairly simple string manipulations.
 !   It is just that these manipulations occur frequently.
 !
+! Overview
+!
+!   This component allows to manage the file system, by providing 
+!   services to create, move and destroy files and directories, and 
+!   to get informations about files and directories.
+!   The services provided are based either on standard fortran,
+!   or on fortran extensions.
+!
+! Portability
+!
+!   One of the main interest of this component is to separate
+!   the client-side application from platform-specific file 
+!   management or from compiler-specific fortran extensions. 
+!
+!   This separation is possible because m_filedir
+!   deals for the platform directly, by using the m_platform
+!   module. This allows to design a client source code which 
+!   portable on several operating systems (for example windows,
+!   linux) without any change. For example, the several file 
+!   separators used on the various operating systems are taken
+!   into account internally : "/" on linux systems, "\" on 
+!   windows systems and ":" on Mac OS.
+!
+!   The portability is also ensured with respect to the 
+!   fortran compiler used to create the executable.
+!   All fortran compilers provide commands to rename the files
+!   or get the working directory. But not all fortran compilers
+!   define these commands the same way : some provide subroutines,
+!   some provide functions, etc... The current component can 
+!   be configured at compile-time with pre-processing commands.
+!   This allows to configure the component with compiler 
+!   specific settings, to make so that the component know
+!   what features your particular compiler knows about.
+!
+!     <your application> 
+!            |
+!        m_filedir -> (operating system , fortran compiler)
+!            |
+!        m_platform -> (operating system , fortran compiler)
+!
+! How to use it
+!
+!   Before using this component, it must be initialized with
+!   filedir_init. This allows to initialize platform-specific 
+!   internal settings.
+!
+!   The commands filedir_delete, filedir_copy, filedir_rename
+!   allow to delete, copy and rename files or directories.
+!   To inquire about a file or directory, one can use 
+!   filedir_exists or filedir_isdirectory.
+!  
+!   In the following example, one creates a new file with filedir_touch,
+!   rename that file and finally delete it.
+!
+!   call filedir_init ()
+!   call filedir_touch ( "foo.txt" )
+!   call filedir_rename ( "foo.txt" , "toto.txt" )
+!   call filedir_delete ( "toto.txt" )
+!
+!   The filedir_separator returns the platform-specific character 
+!   used on the current operating system.
+!
+!   The commands filedir_nativename , filedir_normalize , filedir_pathtype
+!   provide ways to manage file names and paths.
+!   The filedir_nativename function returns the platform-specific name of the file. 
+!   The filedir_pathtype command returns one of FS_PATHTYPE_ABSOLUTE, 
+!   FS_PATHTYPE_RELATIVE, FS_PATHTYPE_VOLUMERELATIVE which correspond to 
+!   the current file. The FS_PATHTYPE_VOLUMERELATIVE only exist on 
+!   windows. The filedir_normalize command returns a unique normalized 
+!   path representation for the file-system object (file, directory, link, 
+!   etc), whose string value can be used as a unique identifier for it.
+!
+!   The filedir_split and filedir_join services allows to separate
+!   or concatenate the components of a file. This can be useful
+!   when dealing with relative file or directories.
+!   The filedir_split command splits a file into pieces each time 
+!   the platform-specific separator is found.
+!   The filedir_join command concatenate a list of strings with 
+!   the platform-specific separator and returns the concatenated
+!   file name.
+!
+!   One particularly useful command when dealing with files is 
+!   filedir_findByPattern. The command takes a string as an input
+!   file pattern. It then computes the list of all files which
+!   match that pattern.
+!
+! Error management
+!
+!   The file management may raise errors, for example when the 
+!   user want to rename a file which does not exist.
+!   Many of the provided commands have an optional integer output 
+!   argument "status" which is zero when no error occured 
+!   and non-zero in case of error.
+!   If the status argument is not provided and an error is generated,
+!   then the program stops and a message is displayed on standard 
+!   output.
+!   These are the public error flags that the current component may generate :
+!     FS_ERROR_OK = 0
+!     FS_ERROR_UNABLE_TO_OPEN_SOURCE
+!     FS_ERROR_UNABLE_TO_OPEN_TARGET
+!     FS_ERROR_UNABLE_TO_WRITE_TARGET
+!     FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
+!
+! Manage file units
+!
+!   The component provides services to manage fortran file units.
+!   The function filedir_get_unit returns an integer representing
+!   a fortran unit which is available for opening a file.
+!   The typical use of this function is to manage the files dynamically,
+!   without any database of file units in the library/software.
+!   In the following example, one opens a file with a dynamical
+!   file unit.
+! 
+!     integer :: fileunit
+!     fileunit = filedir_get_unit ()
+!     open ( unit = fileunit , file = "data.txt" )
+!     [etc...]
+!
+!   If several files are to be opened, the "filedir_get_unit" 
+!   method has to be inserted between the "open" statements.
+!   This is because two consecutive calls to "filedir_get_unit"
+!   will return the same integer, as expected : if a unit is available
+!   the first time, it will also be available the second time.
+!   In the following example, several files are opened and connected
+!   to several files.
+! 
+!     integer :: fileunit1
+!     integer :: fileunit2
+!     fileunit1 = filedir_get_unit ()
+!     open ( unit = fileunit1 , file = "data.txt" )
+!     fileunit2 = filedir_get_unit ()
+!     open ( unit = fileunit2 , file = "data2.txt" )
+!     [etc...]
+!
+!   In a large fortran software, it may be difficult to see if some 
+!   bug has been introduced in the file management, especially
+!   when the software is the composition of several libraries.
+!   The subroutines filedir_getallopenunits , filedir_closeallopenunits , 
+!   filedir_reportunit , filedir_displayopenunits allow to manage for 
+!   the units currently used in the software.
+!   The filedir_getallopenunits returns an array of integers which 
+!   contains all the currently opened units. The filedir_closeallopenunits
+!   subroutine close all currently opened units. The filedir_reportunit
+!   displays a full report about a given unit number by using the 
+!   "inquire" fortran intrinsic statement.
+!
+!   Several methods of this component are based on Fortran extensions,
+!   which requires compiler-specific settings.
+!   For Intel Fortran compiler, the current implementation was based on
+!   IFPORT.F90 file in the Intel release for details on the interfaces provided.
+!
+!   File rename fortran extension.
+!   Depending on the compiler, the "RENAME" fortran extension is 
+!   provided as a subroutine or a function.
+!   For example, this is a short list of compilers and their particular 
+!   RENAME provided :
+!   - function : Intel Fortran, g95
+!   - subroutine : gfortran
+!   Choose your RENAME version between one of these :
+!   _FS_RENAME_FUNCTION , _FS_RENAME_SUBROUTINE
+!
+! This is an abstract of all macros for several compilers.
+!
+! Compiler : Intel Fortran
+! _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
+! _FS_RENAME_FUNCTION
+!
+! Compiler : g95
+! _FS_RENAME_FUNCTION
+!
+! Compiler : gfortran
+! _FS_RENAME_SUBROUTINE
+!
+! Copyright (c) 2008 Arjen Markus
+! Copyright (c) 2008 Michael Baudin
+!
 !   $Id$
 !
 module m_filedir
+#ifdef _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
+  use ifport
+#endif
   use m_platform, only : &
        platform_get_platform, &
        platform_system, &
@@ -57,6 +236,11 @@ module m_filedir
   public :: filedir_tempdir
   public :: filedir_tempfile
   public :: filedir_touch
+  public :: filedir_set_stoponerror
+  public :: filedir_closeallopenunits
+  public :: filedir_reportunit
+  public :: filedir_displayopenunits
+  public :: filedir_getallopenunits
   !
   ! Static attributes
   !
@@ -94,11 +278,15 @@ module m_filedir
   !
   ! Tags to manage errors.
   !
-  integer , parameter, public :: FS_OK = 0
-  integer , parameter, public :: FS_UNABLE_TO_OPEN_SOURCE = 1
-  integer , parameter, public :: FS_UNABLE_TO_OPEN_TARGET = 2
-  integer , parameter, public :: FS_UNABLE_TO_WRITE_TARGET = 3
-  integer , parameter, public :: FS_SOURCE_FILE_DOES_NOT_EXIST = 4
+  integer , parameter, public :: FS_ERROR_OK = 0
+  integer , parameter, public :: FS_ERROR_UNABLE_TO_OPEN_SOURCE = 1
+  integer , parameter, public :: FS_ERROR_UNABLE_TO_OPEN_TARGET = 2
+  integer , parameter, public :: FS_ERROR_UNABLE_TO_WRITE_TARGET = 3
+  integer , parameter, public :: FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST = 4
+  integer , parameter, public :: FS_ERROR_UNDEFINED_SERVICE = 5
+  !
+  ! Set to true to stop whenever an error comes in the vstring component.
+  logical, save :: filedir_stoponerror = .true.
 contains
   !
   ! filedir_init --
@@ -316,20 +504,52 @@ contains
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
   !     upon return
   !
-  subroutine filedir_rename (oldfn, newfn, status )
+  subroutine filedir_rename ( oldfn , newfn , status )
     character(len=*), intent(in) :: oldfn, newfn
     integer, intent(out) , optional :: status
-    ! Caution !
-    ! The RENAME subroutine is not in the fortran 90 standard,
-    ! but it is an extension in the fortran compilers Intel, G95 and
-    ! gfortran. It may generate errors at link time for other
-    ! compilers.
-    ! In Intel Fortran 8.0, the status optional argument does not exist
-    ! If added to the line "call RENAME ( oldfn , newfn , local_status ),
-    ! it generates an error at execution time.
-    call RENAME ( oldfn , newfn )
+    integer :: local_status
+    character ( len = len( oldfn )+len(newfn)) :: message
+    logical :: fexist
+    !
+    ! Check source file.
+    !
+    fexist = filedir_exists ( oldfn )
+    if ( .NOT. fexist ) then
+       if ( present ( status )) then
+          status = FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
+       else
+          write(message,*) "Unable to access to old file :", trim( oldfn )
+          call filedir_error ( "filedir_rename" , message )
+       endif
+       return
+    endif
+    !
+    ! Rename the file
+    !
+#ifdef _FS_RENAME_FUNCTION
+    local_status = RENAME ( oldfn , newfn )
+#endif
+#ifdef _FS_RENAME_SUBROUTINE
+    call RENAME ( oldfn , newfn , local_status )
+#endif
+    !
+    ! Case when no macro is defined
+    !
+#ifndef _FS_RENAME_FUNCTION
+#ifndef _FS_RENAME_SUBROUTINE
+    if ( present ( status ) ) then
+       status = FS_ERROR_UNDEFINED_SERVICE
+    else
+       write(message,*) "The rename service is not provided."
+       call filedir_error ( "filedir_rename" , message )
+    endif
+#endif
+#endif
     if ( present ( status )) then
-       status = 0
+       status = local_status
+    else
+       write ( message , * ) "Unable to rename file ", trim( oldfn ), " to file ", trim( newfn )
+       call filedir_error ( "filedir_rename" , message )
     endif
   end subroutine filedir_rename
   !
@@ -349,6 +569,23 @@ contains
     integer :: local_status
     character (len=len(sourcefn)+len(targetfn)+len(command_copy) + 2) :: command
     character ( len = len(sourcefn)+len(targetfn)+22) :: message
+    logical :: fexist
+    !
+    ! Check source file.
+    !
+    fexist = filedir_exists ( sourcefn )
+    if ( .NOT. fexist ) then
+       if ( present ( status )) then
+          status = FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
+       else
+          write(message,*) "Unable to access to source file :", trim( sourcefn )
+          call filedir_error ( "filedir_rename" , message )
+       endif
+       return
+    endif
+    !
+    ! Make the copy
+    !
     write ( command , *) trim(command_copy) , " ",  trim(sourcefn), " ", trim(targetfn)
     call platform_system ( command , local_status )
     if ( present ( status )) then
@@ -405,14 +642,14 @@ contains
     !
     ! By default, there is no problem.
     !
-    local_status = FS_OK
+    local_status = FS_ERROR_OK
     !
     ! 0. Check that the source file exist.
     !
     fexist = filedir_exists ( sourcefn )
     if ( .NOT. fexist ) then
        if ( present ( status )) then
-          status = FS_SOURCE_FILE_DOES_NOT_EXIST
+          status = FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
        else
           write(message,*) "Source file :", trim(sourcefn) , " does not exist."
           call filedir_error ( "filedir_copy_std" , message )
@@ -436,12 +673,12 @@ contains
     source_unit = filedir_get_unit (  )
     open ( UNIT = source_unit , FILE= sourcefn , ACTION='READ',STATUS='OLD', IOSTAT= local_status )
     if ( local_status /=0) then
-       local_status = FS_UNABLE_TO_OPEN_SOURCE
+       local_status = FS_ERROR_UNABLE_TO_OPEN_SOURCE
     else
        target_unit = filedir_get_unit (  )
        open ( UNIT = target_unit , FILE= targetfn , ACTION='WRITE',STATUS='NEW', IOSTAT= local_status )
        if ( local_status /=0) then
-          local_status = FS_UNABLE_TO_OPEN_TARGET
+          local_status = FS_ERROR_UNABLE_TO_OPEN_TARGET
        else
           !
           ! 3. Copy the lines one after another.
@@ -459,13 +696,13 @@ contains
              endif
              if ( local_status /= 0 ) then
                 ! There was an error while writing
-                local_status = FS_UNABLE_TO_WRITE_TARGET
+                local_status = FS_ERROR_UNABLE_TO_WRITE_TARGET
                 exit
              end if
           enddo
-          close ( source_unit )
+          close ( target_unit )
        endif
-       close ( target_unit )
+       close ( source_unit )
     endif
     if ( present ( status )) then
        status = local_status
@@ -474,50 +711,6 @@ contains
        call filedir_error ( "filedir_copy_std" , message )
     endif
   end subroutine filedir_copy_std
-  !
-  ! filedir_get_unit --
-  !   Returns a free fortran unit.
-  ! Arguments:
-  !   no argument
-  ! Note :
-  !   A "free" FORTRAN unit number is an integer between 1 and MAX_UNIT_NUMBER which
-  !   is not currently associated with an I/O device.  A free FORTRAN unit
-  !   number is needed in order to open a file with the OPEN command.
-  !
-  !   If IUNIT = 0, then no free FORTRAN unit could be found, although
-  !   all 99 units were checked (except for units 5, 6 and 9, which
-  !   are commonly reserved for console I/O).
-  !
-  !   Otherwise, IUNIT is an integer between 1 and MAX_UNIT_NUMBER, representing a
-  !   free FORTRAN unit.  Note that GET_UNIT assumes that units 5 and 6
-  !   are special, and will never return those values.
-  !
-  !  Original Author : John Burkardt
-  !
-  integer function filedir_get_unit ( )
-    integer :: iunit
-    integer :: ios
-    logical :: lopen
-    logical :: unit_found
-    iunit = 0
-    unit_found = .false.
-    filedir_get_unit = 0
-    do iunit = 1, MAX_UNIT_NUMBER
-       if ( iunit /= 5 .and. iunit /= 6 .and. iunit /= 9 ) then
-          inquire ( UNIT = iunit, opened = lopen, iostat = ios )
-          if ( ios == 0 ) then
-             if ( .not. lopen ) then
-                filedir_get_unit = iunit
-                unit_found = .true.
-                exit
-             end if
-          end if
-       end if
-    end do
-    if (.NOT.unit_found) then
-       call filedir_error ( "filedir_get_unit" , "No unit free." )
-    endif
-  end function filedir_get_unit
   !
   ! filedir_pwd --
   !   Returns the name of the current directory by using the fortran
@@ -549,7 +742,7 @@ contains
     endif
   end function filedir_exists
   !
-  ! filedir_delete --
+  ! filedir_delete_with_force --
   !   Removes the file or directory specified by each pathname argument. 
   !   Non-empty directories will be removed only if the force option is specified.
   ! Arguments:
@@ -602,6 +795,10 @@ contains
        call filedir_error ( "filedir_delete" , message )
     endif
   end subroutine filedir_delete_with_force
+  !
+  ! filedir_delete_without_force --
+  !   Interface for filedir_delete_with_force to manage the force option.
+  !
   subroutine filedir_delete_without_force ( filename , status )
     character(len=*), intent(in) :: filename
     integer, intent (out), optional :: status
@@ -693,22 +890,8 @@ contains
     filedir_normalize = filedir_join ( directory , ftail )
   end function filedir_normalize
   !
-  ! filedir_error --
-  !   Manage an error for the filedir module
-  ! Arguments :
-  !   origin : the name of the subroutine/function which generated the error.
-  !   message : the message to display
-  !
-  subroutine filedir_error ( origin , message )
-    character(len=*), intent(in) :: origin
-    character(len=*), intent(in) :: message
-    write(6,*) "Internal error from: ", origin
-    write(6,*) "Error: ", trim(adjustl(message))
-    stop
-  end subroutine filedir_error
-  !
   ! filedir_findByPattern --
-  !   Returns a list of files fulfilling a particular pattern
+  !   Returns a list of files which match the given pattern
   !
   ! Arguments:
   !   pattern         Pattern for the file names (like: *.f90)
@@ -730,13 +913,13 @@ contains
     ! listOfFiles ( : , ifile) is the file #ifile
     ! listOfFiles ( ichar , ifile ) is the character #ichar for file #ifile
     character, dimension(:,:), pointer :: listOfFiles ! -> does not work
-!!$    !character(len=*), dimension(:), pointer :: listOfFiles ! -> does not work
-!!$    ! NOTE :
-!!$    ! When I test it against Intel Fortran 8 or gfortran 4.0.2, the
-!!$    ! program freezes. I have to change the declaration of the list of files to :
-!!$    !character(len=50), dimension(1:50) :: listOfFiles -> works fine.
-!!$    !character(len=*), dimension(1:50) :: listOfFiles -> does not work
-!!$    
+    !!$    !character(len=*), dimension(:), pointer :: listOfFiles ! -> does not work
+    !!$    ! NOTE :
+    !!$    ! When I test it against Intel Fortran 8 or gfortran 4.0.2, the
+    !!$    ! program freezes. I have to change the declaration of the list of files to :
+    !!$    !character(len=50), dimension(1:50) :: listOfFiles -> works fine.
+    !!$    !character(len=*), dimension(1:50) :: listOfFiles -> does not work
+    !!$
     character(len=200)                      :: tmpfile
     character(len=200)                      :: cmd
     character(len=1)                        :: line_unused
@@ -1294,5 +1477,255 @@ contains
        filedir_nativename ( icharacter : icharacter ) = currentcharacter
     enddo
   end function filedir_nativename
+  !
+  ! filedir_get_unit --
+  !   Returns a free fortran unit.
+  ! Arguments:
+  !   no argument
+  ! Note :
+  !   A "free" FORTRAN unit number is an integer between 1 and MAX_UNIT_NUMBER which
+  !   is not currently associated with an I/O device.  A free FORTRAN unit
+  !   number is needed in order to open a file with the OPEN command.
+  !
+  !   If IUNIT = 0, then no free FORTRAN unit could be found, although
+  !   all 99 units were checked (except for units 5, 6 and 9, which
+  !   are commonly reserved for console I/O).
+  !
+  !   Otherwise, IUNIT is an integer between 1 and MAX_UNIT_NUMBER, representing a
+  !   free FORTRAN unit.  Note that GET_UNIT assumes that units 5 and 6
+  !   are special, and will never return those values.
+  !
+  !  Original Author : John Burkardt
+  !
+  integer function filedir_get_unit ( )
+    integer :: iunit
+    integer :: ios
+    logical :: lopen
+    logical :: unit_found
+    iunit = 0
+    unit_found = .false.
+    filedir_get_unit = 0
+    do iunit = 1, MAX_UNIT_NUMBER
+       if ( iunit /= 5 .and. iunit /= 6 .and. iunit /= 9 ) then
+          inquire ( UNIT = iunit, opened = lopen, iostat = ios )
+          if ( ios == 0 ) then
+             if ( .not. lopen ) then
+                filedir_get_unit = iunit
+                unit_found = .true.
+                exit
+             end if
+          end if
+       end if
+    end do
+    if (.NOT.unit_found) then
+       call filedir_error ( "filedir_get_unit" , "No unit free." )
+    endif
+  end function filedir_get_unit
+  !
+  ! file_getallopenunits --
+  !   Computes an array of integers made of all currently opened units.
+  ! Output :
+  !   nbunits : number of opened units
+  !   units ( iunit ) : unit number for the opened unit #iunit with 1<= iunit <= nbunits
+  !
+  subroutine filedir_getallopenunits ( nbunits , units )
+    implicit none
+    integer, intent ( out ) :: nbunits
+    integer , dimension(:) , pointer :: units
+    integer :: iunit
+    logical :: lopen
+    integer :: step
+    !
+    ! Loop over the steps.
+    ! Step #1 : count the number of opened units
+    ! Step #2 : store the number of opened units
+    !
+    do step = 1 , 2
+       nbunits = 0
+       do iunit = 1, MAX_UNIT_NUMBER
+          if ( iunit /= 5 .and. iunit /= 6 .and. iunit /= 9 ) then
+             inquire ( UNIT = iunit, opened = lopen )
+             if ( lopen ) then
+                if ( step == 1 ) then
+                   nbunits = nbunits + 1
+                else
+                   nbunits = nbunits + 1
+                   units ( nbunits ) = iunit
+                endif
+             end if
+          end if
+       end do
+       !
+       ! At the end of step #1, allocate the array
+       !
+       if ( step == 1) then
+          allocate ( units ( 1:nbunits ) )
+       endif
+    enddo
+  end subroutine filedir_getallopenunits
+  !
+  ! filedir_displayopenunits --
+  !   Displays on unit "unitnumber" the full list of opened units and their associated 
+  !   filenames.
+  ! Input :
+  !   reportunitnumber : the unit number on which the report is displayed
+  !
+  subroutine filedir_displayopenunits ( reportunitnumber )
+    implicit none
+    integer, intent ( in ) :: reportunitnumber
+    integer :: iunit
+    integer :: nbunits
+    integer , dimension(:) , pointer :: units
+    call filedir_getallopenunits ( nbunits , units )
+    write ( reportunitnumber , * ) "Number of units opened : ", nbunits
+    do iunit = 1, nbunits
+       write ( reportunitnumber , * ) "Unit # ", iunit , "/" , nbunits
+       call filedir_reportunit ( reportunitnumber , units ( iunit ) )
+    end do
+    deallocate ( units )
+  end subroutine filedir_displayopenunits
+  !
+  ! filedir_reportunit --
+  !   Displays a full report on unit "unitnumber" for unit #iunit.
+  ! Note :
+  !   All possible features of the "inquire" intrinsic are used.
+  !
+  subroutine filedir_reportunit ( reportunitnumber , iunit )
+    implicit none
+    integer , intent (in) :: reportunitnumber
+    integer , intent (in) :: iunit
+    logical :: unit_exist
+    logical :: unit_open
+    logical :: unit_named
+    integer :: unit_iostat
+    integer :: unit_record_length
+    integer :: unit_nextrec
+    integer , parameter :: CHAR_LENGTH = 200
+    character ( len= CHAR_LENGTH) :: unit_name
+    character ( len= CHAR_LENGTH) :: unit_access
+    character ( len= CHAR_LENGTH) :: unit_sequential
+    character ( len= CHAR_LENGTH) :: unit_direct
+    character ( len= CHAR_LENGTH) :: unit_form
+    character ( len= CHAR_LENGTH) :: unit_formatted
+    character ( len= CHAR_LENGTH) :: unit_position
+    character ( len= CHAR_LENGTH) :: unit_action
+    character ( len= CHAR_LENGTH) :: unit_read
+    character ( len= CHAR_LENGTH) :: unit_write
+    character ( len= CHAR_LENGTH) :: unit_readwrite
+    character ( len= CHAR_LENGTH) :: unit_delim
+    character ( len= CHAR_LENGTH) :: unit_pad
+    character ( len= CHAR_LENGTH) :: unit_blank
+
+    inquire ( UNIT = iunit, &
+         iostat = unit_iostat , &
+         exist = unit_exist , &
+         opened = unit_open , &
+         named = unit_named , &
+         name = unit_name , &
+         access = unit_access , &
+         sequential = unit_sequential, &
+         direct = unit_direct , &
+         form = unit_form , &
+         formatted = unit_formatted , &
+         recl = unit_record_length , &
+         nextrec = unit_nextrec , &
+         blank = unit_blank , &
+         position = unit_position , &
+         action = unit_action , &
+         read = unit_read , &
+         write = unit_write , &
+         readwrite = unit_readwrite , &
+         delim = unit_delim , &
+         pad = unit_pad )
+    call filedir_reportunit_write_integer ( reportunitnumber , "iunit" , iunit )
+    call filedir_reportunit_write_integer ( reportunitnumber , "iostat" , unit_iostat )
+    call filedir_reportunit_write_logical ( reportunitnumber , "exist" , unit_exist )
+    call filedir_reportunit_write_logical ( reportunitnumber , "opened" , unit_open )
+    call filedir_reportunit_write_logical ( reportunitnumber , "named" , unit_named )
+    if ( unit_named ) then
+       call filedir_reportunit_write_character ( reportunitnumber , "filename" , trim(unit_name) )
+    endif
+    call filedir_reportunit_write_character ( reportunitnumber , "sequential" , trim(unit_sequential) )
+    call filedir_reportunit_write_character ( reportunitnumber , "direct" , trim(unit_direct) )
+    call filedir_reportunit_write_character ( reportunitnumber , "form" , trim(unit_form) )
+    call filedir_reportunit_write_character ( reportunitnumber , "formatted" , trim(unit_formatted) )
+    call filedir_reportunit_write_integer ( reportunitnumber , "record length" , unit_record_length )
+    call filedir_reportunit_write_integer ( reportunitnumber , "last record" , unit_nextrec )
+    call filedir_reportunit_write_character ( reportunitnumber , "blank" , trim(unit_blank) )
+    call filedir_reportunit_write_character ( reportunitnumber , "position" , trim(unit_position) )
+    call filedir_reportunit_write_character ( reportunitnumber , "action" , trim(unit_action) )
+    call filedir_reportunit_write_character ( reportunitnumber , "read" , trim(unit_read) )
+    call filedir_reportunit_write_character ( reportunitnumber , "write" , trim(unit_write) )
+    call filedir_reportunit_write_character ( reportunitnumber , "readwrite" , trim(unit_readwrite) )
+    call filedir_reportunit_write_character ( reportunitnumber , "delim" , trim(unit_delim) )
+    call filedir_reportunit_write_character ( reportunitnumber , "pad" , trim(unit_pad) )
+  contains
+    subroutine filedir_reportunit_write_character ( reportunitnumber , key , value )
+      implicit none
+      integer , intent (in) :: reportunitnumber
+      character (len= *), intent(in) :: key
+      character (len= *), intent(in) :: value
+      write ( reportunitnumber , * ) "  * ", trim(key), " : ", trim(value)
+    end subroutine filedir_reportunit_write_character
+    subroutine filedir_reportunit_write_integer ( reportunitnumber , key , value )
+      implicit none
+      integer , intent (in) :: reportunitnumber
+      character (len= *), intent(in) :: key
+      integer, intent(in) :: value
+      write ( reportunitnumber , * ) "  * ", trim(key), " : ", value
+    end subroutine filedir_reportunit_write_integer
+    subroutine filedir_reportunit_write_logical ( reportunitnumber , key , value )
+      implicit none
+      integer , intent (in) :: reportunitnumber
+      character (len= *), intent(in) :: key
+      logical, intent(in) :: value
+      write ( reportunitnumber , * ) "  * ", trim(key), " : ", value
+    end subroutine filedir_reportunit_write_logical
+  end subroutine filedir_reportunit
+  !
+  ! filedir_closeallopenunits --
+  !   Close all currently opened units.
+  !
+  subroutine filedir_closeallopenunits ( )
+    implicit none
+    integer :: nbunits
+    integer , dimension(:) , pointer :: units
+    integer :: iunit
+    call filedir_getallopenunits ( nbunits , units )
+    do iunit = 1, nbunits
+       close ( units ( iunit ) )
+    enddo
+  end subroutine filedir_closeallopenunits
+  !
+  ! filedir_error --
+  !   Manage an error for the filedir module
+  ! Arguments :
+  !   origin : the name of the subroutine/function which generated the error.
+  !   message : the message to display
+  !
+  subroutine filedir_error ( origin , message )
+    character(len=*), intent(in) :: origin
+    character(len=*), intent(in) :: message
+    character(len=len(origin)+len(message)) :: directory
+    write(*,*) "Internal error from: ", origin
+    write(*,*) "Error: ", trim(adjustl(message))
+    call filedir_pwd ( directory )
+    write(*,*) "Current working directory: ", trim(directory)
+    if ( filedir_stoponerror ) then
+       stop
+    endif
+  end subroutine filedir_error
+  ! 
+  ! filedir_set_stoponerror --
+  !   Configure the behaviour of the component whenever an 
+  !   error is met.
+  !   If stoponerror is true, then the execution stops if an error is encountered.
+  !   If stoponerror is false, then the execution continues if an error is encountered.
+  !   In both cases, a message is displayed on standard output.
+  ! 
+  subroutine filedir_set_stoponerror ( stoponerror )
+    logical , intent(in) :: stoponerror
+    filedir_stoponerror = stoponerror
+  end subroutine filedir_set_stoponerror
 end module m_filedir
 
