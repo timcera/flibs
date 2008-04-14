@@ -27,8 +27,8 @@
 ! settings.
 ! For example, this is a short list of compilers and their particular 
 ! SYSTEM provided :
-! - subroutine : Intel Fortran, gfortran,
-! - function : g95.
+! - function : Intel Fortran, g95.
+! - subroutine : gfortran,
 ! Choose your SYSTEM version between one of these :
 ! _PLATFORM_SYSTEM_SUBROUTINE , _PLATFORM_SYSTEM_FUNCTION
 !
@@ -51,12 +51,12 @@
 ! _PLATFORM_CHDIR_SUBROUTINE , _PLATFORM_CHDIR_FUNCTION
 !
 ! File stat fortran extension.
-! Depending on the compiler the "STAT" fortran extension is 
+! Depending on the compiler, the "STAT" fortran extension is 
 ! provided as a subroutine or a function.
 ! For example, this is a short list of compilers and their particular 
 ! STAT provided :
-! - subroutine : Intel Fortran, gfortran
-! - function : g95
+! - function : Intel Fortran, g95
+! - subroutine : gfortran
 ! Choose your STAT version between one of these :
 ! _PLATFORM_STAT_SUBROUTINE , _PLATFORM_STAT_FUNCTION
 !
@@ -80,7 +80,9 @@
 ! _PLATFORM_STAT_FUNCTION
 ! _PLATFORM_SYSTEM_FUNCTION
 !
-! Copyright (c) 2008 Michaël Baudin
+! Copyright (c) 2008 Michael Baudin
+!
+! $Id$
 !
 module m_platform
 #ifdef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
@@ -156,6 +158,12 @@ module m_platform
   public :: platform_stat
   public :: platform_osstring
   public :: platform_platformstring
+  !
+  ! Tags to manage errors.
+  !
+  integer , parameter, public :: PLATFORM_ERROR_OK = 0
+  integer , parameter, public :: PLATFORM_ERROR_UNDEFINED_SERVICE = 1
+
 contains
   !
   ! platform_system  --
@@ -171,7 +179,7 @@ contains
   ! Caution !
   !   The standard is that a status different from 0 is an error.
   !   In fact, under Windows, the value of the status has no signification.
-  !   I got status 1 or 5228135 with a good copy result.
+  !   I got status 1 or 5228135 with a good result.
   !
   subroutine platform_system ( command , status )
     character (len=*), intent(in) :: command
@@ -183,6 +191,19 @@ contains
 #endif
 #ifdef _PLATFORM_SYSTEM_FUNCTION
     local_status = system ( command )
+#endif
+    !
+    ! Case when no macro is defined
+    !
+#ifndef _PLATFORM_SYSTEM_SUBROUTINE
+#ifndef _PLATFORM_SYSTEM_FUNCTION
+    if ( present ( status ) ) then
+       status = PLATFORM_ERROR_UNDEFINED_SERVICE
+    else
+       write(message,*) "The system service is not provided."
+       call platform_error ( "platform_system" , message )
+    endif
+#endif
 #endif
     if (present(status)) then
        platform = platform_get_platform ()
@@ -268,6 +289,19 @@ contains
 #ifdef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
     environment_variable_length =  GETENVQQ ( envvar , value )
 #endif
+    !
+    ! Case when no macro is defined
+    !
+#ifndef _PLATFORM_FORTRAN_2003
+#ifndef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
+    if ( present ( status ) ) then
+       status = PLATFORM_ERROR_UNDEFINED_SERVICE
+    else
+       write(message,*) "The get_environment_variable service is not provided."
+       call platform_error ( "platform_get_environment_variable" , message )
+    endif
+#endif
+#endif
   end subroutine platform_get_environment_variable
   !
   ! platform_cd --
@@ -286,6 +320,19 @@ contains
 #endif
 #ifdef _PLATFORM_CHDIR_FUNCTION
     local_status = chdir ( dirname )
+#endif
+    !
+    ! Case when no macro is defined
+    !
+#ifndef _PLATFORM_CHDIR_SUBROUTINE
+#ifndef _PLATFORM_CHDIR_FUNCTION
+    if ( present ( status ) ) then
+       status = PLATFORM_ERROR_UNDEFINED_SERVICE
+    else
+       write(message,*) "The cd service is not provided."
+       call platform_error ( "platform_cd" , message )
+    endif
+#endif
 #endif
     if (present ( status )) then
        status = local_status
@@ -323,6 +370,19 @@ contains
 #endif
 #ifdef _PLATFORM_STAT_FUNCTION
     local_status = stat ( filename , statarray )
+#endif
+    !
+    ! Case when no macro is defined
+    !
+#ifndef _PLATFORM_STAT_SUBROUTINE
+#ifndef _PLATFORM_STAT_FUNCTION
+    if ( present ( status ) ) then
+       status = PLATFORM_ERROR_UNDEFINED_SERVICE
+    else
+       write(message,*) "The stat service is not provided."
+       call platform_error ( "platform_stat" , message )
+    endif
+#endif
 #endif
     if (present ( status )) then
        status = local_status
