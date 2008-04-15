@@ -39,8 +39,8 @@ subroutine qsort_array( array, compare )
     integer, dimension(:), allocatable         :: order
     integer                                    :: i
 
-    allocate( backup(1:size(array) )
-    allocate( order(1:size(array) )
+    allocate( backup(1:size(array)) )
+    allocate( order(1:size(array)) )
 
     do i = 1,size(order)
         order(i) = i
