@@ -20,6 +20,52 @@ module ipc_file
         integer           :: id          ! Numerical identfier
         integer           :: lun
     end type ipc_comm
+
+    interface ipc_send_data
+        module procedure ipc_send_int_scalar
+        module procedure ipc_send_int_1d
+        module procedure ipc_send_int_2d
+        module procedure ipc_send_int_3d
+        module procedure ipc_send_real_scalar
+        module procedure ipc_send_real_1d
+        module procedure ipc_send_real_2d
+        module procedure ipc_send_real_3d
+        module procedure ipc_send_dbl_scalar
+        module procedure ipc_send_dbl_1d
+        module procedure ipc_send_dbl_2d
+        module procedure ipc_send_dbl_3d
+        module procedure ipc_send_char_scalar
+        module procedure ipc_send_char_1d
+        module procedure ipc_send_char_2d
+        module procedure ipc_send_char_3d
+        module procedure ipc_send_cmplx_scalar
+        module procedure ipc_send_cmplx_1d
+        module procedure ipc_send_cmplx_2d
+        module procedure ipc_send_cmplx_3d
+    end interface
+
+    interface ipc_receive_data
+        module procedure ipc_receive_int_scalar
+        module procedure ipc_receive_int_1d
+        module procedure ipc_receive_int_2d
+        module procedure ipc_receive_int_3d
+        module procedure ipc_receive_real_scalar
+        module procedure ipc_receive_real_1d
+        module procedure ipc_receive_real_2d
+        module procedure ipc_receive_real_3d
+        module procedure ipc_receive_dbl_scalar
+        module procedure ipc_receive_dbl_1d
+        module procedure ipc_receive_dbl_2d
+        module procedure ipc_receive_dbl_3d
+        module procedure ipc_receive_char_scalar
+        module procedure ipc_receive_char_1d
+        module procedure ipc_receive_char_2d
+        module procedure ipc_receive_char_3d
+        module procedure ipc_receive_cmplx_scalar
+        module procedure ipc_receive_cmplx_1d
+        module procedure ipc_receive_cmplx_2d
+        module procedure ipc_receive_cmplx_3d
+    end interface
 contains
 
 type(ipc_comm) function ipc_open( me )
@@ -173,6 +219,8 @@ subroutine ipc_receive_finish( comm )
 
 end subroutine
 
+include "ipc_file_data.f90"
+
 end module ipc_file
 
 ! Test program:
@@ -196,6 +244,7 @@ program test_ipc_file
     character(len=20) :: value
     character(len=20) :: tag
     character(len=20) :: connection
+    logical           :: error
 
     !
     ! Read the information from the command-line:
@@ -219,13 +268,14 @@ program test_ipc_file
     ! Depending on the task we either send a number or receive it
     ! and print it
     !
+    write( *, * ) 'Task: >>',task, '<<'
     if ( task == 'send' ) then
         do i = 1,10
             id = i
             write( *, * ) myid, ': sending ... ', v, id
             call random_number( v )
             call ipc_send_start( comm, connection, 'number', id, lun )
-            write( lun ) v
+            call ipc_send_data( comm, v, error )
             write( *, * ) myid, ': sent ', v, id
             call ipc_send_finish( comm )
         enddo
@@ -235,7 +285,7 @@ program test_ipc_file
             id = i
             write( *, * ) myid, ': receiving ... '
             call ipc_receive_start( comm, connection, tag, id, lun )
-            read( lun ) v
+            call ipc_receive_data( comm, v, error )
             write( *, * ) myid, ': received ', v, id
             call ipc_receive_finish( comm )
         enddo
