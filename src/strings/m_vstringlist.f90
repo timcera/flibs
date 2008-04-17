@@ -77,7 +77,10 @@ module m_vstringlist
        vstring_append , &
        VSTRING_SPACE , &
        vstring_match , &
-       vstring_equals
+       vstring_equals , &
+       vstring_compare , &
+       vstring_cast , &
+       vstring_exists
   implicit none
   private
   !
@@ -99,6 +102,7 @@ module m_vstringlist
   public :: vstrlist_join
   public :: vstrlist_search
   public :: vstrlist_lsearch
+  public :: vstrlist_sort
   !
   ! t_vstringlist --
   !   A list of vstrings is implemented as an array of vstrings.
@@ -191,12 +195,20 @@ module m_vstringlist
   end interface vstrlist_search
   !
   ! vstrlist_lsearch --
-  !   Generic interface to compute the list of items which match a pattern.
+  !   Generic interface to compute the list of strings which match a pattern.
   !
   interface vstrlist_lsearch
      module procedure vstrlist_lsearch_vstring
      module procedure vstrlist_lsearch_charstring
   end interface vstrlist_lsearch
+  !
+  ! vstrlist_sort --
+  !   Generic interface to sort a list of strings
+  !
+  interface vstrlist_sort
+     module procedure vstrlist_sort_basic
+     module procedure vstrlist_sort_command
+  end interface vstrlist_sort
   !
   ! Total number of currently available (allocated) lists.
   ! Note :
@@ -210,7 +222,9 @@ module m_vstringlist
   ! Flags for error management.
   !
   integer, parameter :: VSTRINGLIST_ERROR_OK = 0
-  integer, parameter :: VSTRINGLIST_ERROR_INDEXWRONG = 1
+  integer, parameter :: VSTRINGLIST_ERROR_WRONG_INDEX = 1
+  integer, parameter :: VSTRINGLIST_ERROR_WRONG_LIST = 2
+  integer, parameter :: VSTRINGLIST_ERROR_WRONG_ITEM = 3
   !
   ! Constants
   !
@@ -282,6 +296,14 @@ contains
     type ( t_vstringlist ), intent(in) :: list
     integer :: length
     integer :: icomponent
+    integer :: status
+    character (len=200) :: message
+    call vstrlist_checklist ( list , status )
+    if ( status /= VSTRINGLIST_ERROR_OK ) then
+       write ( message , * ) "The given list is not consistent."
+       call vstrlist_error ( this , message )
+       return
+    endif
     length = vstrlist_length ( list )
     allocate ( this % array ( length ) )
     do icomponent = 1 , length
@@ -303,7 +325,7 @@ contains
     integer :: icomponent
     if ( length < 0 ) then
        write ( message , * ) "The given length ", length, " is lower than 0."
-       call vstring_error ( this , message )
+       call vstrlist_error ( this , message )
     endif
     allocate ( this % array ( length ) )
     do icomponent = 1 , length
@@ -387,8 +409,11 @@ contains
     type ( t_vstring ) :: newstring
     integer :: icomponent
     integer :: status
-    call vstrlist_check_index ( this , icomponent , status )
+    character ( len = 500 ) :: message
+    call vstrlist_checkindex ( this , icomponent , status )
     if ( status /= VSTRINGLIST_ERROR_OK ) then
+       write ( message , * ) "Wrong item index #", icomponent, " in current list"
+       call vstrlist_error ( this , message )
        return
     endif
     call vstring_new ( newstring , this % array ( icomponent ) )
@@ -532,7 +557,6 @@ contains
     integer :: icomponent
     integer :: icomponent_reduced
     integer :: status
-    type ( t_vstring ) :: this_string
     oldlength = vstrlist_length ( this )
     if ( oldlength == 0 .AND. strindex == 1 ) then
        ! No problem : we try to insert a string at the begining of an empty list
@@ -540,7 +564,7 @@ contains
        !
        ! Check the index
        !
-       call vstrlist_check_index ( this , strindex , status )
+       call vstrlist_checkindex ( this , strindex , status )
        if ( status /= VSTRINGLIST_ERROR_OK ) then
           return
        endif
@@ -555,18 +579,14 @@ contains
     !
     do icomponent = 1 , strindex - 1
        call vstring_free ( newlist % array ( icomponent ) )
-       this_string = vstrlist_index ( this , icomponent )
-       call vstring_new ( newlist % array ( icomponent )  , this_string )
-       call vstring_free ( this_string )
+       call vstring_new ( newlist % array ( icomponent )  , this % array ( icomponent ) )
     enddo
     call vstring_free ( newlist % array ( strindex ) )
     call vstring_new ( newlist % array ( strindex )  , string )
     do icomponent = strindex + 1 , newlength
        icomponent_reduced = icomponent - 1
        call vstring_free ( newlist % array ( icomponent ) )
-       this_string = vstrlist_index ( this , icomponent_reduced )
-       call vstring_new ( newlist % array ( icomponent )  , this_string )
-       call vstring_free ( this_string )
+       call vstring_new ( newlist % array ( icomponent )  , this % array ( icomponent_reduced ) )
     enddo
   end function vstrlist_insert_string
   !
@@ -597,12 +617,29 @@ contains
     integer , intent(in) :: last
     type ( t_vstringlist ) :: newlist
     integer :: icomponent
-    type ( t_vstring ) :: string
+    character (len= 500 ) :: message
+    integer :: status
+    !
+    ! Check indices.
+    !
+    call vstrlist_checkindex ( this , first , status )
+    if ( status /= VSTRINGLIST_ERROR_OK ) then
+       write ( message , * ) "Wrong index first : ", first , " in vstrlist_range"
+       call vstrlist_error ( this , message )
+       return
+    endif
+    call vstrlist_checkindex ( this , last , status )
+    if ( status /= VSTRINGLIST_ERROR_OK ) then
+       write ( message , * ) "Wrong index last : ", last , " in vstrlist_range"
+       call vstrlist_error ( this , message )
+       return
+    endif
+    !
+    ! Compute new list
+    !
     call vstrlist_new ( newlist )
     do icomponent = first , last
-       string = vstrlist_index ( this , icomponent )
-       call vstrlist_append ( newlist , string )
-       call vstring_free ( string )
+       call vstrlist_append ( newlist , this % array ( icomponent ) )
     enddo
   end function vstrlist_range
   !
@@ -618,7 +655,7 @@ contains
     integer , intent(in) :: strindex
     type ( t_vstring ) , intent(in) :: newstring
     integer :: status
-    call vstrlist_check_index ( this , strindex , status )
+    call vstrlist_checkindex ( this , strindex , status )
     if ( status /= VSTRINGLIST_ERROR_OK ) then
        return
     endif
@@ -758,7 +795,6 @@ contains
     integer :: numberOfComponents
     type ( t_vstring ) :: joinString_real
     integer :: icomponent
-    type ( t_vstring ) :: component
     !
     ! Process options
     !
@@ -777,17 +813,13 @@ contains
        ! Join the elements
        !
        do icomponent = 1 , numberOfComponents - 1
-          component = vstrlist_index ( this , icomponent )
-          call vstring_append ( newstring , component )
-          call vstring_free ( component )
+          call vstring_append ( newstring , this % array ( icomponent ) )
           call vstring_append ( newstring , joinString_real )
        enddo
        !
        ! Last but not the least
        !
-       component = vstrlist_index ( this , numberOfComponents )
-       call vstring_append ( newstring , component )
-       call vstring_free ( component )
+       call vstring_append ( newstring , this % array ( numberOfComponents ) )
     endif
     !
     ! Clean-up
@@ -845,7 +877,6 @@ contains
     integer :: length
     integer :: icomponent
     logical :: match
-    type ( t_vstring ) :: item
     integer :: first_real
     logical :: notmatch_real
     logical :: exact_real
@@ -876,13 +907,11 @@ contains
     ! Now search the item
     !
     do icomponent = first_real , length
-       item = vstrlist_index ( this , icomponent )
        if ( exact_real ) then
-          match = vstring_equals ( item , pattern )
+          match = vstring_equals ( this % array ( icomponent ) , pattern )
        else
-          match = vstring_match ( item , pattern )
+          match = vstring_match ( this % array ( icomponent ) , pattern )
        endif
-       call vstring_free ( item )
        if ( notmatch_real ) then
           if ( .NOT. match ) then
              strindex = icomponent
@@ -950,7 +979,6 @@ contains
     logical , intent(in), optional :: allitems
     type ( t_vstringlist ) :: newlist
     integer :: strindex
-    type ( t_vstring) :: current
     integer :: strindex_current
     logical :: done
     logical :: allitems_real
@@ -981,9 +1009,7 @@ contains
        if ( strindex == VSTRINGLIST_INDEX_UNKNOWN ) then
           done = .true.
        else
-          current = vstrlist_index ( this , strindex )
-          call vstrlist_append ( newlist , current )
-          call vstring_free ( current )
+          call vstrlist_append ( newlist , this % array ( strindex ) )
        endif
        ! Update the first element to look at
        strindex_current = strindex + 1
@@ -1013,19 +1039,319 @@ contains
     call vstring_free ( vpattern )
   end function vstrlist_lsearch_charstring
   !
-  ! vstrlist_sort --
+  ! Include template sorting methods 
+  !
+#define _QSORTARRAY_TYPE t_vstring
+#define _QSORTARRAY_MODULE m_vstring
+#include "qsortarray_template.f90"
+  !
+  ! vstrlist_sort_basic --
   !   Sort the elements of a list.
-  ! TODO : fill that missing piece
+  !   This command sorts the elements of list, returning a new list in sorted order.
+  ! Arguments
+  !   increasing, optional : If provided and true or not provided, sort the list in increasing order 
+  !     (``smallest'' items first).
+  !     If provided and false, sort the list in decreasing order (``largest'' items first).
+  !   classtype, optional : 
+  !     If provided, converts the items of the list into that class of data before comparing 
+  !     the items. The possible values of classtype are :
+  !       "ascii" : compare items as strings ( default )
+  !       "integer" : convert strings into integer before comparing items
+  !       "real" : convert strings into real before comparing items
+  !       "dictionnary" : Use dictionary-style comparison. 
+  !          This is the same as "ascii" except case is ignored.
+  !      If classtype is not provided, it defaults to "ascii".
+  !   unique, optional :: if provided and true, then only the last set of duplicate 
+  !     elements found in the list will be retained. Note that duplicates are 
+  !     determined relative to the comparison used in the sort.
+  !     Two items are considered the same if the comparison command returns 0.
   !
-
+  function vstrlist_sort_basic ( this , increasing , classtype , unique ) result ( newlist )
+    type ( t_vstringlist ) , intent(in) :: this
+    logical, optional , intent(in) :: increasing
+    character(len=*), optional , intent(in) :: classtype
+    logical, optional , intent(in) :: unique
+    type ( t_vstringlist ) :: newlist
+    logical :: increasing_real
+    character(len=200) :: classtype_real
+    character ( len = 200 ) :: message
+    logical :: unique_real
+    !
+    ! Process options
+    !
+    if ( present ( increasing ) ) then
+       increasing_real = increasing
+    else
+       increasing_real = .true.
+    endif
+    if ( present ( classtype ) ) then
+       classtype_real = classtype
+    else
+       classtype_real = "ascii"
+    endif
+    if ( present ( unique ) ) then
+       unique_real = unique
+    else
+       unique_real = .false.
+    endif
+    !
+    ! Create and sort the list
+    !
+    call vstrlist_new ( newlist , this )
+    select case ( classtype_real )
+    case ( "ascii" )
+       if ( increasing_real ) then
+          call qsort_array ( newlist % array , vstrlist_compare_asciiincreasing )
+       else
+          call qsort_array ( newlist % array , vstrlist_compare_asciidecreasing )
+       endif
+    case ( "dictionnary" )
+       if ( increasing_real ) then
+          call qsort_array ( newlist % array , vstrlist_compare_dictincreasing )
+       else
+          call qsort_array ( newlist % array , vstrlist_compare_dictdecreasing )
+       endif
+    case ( "integer" )
+       if ( increasing_real ) then
+          call qsort_array ( newlist % array , vstrlist_compare_integerincreasing )
+       else
+          call qsort_array ( newlist % array , vstrlist_compare_integerdecreasing )
+       endif
+    case ( "real" )
+       if ( increasing_real ) then
+          call qsort_array ( newlist % array , vstrlist_compare_realincreasing )
+       else
+          call qsort_array ( newlist % array , vstrlist_compare_realdecreasing )
+       endif
+    case default
+       write ( message , * )  "Unknown class type :", trim(classtype)
+       call vstrlist_error ( this , message )
+    end select
+    !
+    ! Eliminate duplicate entries
+    !
+    if ( unique_real ) then
+       select case ( classtype_real )
+       case ( "ascii" )
+          call vstrlist_eliminateduplicate ( newlist , vstrlist_compare_asciiincreasing )
+       case ( "dictionnary" )
+          call vstrlist_eliminateduplicate ( newlist , vstrlist_compare_dictincreasing )
+       case ( "integer" )
+          call vstrlist_eliminateduplicate ( newlist , vstrlist_compare_integerincreasing )
+       case ( "real" )
+          call vstrlist_eliminateduplicate ( newlist , vstrlist_compare_realincreasing )
+       case default
+          write ( message , * )  "Unknown class type :", trim(classtype)
+          call vstrlist_error ( this , message )
+       end select
+    endif
+  end function vstrlist_sort_basic
   !
-  ! vstrlist_check_index --
+  ! vstrlist_sort_command --
+  !   Sort the elements of a list.
+  !   This command sorts the elements of list, returning a new list in sorted order.
+  ! Arguments
+  !   command : use that function as a comparison function.
+  !   unique, optional :: if provided and true, then only the last set of duplicate 
+  !     elements found in the list will be retained. Note that duplicates are 
+  !     determined relative to the comparison used in the sort.
+  !     Two items are considered the same if the comparison command returns 0.
+  !
+  function vstrlist_sort_command ( this , command , unique ) result ( newlist )
+    type ( t_vstringlist ) , intent(in) :: this
+    logical, optional , intent(in) :: unique
+    interface
+       integer function command ( string_a , string_b )
+         use m_vstring, only : t_vstring
+         type(t_vstring), intent(in) :: string_a
+         type(t_vstring), intent(in) :: string_b
+       end function command 
+    end interface
+    type ( t_vstringlist ) :: newlist
+    logical :: unique_real
+    if ( present ( unique ) ) then
+       unique_real = unique
+    else
+       unique_real = .false.
+    endif
+    call vstrlist_new ( newlist , this )
+    call qsort_array ( newlist % array , command )
+    if ( unique_real ) then
+       call vstrlist_eliminateduplicate ( newlist , command )
+    endif
+  end function vstrlist_sort_command
+  !
+  ! vstrlist_compare_asciiincreasing --
+  !   Comparing function as a support for sorting a list of strings
+  !   in increasing order.
+  !   A simple interface to vstring_compare.
+  !
+  function vstrlist_compare_asciiincreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: compare
+    compare = vstring_compare ( string_a , string_b )
+  end function vstrlist_compare_asciiincreasing
+  !
+  ! vstrlist_compare_asciidecreasing --
+  !   Comparing function as a support for sorting a list of strings
+  !   in decreasing order.
+  !
+  function vstrlist_compare_asciidecreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: compare
+    compare = vstring_compare ( string_a , string_b )
+    ! Decreasing :
+    compare = - compare
+  end function vstrlist_compare_asciidecreasing
+  !
+  ! vstrlist_compare_dictincreasing --
+  !   Compare two string in the style of the dictionnary.
+  !   A simple interface to vstring_compare with no case.
+  !
+  function vstrlist_compare_dictincreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: compare
+    compare = vstring_compare ( string_a , string_b , nocase = .true. )
+  end function vstrlist_compare_dictincreasing
+  !
+  ! vstrlist_compare_dictdecreasing --
+  !   Compare two string in the style of the dictionnary 
+  !   in decreasing order.
+  !
+  function vstrlist_compare_dictdecreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: compare
+    compare = vstrlist_compare_dictincreasing ( string_a , string_b )
+    ! Decreasing :
+    compare = - compare
+  end function vstrlist_compare_dictdecreasing
+  !
+  ! vstrlist_compare_integerincreasing --
+  !   Comparing function to compare two integers and sort the list of strings
+  !   in increasing order.
+  !
+  function vstrlist_compare_integerincreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: value_a
+    integer :: value_b
+    integer :: compare
+    call vstring_cast ( string_a , value_a )
+    call vstring_cast ( string_b , value_b )
+    if ( value_a < value_b ) then
+       compare = -1
+    elseif ( value_a == value_b ) then
+       compare = 0
+    else
+       compare = 1
+    endif
+  end function vstrlist_compare_integerincreasing
+  !
+  ! vstrlist_compare_integerdecreasing --
+  !   Comparing function to compare two integers and sort the list of strings
+  !   in decreasing order.
+  !
+  function vstrlist_compare_integerdecreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: compare
+    compare = vstrlist_compare_integerincreasing ( string_a , string_b )
+    compare = - compare
+  end function vstrlist_compare_integerdecreasing
+  !
+  ! vstrlist_compare_realincreasing --
+  !   Comparing function to compare two integers and sort the list of strings
+  !   in increasing order.
+  !
+  function vstrlist_compare_realincreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    real :: value_a
+    real :: value_b
+    integer :: compare
+    call vstring_cast ( string_a , value_a )
+    call vstring_cast ( string_b , value_b )
+    if ( value_a < value_b ) then
+       compare = -1
+    elseif ( value_a == value_b ) then
+       compare = 0
+    else
+       compare = 1
+    endif
+  end function vstrlist_compare_realincreasing
+  !
+  ! vstrlist_compare_realdecreasing --
+  !   Comparing function to compare two integers and sort the list of strings
+  !   in decreasing order.
+  !
+  function vstrlist_compare_realdecreasing ( string_a , string_b ) result ( compare )
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    integer :: compare
+    compare = vstrlist_compare_realincreasing ( string_a , string_b )
+    compare = - compare
+  end function vstrlist_compare_realdecreasing
+  !
+  ! vstrlist_eliminateduplicate --
+  !   Eliminate duplicate entries in the current sorted list of strings, 
+  !   using the given comparison command, which must returns 0 
+  !   if the two strings are equal.
+  !
+  subroutine vstrlist_eliminateduplicate ( this , command )
+    type ( t_vstringlist ) , intent(inout) :: this
+    interface
+       integer function command ( string_a , string_b )
+         use m_vstring, only : t_vstring
+         type(t_vstring), intent(in) :: string_a
+         type(t_vstring), intent(in) :: string_b
+       end function command 
+    end interface
+    type ( t_vstringlist )  :: newlist
+    integer :: length
+    integer :: icomponent
+    integer :: compare
+    integer :: newlength
+    !
+    ! Create an empty list
+    !
+    call vstrlist_new ( newlist )
+    !
+    ! Create the newlist with the first item of the list as the only element, if any
+    !
+    length = vstrlist_length ( this )
+    if ( length > 0 ) then
+       call vstrlist_append ( newlist , this % array ( 1 ) )
+    endif
+    !
+    ! Add items only if they are different.
+    !
+    do icomponent = 2 , length
+       compare = command ( this % array ( icomponent - 1 ) , this % array ( icomponent ) )
+       if ( compare /= 0 ) then
+          call vstrlist_append ( newlist , this % array ( icomponent ) )
+       endif
+    enddo
+    !
+    ! Replace the current list by the newlist, if necessary
+    !
+    newlength = vstrlist_length ( newlist )
+    if ( newlength /= length ) then
+       call vstrlist_free ( this )
+       call vstrlist_new ( this , newlist )
+    endif
+  end subroutine vstrlist_eliminateduplicate
+  !
+  ! vstrlist_checkindex --
   !   Check that the given integer index exist in the current list.
   !   Generates an error if not.
   !   If no error occurs, set the status to azero value.
   !   If an error occurs, set the status to a non-zero value.
   !
-  subroutine vstrlist_check_index ( this , icomponent , status )
+  subroutine vstrlist_checkindex ( this , icomponent , status )
     type ( t_vstringlist ) , intent(in) :: this
     integer, intent(in) :: icomponent
     integer , intent(out) :: status
@@ -1033,23 +1359,61 @@ contains
     character ( len = 400 ) :: message
     status = VSTRINGLIST_ERROR_OK
     if ( icomponent < 1 ) then
-       status = VSTRINGLIST_ERROR_INDEXWRONG
+       status = VSTRINGLIST_ERROR_WRONG_INDEX
        write ( message , * ) "The given index ", icomponent , " is lower than 1."
-       call vstring_error ( this , message )
+       call vstrlist_error ( this , message )
     endif
     length = vstrlist_length ( this )
     if ( icomponent > length ) then
-       status = VSTRINGLIST_ERROR_INDEXWRONG
+       status = VSTRINGLIST_ERROR_WRONG_INDEX
        write ( message , * ) "The given index ", icomponent , &
             " is greater than the length of the list : ", length
-       call vstring_error ( this , message )
+       call vstrlist_error ( this , message )
     endif
-  end subroutine vstrlist_check_index
+  end subroutine vstrlist_checkindex
+  !
+  ! vstrlist_checklist --
+  !   Check that the given list exists.
+  !   Generates an error if not.
+  !   If no error occurs, set the status to azero value.
+  !   If an error occurs, set the status to a non-zero value.
+  !
+  subroutine vstrlist_checklist ( this , status )
+    type ( t_vstringlist ) , intent(in) :: this
+    integer , intent(out) :: status
+    integer :: length
+    character ( len = 400 ) :: message
+    integer :: icomponent
+    logical :: listexists
+    logical :: stringexists
+    status = VSTRINGLIST_ERROR_OK
+    listexists = vstrlist_exists ( this )
+    if ( .NOT. listexists ) then
+       status = VSTRINGLIST_ERROR_WRONG_LIST
+       write ( message , * ) "The list does not exist."
+       call vstrlist_error ( this , message )
+    endif
+    if ( listexists ) then
+       length = vstrlist_length ( this )
+       !
+       ! Check each string
+       !
+       do icomponent = 1 , length
+          stringexists = vstring_exists ( this % array ( icomponent ) )
+          if ( .NOT. stringexists ) then
+             status = VSTRINGLIST_ERROR_WRONG_ITEM
+             write ( message , * ) "The item #", icomponent , " does not exist."
+             call vstrlist_error ( this , message )
+             exit
+          endif
+       enddo
+    endif
+  end subroutine vstrlist_checklist
   !
   ! vstrlist_error --
   !   Generates an error for the string list.
   !
-  subroutine vstring_error ( this , message )
+  subroutine vstrlist_error ( this , message )
     implicit none
     type ( t_vstringlist ) , intent(in) :: this
     character ( len = * ), intent (in) :: message
@@ -1071,7 +1435,7 @@ contains
     if ( vstringlist_stoponerror ) then
        STOP
     endif
-  end subroutine vstring_error
+  end subroutine vstrlist_error
   ! 
   ! vstringlist_set_stoponerror --
   !   Configure the behaviour of the componenent whenever an 
@@ -1086,4 +1450,6 @@ contains
     call vstring_set_stoponerror ( stoponerror )
   end subroutine vstringlist_set_stoponerror
 end module m_vstringlist
+	
+
 

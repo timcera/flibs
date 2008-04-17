@@ -151,6 +151,30 @@
 !       except for vstring_match)
 !   - g95 May  3 2007 : tested with _VSTRING_POINTER, OK
 !
+!   Dynamic buffer
+!   The internal algorithms provided by m_vstrings are based on 
+!   basic fortran character strings. In several situations, the 
+!   dynamic vstring has to be converted into a basic fortran character
+!   buffer string, which size has to be given explicitely in the source 
+!   code, with the len = <something> statement (in the 
+!   character ( len = <something>) ). Two solutions are provided, 
+!   and the user can define the pre-processing macro 
+!   _VSTRING_STATIC_BUFFER to configure that :
+!   - the first solution is to set the size of the buffer statically,
+!     to a constant integer value VSTRING_BUFFER_SIZE.
+!   - the second solution is to compute the size 
+!     of the buffer dynamicaly, with the fortran 90 len = vstring_length(this)
+!     statement,
+!   If the _VSTRING_STATIC_BUFFER is defined, then character strings of 
+!   constant size are used as buffers.
+!   If the _VSTRING_STATIC_BUFFER is not defined (which is the default), 
+!   then character strings of dynamic size are used as buffers.
+!   The second solution is more efficient, because the strings are not 
+!   oversized or undersized, depending on the real number of characters
+!   in the dynamic string. But the feature may not be provided 
+!   by the compiler at hand. For example, problems with the dynamic 
+!   length character string have been experienced with Intel Fortran 8.
+!
 !   Limitations
 !     - No regular expression algorithm is provided.
 !       But vstring_match allows to do string matching in glob-style.
@@ -262,7 +286,6 @@ module m_vstring
   public :: vstring_replace
   public :: vstring_reverse
   public :: vstring_scan
-  public :: vstring_tocharstring
   public :: vstring_tolower
   public :: vstring_totitle
   public :: vstring_toupper
@@ -274,6 +297,7 @@ module m_vstring
   public :: vstring_isincharset
   public :: vstring_isinasciirange
   public :: vstring_set_stoponerror
+  public :: vstring_cast
   !
   ! vstring_new --
   !   Generic constructor
@@ -287,12 +311,15 @@ module m_vstring
   end interface vstring_new
   !
   ! vstring_tocharstring --
-  !   Generic converter from a vstring to a charstring
+  !   Generic converter from a vstring to a basic fortran data type 
   !
-  interface vstring_tocharstring
-     module procedure vstring_tocharstring_fixed
-     module procedure vstring_tocharstring_auto
-  end interface vstring_tocharstring
+  interface vstring_cast
+     module procedure vstring_cast_charstringfixed
+     module procedure vstring_cast_charstringauto
+     module procedure vstring_cast_tointeger
+     module procedure vstring_cast_toreal
+     module procedure vstring_cast_todp
+  end interface vstring_cast
   !
   ! vstring_equals --
   !   Generic comparison between two strings
@@ -398,6 +425,10 @@ module m_vstring
   character(len=*), parameter, public :: VSTRING_WHITESPACE = VSTRING_SPACE//VSTRING_NEWLINE//VSTRING_CARRIAGE_RETURN//VSTRING_TAB
   character(len=*), parameter, public :: VSTRING_HEXDIGITS = "abcdefABCDEF"//VSTRING_DIGITS
   character(len=*), parameter, public :: VSTRING_PUNCTUATION = "_,;:.?![](){}@"//VSTRING_DOUBLEQUOTE//VSTRING_SINGLEQUOTE
+  !
+  ! Maximum number of characters in the buffer.
+  !
+  integer , parameter :: VSTRING_BUFFER_SIZE = 1000
   !
   ! Static parameters
   !
@@ -790,13 +821,13 @@ contains
     call vstring_free ( vstring_b )
   end function vstring_equals_charstring
   !
-  ! vstring_tocharstring_fixed --
+  ! vstring_cast_charstringfixed --
   !   Convert a varying string into a character string
   !   (fixed length)
   !   If the number of characters is not sufficient, the 
   !   string is truncated.
   !
-  subroutine vstring_tocharstring_fixed ( this , length , char_string )
+  subroutine vstring_cast_charstringfixed ( this , length , char_string )
     type(t_vstring), intent(in) :: this
     integer, intent(in)              :: length
     character ( LEN = length ) , intent(out) :: char_string
@@ -812,15 +843,15 @@ contains
     do icharacter = length_this + 1 , length
        char_string ( icharacter : icharacter ) = VSTRING_SPACE
     end do
-  end subroutine vstring_tocharstring_fixed
+  end subroutine vstring_cast_charstringfixed
   !
-  ! vstring_tocharstring_auto --
+  ! vstring_cast_charstringauto --
   !   Convert a varying string into a character string
   !   (automatic length)
   !   If the number of characters is not sufficient, the 
   !   string is truncated.
   !
-  subroutine vstring_tocharstring_auto ( this , char_string )
+  subroutine vstring_cast_charstringauto ( this , char_string )
     type(t_vstring), intent(in) :: this
     character ( LEN = * ) , intent(out) :: char_string
     integer :: length_this
@@ -843,7 +874,7 @@ contains
     do icharacter = length_this + 1 , charlength
        char_string ( icharacter : icharacter ) = VSTRING_SPACE
     end do
-  end subroutine vstring_tocharstring_auto
+  end subroutine vstring_cast_charstringauto
   !
   ! vstring_length --
   !   Compute the length of a varying string
@@ -1770,7 +1801,7 @@ contains
             " in vstring_iachar"
        call vstring_error ( this , message )
     endif
-    call vstring_tocharstring ( this , 1 , thechar )
+    call vstring_cast ( this , 1 , thechar )
     new_iachar = iachar ( thechar )
   end function vstring_iachar
   !
@@ -1794,7 +1825,7 @@ contains
             " in vstring_ichar"
        call vstring_error ( this , message )
     endif
-    call vstring_tocharstring ( this , 1 , thechar)
+    call vstring_cast ( this , 1 , thechar)
     new_ichar = ichar ( thechar )
   end function vstring_ichar
   !
@@ -2061,17 +2092,30 @@ contains
     type(t_vstring), intent(in)   :: substring
     logical, intent(in), optional :: back
     integer :: charindex
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
+    character ( len = VSTRING_BUFFER_SIZE ) :: substring_charstring
+    integer :: this_length
+    integer :: substring_length
+#else
     character ( len = vstring_length ( this ) ) :: this_charstring
     character ( len = vstring_length ( substring ) ) :: substring_charstring
+#endif
     logical :: back_real
     if ( present ( back ) ) then
        back_real = back
     else
        back_real = .false.
     endif
-    call vstring_tocharstring ( this , this_charstring )
-    call vstring_tocharstring ( substring , substring_charstring )
+    call vstring_cast ( this , this_charstring )
+    call vstring_cast ( substring , substring_charstring )
+#ifdef _VSTRING_STATIC_BUFFER
+    this_length = vstring_length ( this )
+    substring_length = vstring_length ( substring )
+    charindex = index ( this_charstring(1:this_length) , substring_charstring(1:substring_length) , back_real )
+#else
     charindex = index ( this_charstring , substring_charstring , back_real )
+#endif
   end function vstring_charindex
   !
   ! vstring_scan --
@@ -2087,17 +2131,30 @@ contains
     type(t_vstring), intent(in)   :: substring
     logical, intent(in), optional :: back
     integer :: charindex
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
+    character ( len = VSTRING_BUFFER_SIZE ) :: substring_charstring
+    integer :: this_length
+    integer :: substring_length
+#else
     character ( len = vstring_length ( this ) ) :: this_charstring
     character ( len = vstring_length ( substring ) ) :: substring_charstring
+#endif
     logical :: back_real
     if ( present ( back ) ) then
        back_real = back
     else
        back_real = .false.
     endif
-    call vstring_tocharstring ( this , this_charstring )
-    call vstring_tocharstring ( substring , substring_charstring )
+    call vstring_cast ( this , this_charstring )
+    call vstring_cast ( substring , substring_charstring )
+#ifdef _VSTRING_STATIC_BUFFER
+    this_length = vstring_length ( this )
+    substring_length = vstring_length ( substring )
+    charindex = scan ( this_charstring(1:this_length) , substring_charstring(1:substring_length) , back_real )
+#else
     charindex = scan ( this_charstring , substring_charstring , back_real )
+#endif
   end function vstring_scan
   !
   ! vstring_verify --
@@ -2114,17 +2171,30 @@ contains
     type(t_vstring), intent(in)   :: substring
     logical, intent(in), optional :: back
     integer :: charindex
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
+    character ( len = VSTRING_BUFFER_SIZE ) :: substring_charstring
+    integer :: this_length
+    integer :: substring_length
+#else
     character ( len = vstring_length ( this ) ) :: this_charstring
     character ( len = vstring_length ( substring ) ) :: substring_charstring
+#endif
     logical :: back_real
     if ( present ( back ) ) then
        back_real = back
     else
        back_real = .false.
     endif
-    call vstring_tocharstring ( this , this_charstring )
-    call vstring_tocharstring ( substring , substring_charstring )
+    call vstring_cast ( this , this_charstring )
+    call vstring_cast ( substring , substring_charstring )
+#ifdef _VSTRING_STATIC_BUFFER
+    this_length = vstring_length ( this )
+    substring_length = vstring_length ( substring )
+    charindex = verify ( this_charstring(1:this_length) , substring_charstring(1:substring_length) , back_real )
+#else
     charindex = verify ( this_charstring , substring_charstring , back_real )
+#endif
   end function vstring_verify
   !
   ! vstring_adjustl --
@@ -2136,11 +2206,22 @@ contains
   function vstring_adjustl ( this ) result ( newstring )
     type(t_vstring), intent(in)   :: this
     type(t_vstring) :: newstring
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
+    character ( len = VSTRING_BUFFER_SIZE ) :: adjusted
+    integer :: this_length
+#else
     character ( len = vstring_length ( this ) ) :: this_charstring
     character ( len = vstring_length ( this ) ) :: adjusted
-    call vstring_tocharstring ( this , this_charstring )
+#endif
+    call vstring_cast ( this , this_charstring )
     adjusted = adjustl ( this_charstring (:) )
+#ifdef _VSTRING_STATIC_BUFFER
+    this_length = vstring_length ( this )
+    call vstring_new ( newstring , adjusted ( 1 : this_length ) )
+#else
     call vstring_new ( newstring , adjusted )
+#endif
   end function vstring_adjustl
   !
   ! vstring_adjustr --
@@ -2152,11 +2233,23 @@ contains
   function vstring_adjustr ( this ) result ( newstring )
     type(t_vstring), intent(in)   :: this
     type(t_vstring) :: newstring
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
+    character ( len = VSTRING_BUFFER_SIZE ) :: adjusted
+    integer :: this_length
+#else
     character ( len = vstring_length ( this ) ) :: this_charstring
     character ( len = vstring_length ( this ) ) :: adjusted
-    call vstring_tocharstring ( this , this_charstring )
+#endif
+    call vstring_cast ( this , this_charstring )
+#ifdef _VSTRING_STATIC_BUFFER
+    this_length = vstring_length ( this )
+    adjusted = adjustr ( this_charstring ( 1 : this_length ) )
+    call vstring_new ( newstring , adjusted ( 1 : this_length ) )
+#else
     adjusted = adjustr ( this_charstring )
     call vstring_new ( newstring , adjusted )
+#endif
   end function vstring_adjustr
   !
   ! vstring_match_vstring --
@@ -2587,41 +2680,41 @@ contains
     !
     ! Now search a class
     !
-    if ( class=="digit" ) then
+    if ( class == "digit" ) then
        vstring_is = vstring_isdigit ( this , failindex_real )
-    elseif ( class=="integer" ) then
+    elseif ( class == "integer" ) then
        vstring_is = vstring_isinteger ( this , failindex_real )
-    elseif ( class=="alpha" ) then
+    elseif ( class == "alpha" ) then
        vstring_is = vstring_isalpha ( this , failindex_real )
-    elseif ( class=="alnum" ) then
+    elseif ( class == "alnum" ) then
        vstring_is = vstring_isalnum ( this , failindex_real )
-    elseif ( class=="logical" ) then
+    elseif ( class == "logical" ) then
        vstring_is = vstring_islogical ( this , failindex_real )
-    elseif ( class=="real" ) then
+    elseif ( class == "real" ) then
        vstring_is = vstring_isreal ( this , failindex_real )
-    elseif ( class=="true" ) then
+    elseif ( class == "true" ) then
        vstring_is = vstring_istrue ( this , failindex_real )
-    elseif ( class=="false" ) then
+    elseif ( class == "false" ) then
        vstring_is = vstring_isfalse ( this , failindex_real )
-    elseif ( class=="lower" ) then
+    elseif ( class == "lower" ) then
        vstring_is = vstring_islower ( this , failindex_real )
-    elseif ( class=="upper" ) then
+    elseif ( class == "upper" ) then
        vstring_is = vstring_isupper ( this , failindex_real )
-    elseif ( class=="space" ) then
+    elseif ( class == "space" ) then
        vstring_is = vstring_isspace ( this , failindex_real )
-    elseif ( class=="punct" ) then
+    elseif ( class == "punct" ) then
        vstring_is = vstring_ispunct ( this , failindex_real )
-    elseif ( class=="xdigit" ) then
+    elseif ( class == "xdigit" ) then
        vstring_is = vstring_isxdigit ( this , failindex_real )
-    elseif ( class=="ascii" ) then
+    elseif ( class == "ascii" ) then
        vstring_is = vstring_isascii ( this , failindex_real )
-    elseif ( class=="control" ) then
+    elseif ( class == "control" ) then
        vstring_is = vstring_iscontrol ( this , failindex_real )
-    elseif ( class=="print" ) then
+    elseif ( class == "print" ) then
        vstring_is = vstring_isprint ( this , failindex_real )
-    elseif ( class=="graph" ) then
+    elseif ( class == "graph" ) then
        vstring_is = vstring_isgraph ( this , failindex_real )
-    elseif ( class=="wordchar" ) then
+    elseif ( class == "wordchar" ) then
        vstring_is = vstring_iswordchar ( this , failindex_real )
     else
        write ( message , * ) "Unknown class:" , class
@@ -2713,8 +2806,9 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(out) :: failindex
     logical :: mylogical
+    ! 7 is the largest possible length of a logical.
     character ( len = 7 ) :: logicalstring
-    call vstring_tocharstring ( this , logicalstring )
+    call vstring_cast ( this , logicalstring )
     read ( logicalstring , * , err = 100 ) mylogical
     vstring_islogical = .true.
     return
@@ -2733,8 +2827,12 @@ contains
     type(t_vstring), intent(in) :: this
     integer, intent(out) :: failindex
     real :: mydata
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: charstring
+#else
     character ( len = vstring_length ( this ) ) :: charstring
-    call vstring_tocharstring ( this , charstring )
+#endif
+    call vstring_cast ( this , charstring )
     read ( charstring , * , err = 100 ) mydata
     vstring_isreal = .true.
     failindex = VSTRING_INDEX_UNKNOWN
@@ -2755,7 +2853,7 @@ contains
     integer, intent(out) :: failindex
     logical :: mylogical
     character ( len = 7 ) :: logicalstring
-    call vstring_tocharstring ( this , logicalstring )
+    call vstring_cast ( this , logicalstring )
     read ( logicalstring , * , err = 100 ) mylogical
     vstring_istrue = mylogical
     ! TODO : compute a finer value for failindex
@@ -2781,7 +2879,7 @@ contains
     integer, intent(out) :: failindex
     logical :: mylogical
     character ( len = 7 ) :: logicalstring
-    call vstring_tocharstring ( this , logicalstring )
+    call vstring_cast ( this , logicalstring )
     read ( logicalstring , * , err = 100 ) mylogical
     vstring_isfalse = .NOT.mylogical
     if ( vstring_isfalse ) then
@@ -3035,6 +3133,96 @@ contains
        endif
     endif
   end function vstring_isinasciirange
+  !
+  ! vstring_cast_tointeger --
+  !   Returns the integer stored in the current string.
+  !
+  subroutine vstring_cast_tointeger ( this , value )
+    type(t_vstring), intent(in) :: this
+    integer, intent(out) :: value
+    character ( len = 200 ) :: message
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
+#else
+    character ( len = vstring_length ( this ) ) :: char_string
+#endif
+    logical :: hastype
+    hastype = vstring_is ( this , "integer" )
+    if ( .NOT. hastype ) then
+       write ( message , * ) "Current string is not an integer in vstring_cast_tointeger"
+       call vstring_error ( this , message )
+    else
+       call vstring_cast ( this , char_string )
+       read ( char_string , * , err = 100 , end = 100) value
+    endif
+    return
+100 continue
+    !
+    ! An error was generated while reading in buffer.
+    !
+    write ( message , * ) "The string could not be converted to integer in vstring_cast_tointeger"
+    call vstring_error ( this , message )
+  end subroutine vstring_cast_tointeger
+  !
+  ! vstring_cast_toreal --
+  !   Returns the real stored in the current string.
+  !
+  subroutine vstring_cast_toreal ( this , value )
+    type(t_vstring), intent(in) :: this
+    real, intent(out) :: value
+    character ( len = 200 ) :: message
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
+#else
+    character ( len = vstring_length ( this ) ) :: char_string
+#endif
+    logical :: hastype
+    hastype = vstring_is ( this , "real" )
+    if ( .NOT. hastype ) then
+       write ( message , * ) "Current string is not a real in vstring_cast_toreal"
+       call vstring_error ( this , message )
+    else
+       call vstring_cast ( this , char_string )
+       read ( char_string , * , err = 100 , end = 100) value
+    endif
+    return
+100 continue
+    !
+    ! An error was generated while reading in buffer.
+    !
+    write ( message , * ) "The string could not be converted to real in vstring_cast_toreal"
+    call vstring_error ( this , message )
+  end subroutine vstring_cast_toreal
+  !
+  ! vstring_cast_todp --
+  !   Returns the double precision stored in the current string.
+  !
+  subroutine vstring_cast_todp ( this , value )
+    type(t_vstring), intent(in) :: this
+    double precision, intent(out) :: value
+    character ( len = 200 ) :: message
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
+#else
+    character ( len = vstring_length ( this ) ) :: char_string
+#endif
+    logical :: hastype
+    hastype = vstring_is ( this , "real" )
+    if ( .NOT. hastype ) then
+       write ( message , * ) "Current string is not a real in vstring_cast_toreal"
+       call vstring_error ( this , message )
+    else
+       call vstring_cast ( this , char_string )
+       read ( char_string , * , err = 100 , end = 100) value
+    endif
+    return
+100 continue
+    !
+    ! An error was generated while reading in buffer.
+    !
+    write ( message , * ) "The string could not be converted to real in vstring_cast_toreal"
+    call vstring_error ( this , message )
+  end subroutine vstring_cast_todp
   !
   ! TODO :
   ! vstring_read --
