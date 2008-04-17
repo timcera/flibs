@@ -17,7 +17,7 @@ program test_m_vstring
        vstring_last, &
        vstring_trimleft , &
        vstring_trimright , &
-       vstring_tocharstring , &
+       vstring_cast , &
        vstring_toupper , &
        vstring_tolower , &
        vstring_totitle , &
@@ -47,7 +47,14 @@ program test_m_vstring
   integer , parameter :: log_unit = 12
   call test_main ()
 contains
-  
+  !
+  ! Include support for unit tests.
+  !
+  include "test_support.f90"
+  !
+  ! test_main --
+  !   Main subroutine for tests.
+  !
   subroutine test_main ()
     implicit none
     call log_startup ( "test_m_vstring.log" )
@@ -81,14 +88,16 @@ contains
     !
     ! Test interfaces to standard fortran
     !
-#ifndef _IVF8
     call test_m_vstring_stdfortran ()
-#endif
     !
     ! Test string matching
     ! Fails with gfortran 2007
     !
     call test_m_vstring_match ()
+    !
+    ! Test string convert
+    !
+    call test_m_vstring_cast ()
     !
     ! Test string is
     !
@@ -561,12 +570,9 @@ contains
     integer :: compare
     integer :: charindex
     character ( len = 1) , dimension( 1:5), parameter :: mychararray = (/"m","y"," ","s","t"/)
-    character ( len = 10 ) :: char_string1
     type ( t_vstring ), dimension(1:4) :: map_old1
     type ( t_vstring ), dimension(1:4) :: map_new1
     integer :: imap
-    character ( len = 4 ) :: char_string2
-    character ( len = 10 ) :: char_string3
     
     !
     ! test #2.1 -> generates an error, as expected
@@ -917,59 +923,6 @@ contains
     string2 = vstring_index ( string1 , 4 )
     call vstring_new ( string3 , "s" )
     call assertVstring_vstring ( string2 , string3 , "Wrong string_index. (1)" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    call vstring_free ( string3 )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    ! test #23.1
-    !
-    call logmsg ( "Test #23.1 : vstring_tocharstring with fixed length" )
-    call vstring_new ( string1 , "toto" )
-    call vstring_tocharstring ( string1 , len ( char_string1 ) , char_string1 )
-    call vstring_new ( string3 , char_string1 )
-    call vstring_new ( string2 , "toto      " )
-    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    call vstring_free ( string3 )
-    !
-    ! test #23.2
-    !
-    call logmsg ( "Test #23.2 : vstring_tocharstring with auto length" )
-    call vstring_new ( string1 , "toto" )
-    call vstring_tocharstring ( string1 , char_string2 )
-    call vstring_new ( string2 , char_string2 )
-    call vstring_new ( string3 , "toto" )
-    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    call vstring_free ( string3 )
-    !
-    ! test #23.3
-    !
-    call logmsg ( "Test #23.3 : vstring_tocharstring with auto length and needed blanks" )
-    call vstring_new ( string1 , "toto" )
-    char_string3 = "@@@@@@@@@@"
-    call vstring_tocharstring ( string1 , char_string3 )
-    call vstring_new ( string2 , char_string3 )
-    call vstring_new ( string3 , "toto      " )
-    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    call vstring_free ( string3 )
-    !
-    ! test #23.4
-    !
-    call logmsg ( "Test #23.4 : vstring_tocharstring with auto length and truncation" )
-    call vstring_new ( string1 , "toto      @" )
-    call vstring_tocharstring ( string1 , char_string3 )
-    call vstring_new ( string2 , char_string3 )
-    call vstring_new ( string3 , "toto      " )
-    call assertVstring_vstring ( string2 , string3 , "Wrong vstring_tocharstring" )
     call vstring_free ( string1 )
     call vstring_free ( string2 )
     call vstring_free ( string3 )
@@ -2365,32 +2318,91 @@ contains
     call string_reference_check ()
   end subroutine test_m_vstring_is
   !
-  ! assert --
-  !   Check that the given test is true and updates the assertion system.
+  ! test_m_vstring_cast --
+  ! Test converting a string into a basic type.
   !
-  subroutine assert (test, message)
-    implicit none
-    logical         , intent(in) :: test
-    character(len=*), intent(in) :: message
-    character(len=50) :: origin
-    integer, parameter :: MSG_LEN = 200
-    character (len= MSG_LEN ) :: msg
-    origin = "test_m_vstring.f90"
-    assertTestIndex = assertTestIndex + 1
-    if (.NOT.test) then
-       write(msg,*) "-> Test #", assertTestIndex , " FAIL"
-       call logmsg ( msg )
-       write(msg,*) "Origin:", origin
-       call logmsg ( msg )
-       write(msg,*) "Error: ", trim(message)
-       call logmsg ( msg )
-       assertTotalTestFail = assertTotalTestFail + 1
-    else
-       write(msg,*) "-> Test #", assertTestIndex , " PASS"
-       call logmsg ( msg )
-       assertTotalTestSuccess = assertTotalTestSuccess + 1
-    endif
-  end subroutine assert
+  subroutine test_m_vstring_cast ()
+    type ( t_vstring ) :: string1
+    type ( t_vstring ) :: string2
+    integer :: valueinteger
+    real :: valuereal
+    double precision :: valuedp
+    character ( len = 10 ) :: char_string1
+    character ( len = 4 ) :: char_string2
+    character ( len = 10 ) :: char_string3
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    call logmsg ( "Test vstring_cast to integer" )
+    call vstring_new ( string1 , "2008" )
+    call vstring_cast ( string1 , valueinteger )
+    call assert ( valueinteger == 2008 , "Wrong vstring_cast to integer" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test vstring_cast to real" )
+    call vstring_new ( string1 , "2.5" )
+    call vstring_cast ( string1 , valuereal )
+    call assert ( abs( valuereal - 2.5) < 1.d-5 , "Wrong vstring_cast to real" )
+    call vstring_free ( string1 )
+    !
+    call logmsg ( "Test vstring_cast to double precision" )
+    call vstring_new ( string1 , "2.5d0" )
+    call vstring_cast ( string1 , valuedp )
+    call assert ( abs( valuedp - 2.5d0) < 1.d-8 , "Wrong vstring_cast to double precision" )
+    call vstring_free ( string1 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #23.1
+    !
+    call logmsg ( "Test #23.1 : vstring_cast with fixed length" )
+    call vstring_new ( string1 , "toto" )
+    call vstring_cast ( string1 , len ( char_string1 ) , char_string1 )
+    call vstring_new ( string2 , char_string1 )
+    call assertVstring_charstring ( string2 , "toto      " , "Wrong vstring_cast" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    !
+    ! test #23.2
+    !
+    call logmsg ( "Test #23.2 : vstring_cast with auto length" )
+    call vstring_new ( string1 , "toto" )
+    call vstring_cast ( string1 , char_string2 )
+    call vstring_new ( string2 , char_string2 )
+    call assertVstring_charstring ( string2 , "toto" , "Wrong vstring_cast" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    !
+    ! test #23.3
+    !
+    call logmsg ( "Test #23.3 : vstring_cast with auto length and needed blanks" )
+    call vstring_new ( string1 , "toto" )
+    char_string3 = "@@@@@@@@@@"
+    call vstring_cast ( string1 , char_string3 )
+    call vstring_new ( string2 , char_string3 )
+    call assertVstring_charstring ( string2 , "toto      " , "Wrong vstring_cast" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    !
+    ! test #23.4
+    !
+    call logmsg ( "Test #23.4 : vstring_cast with auto length and truncation" )
+    call vstring_new ( string1 , "toto      @" )
+    call vstring_cast ( string1 , char_string3 )
+    call vstring_new ( string2 , char_string3 )
+    call assertVstring_charstring ( string2 , "toto      " , "Wrong vstring_cast" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+
+  end subroutine test_m_vstring_cast
   !
   ! assertString --
   !   Check that the computed string is equal to the expected string
@@ -2476,57 +2488,6 @@ contains
     call assert ( test , message )
   end subroutine assertCharacter
   !
-  ! logmsg --
-  !   Write a message into the log file
-  !
-  subroutine logmsg ( message )
-    implicit none
-    character(len=*), intent(in) :: message
-    write(6,*) trim(message)
-    write(log_unit,*) trim(message)
-  end subroutine logmsg
-  !
-  ! log_startup --
-  !   Startup logger
-  !
-  subroutine log_startup ( filename )
-    implicit none
-    character(len=*), intent(in) :: filename
-    open ( log_unit , file=filename, action = "write")
-  end subroutine log_startup
-  !
-  ! log_shutdown --
-  !   Shutdown logger
-  !
-  subroutine log_shutdown ( )
-    implicit none
-    close ( log_unit )
-  end subroutine log_shutdown
-  !
-  ! assert_startup --
-  !   Startup assertion system.
-  !
-  subroutine assert_startup ( )
-    implicit none
-    assertTotalTestFail = 0
-    assertTotalTestSuccess = 0
-    assertTestIndex = 0
-  end subroutine assert_startup
-  !
-  ! assert_shutdown --
-  !   Shutdown assertion system.
-  !
-  subroutine assert_shutdown ( )
-    implicit none
-    character (len= 200 ) :: msg
-    call logmsg ( "**********************" )
-    call logmsg ( "End of tests." )
-    write ( msg , * ) "Total number of success tests : ", assertTotalTestSuccess
-    call logmsg ( msg )
-    write ( msg , * ) "Total number of failing tests : ", assertTotalTestFail
-    call logmsg ( msg )
-  end subroutine assert_shutdown
-  !
   ! log_vstring --
   !   Log a vstring
   !
@@ -2534,7 +2495,7 @@ contains
     implicit none
     type ( t_vstring ), intent(in) :: string
     character ( len = 200 ) :: msg
-    call vstring_tocharstring ( string , len ( msg ) , msg )
+    call vstring_cast ( string , len ( msg ) , msg )
     call logmsg ( msg )
   end subroutine log_vstring
   !
@@ -2551,13 +2512,13 @@ contains
     character ( len = 200 ) :: char_string
     logical :: equals
     equals = vstring_equals ( computedString , expectedString )
-    call vstring_tocharstring ( expectedString , len ( char_string ) , char_string )
+    call vstring_cast ( expectedString , len ( char_string ) , char_string )
     ! CAUTION !
     ! The trim removes the blanks so that the blanks of the real string are not displayed !
     if ( .NOT.equals ) then
        write ( msg , * ) "String expected :-", trim ( char_string ), "-"
        call logmsg ( msg )
-       call vstring_tocharstring ( computedString , len ( char_string ) , char_string )
+       call vstring_cast ( computedString , len ( char_string ) , char_string )
        write ( msg , * ) "String computed :-", trim ( char_string ) , "-"
        call logmsg ( msg )
     endif

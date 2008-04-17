@@ -175,8 +175,80 @@
   -> Test #         111 PASS
   Number of strings :           0
   -> Test #         112 PASS
+  Number of strings :           0
+  -> Test #         113 PASS
+ Test : vstrlist_sort with no option
+  -> Test #         114 PASS
+  -> Test #         115 PASS
+  -> Test #         116 PASS
+  -> Test #         117 PASS
+ Test : vstrlist_sort with increasing option as true
+  -> Test #         118 PASS
+  -> Test #         119 PASS
+  -> Test #         120 PASS
+  -> Test #         121 PASS
+ Test : vstrlist_sort with increasing option as false
+  -> Test #         122 PASS
+  -> Test #         123 PASS
+  -> Test #         124 PASS
+  -> Test #         125 PASS
+ Test : vstrlist_sort with classtype as ascii
+  -> Test #         126 PASS
+  -> Test #         127 PASS
+  -> Test #         128 PASS
+  -> Test #         129 PASS
+ Test : vstrlist_sort with classtype as dictionnary
+  -> Test #         130 PASS
+  -> Test #         131 PASS
+ Test : vstrlist_sort with classtype as dictionnary and decreasing
+  -> Test #         132 PASS
+  -> Test #         133 PASS
+ Test : vstrlist_sort with integers
+  -> Test #         134 PASS
+  -> Test #         135 PASS
+  -> Test #         136 PASS
+  -> Test #         137 PASS
+ Test : vstrlist_sort with decreasing integers
+  -> Test #         138 PASS
+  -> Test #         139 PASS
+  -> Test #         140 PASS
+  -> Test #         141 PASS
+ Test : vstrlist_sort with real
+  -> Test #         142 PASS
+  -> Test #         143 PASS
+  -> Test #         144 PASS
+  -> Test #         145 PASS
+ Test : vstrlist_sort with decreasing real
+  -> Test #         146 PASS
+  -> Test #         147 PASS
+  -> Test #         148 PASS
+  -> Test #         149 PASS
+ Test : vstrlist_sort with customized command
+  -> Test #         150 PASS
+  -> Test #         151 PASS
+  -> Test #         152 PASS
+  -> Test #         153 PASS
+ Test : vstrlist_sort with customized command and unique
+  -> Test #         154 PASS
+  -> Test #         155 PASS
+  -> Test #         156 PASS
+  -> Test #         157 PASS
+ Test : vstrlist_sort with integer and unique
+  -> Test #         158 PASS
+  -> Test #         159 PASS
+  -> Test #         160 PASS
+  -> Test #         161 PASS
+ Test : vstrlist_sort with ascii and unique
+  -> Test #         162 PASS
+  -> Test #         163 PASS
+  -> Test #         164 PASS
+  -> Test #         165 PASS
+ Test : vstrlist_sort with classtype as dictionnary and unique
+  -> Test #         166 PASS
+  -> Test #         167 PASS
  Test suite completed
  **********************
  End of tests.
-  Total number of success tests :          112
+  Total number of tests :          167
+  Total number of success tests :          167
   Total number of failing tests :            0

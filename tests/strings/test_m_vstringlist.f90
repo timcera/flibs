@@ -12,8 +12,9 @@ program test_m_vstringlist
        vstring_new , &
        vstring_free , &
        vstring_equals , &
-       vstring_tocharstring , &
-       vstring_length
+       vstring_cast , &
+       vstring_length , &
+       vstring_compare
   use m_vstringlist , only : &
        t_vstringlist ,&
        vstrlist_new, &
@@ -30,7 +31,8 @@ program test_m_vstringlist
        vstrlist_split , &
        vstrlist_join , &
        vstrlist_search ,&
-       vstrlist_lsearch
+       vstrlist_lsearch , &
+       vstrlist_sort
   implicit none
   integer :: assertTotalTestSuccess
   integer :: assertTotalTestFail
@@ -38,7 +40,14 @@ program test_m_vstringlist
   integer , parameter :: log_unit = 12
   call test_main ()
 contains
-  
+  !
+  ! Include support for unit tests.
+  !
+  include "test_support.f90"
+  !
+  ! test_main --
+  !   Main subroutine for unit tests.
+  !
   subroutine test_main ()
     implicit none
     call log_startup ( "test_m_vstringlist.log" )
@@ -73,6 +82,10 @@ contains
     ! Check the number of lists references
     !
     call strlist_reference_check ()
+    !
+    ! Test string sort
+    !
+    call test_mstringlist_sort ()
     !
     ! Shutdown the tests
     !
@@ -481,8 +494,6 @@ contains
     type ( t_vstring ) :: string1
     type ( t_vstringlist ) :: listOfComponents
     integer :: numberOfComponents
-    integer :: icomponent
-    type ( t_vstring ) :: string2
     !
     ! Check the number of lists references
     !
@@ -493,18 +504,8 @@ contains
     listOfComponents = vstrlist_split ( string1 )
     numberOfComponents = vstrlist_length ( listOfComponents )
     call assert ( numberOfComponents == 2 , "Wrong vstrlist_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       string2 = vstrlist_index ( listOfComponents , icomponent )
-       select case (icomponent)
-       case (1)
-          call assertVstring_charstring ( string2 , "my" , "Wrong vstrlist_split. (2)" )
-       case (2)
-          call assertVstring_charstring ( string2 , "string" , "Wrong vstrlist_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-    enddo
+    call assertVstring_charstringindex ( listOfComponents , 1 , "my" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 2 , "string" , "Wrong vstrlist_split. (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( listOfComponents )
     !
@@ -517,22 +518,10 @@ contains
     listOfComponents = vstrlist_split ( string1 , "" )
     numberOfComponents = vstrlist_length ( listOfComponents )
     call assert ( numberOfComponents==4 , "Wrong vstrlist_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       string2 = vstrlist_index ( listOfComponents , icomponent )
-       select case (icomponent)
-       case (1)
-          call assertVstring_charstring ( string2 , "m" , "Wrong vstrlist_split. (2)" )
-       case (2)
-          call assertVstring_charstring ( string2 , "y" , "Wrong vstrlist_split. (2)" )
-       case (3)
-          call assertVstring_charstring ( string2 , " " , "Wrong vstrlist_split. (2)" )
-       case (4)
-          call assertVstring_charstring ( string2 , "s" , "Wrong vstrlist_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-    enddo
+    call assertVstring_charstringindex ( listOfComponents , 1 , "m" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 2 , "y" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 3 , " " , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 4 , "s" , "Wrong vstrlist_split. (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( listOfComponents )
     !
@@ -557,16 +546,7 @@ contains
     listOfComponents = vstrlist_split ( string1 )
     numberOfComponents = vstrlist_length ( listOfComponents )
     call assert ( numberOfComponents==1 , "Wrong vstrlist_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       string2 = vstrlist_index ( listOfComponents , icomponent )
-       select case (icomponent)
-       case (1)
-          call assertVstring_charstring ( string2 , "" , "Wrong vstrlist_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-    enddo
+    call assertVstring_charstringindex ( listOfComponents , 1 , "" , "Wrong vstrlist_split. (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( listOfComponents )
     !
@@ -579,20 +559,9 @@ contains
     listOfComponents = vstrlist_split ( string1 )
     numberOfComponents = vstrlist_length ( listOfComponents )
     call assert ( numberOfComponents==3 , "Wrong vstrlist_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       string2 = vstrlist_index ( listOfComponents , icomponent )
-       select case (icomponent)
-       case (1)
-          call assertVstring_charstring ( string2 , "" , "Wrong vstrlist_split. (2)" )
-       case (2)
-          call assertVstring_charstring ( string2 , "my" , "Wrong vstrlist_split. (2)" )
-       case (3)
-          call assertVstring_charstring ( string2 , "string" , "Wrong vstrlist_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-    enddo
+    call assertVstring_charstringindex ( listOfComponents , 1 , "" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 2 , "my" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 3 , "string" , "Wrong vstrlist_split. (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( listOfComponents )
     !
@@ -605,16 +574,7 @@ contains
     listOfComponents = vstrlist_split ( string1 )
     numberOfComponents = vstrlist_length ( listOfComponents )
     call assert ( numberOfComponents==1 , "Wrong vstrlist_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       string2 = vstrlist_index ( listOfComponents , icomponent )
-       select case (icomponent)
-       case (1)
-          call assertVstring_charstring ( string2 , "comp.lang.fortran" , "Wrong vstrlist_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-    enddo
+    call assertVstring_charstringindex ( listOfComponents , 1 , "comp.lang.fortran" , "Wrong vstrlist_split. (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( listOfComponents )
     !
@@ -628,20 +588,9 @@ contains
     listOfComponents = vstrlist_split ( string1 , "." )
     numberOfComponents = vstrlist_length ( listOfComponents )
     call assert ( numberOfComponents==3 , "Wrong vstrlist_split (1)." )
-    do icomponent = 1 , numberOfComponents
-       string2 = vstrlist_index ( listOfComponents , icomponent )
-       select case (icomponent)
-       case (1)
-          call assertVstring_charstring ( string2 , "comp" , "Wrong vstrlist_split. (2)" )
-       case (2)
-          call assertVstring_charstring ( string2 , "lang" , "Wrong vstrlist_split. (2)" )
-       case (3)
-          call assertVstring_charstring ( string2 , "fortran" , "Wrong vstrlist_split. (2)" )
-       case default
-          write(6,*) "Unknown component index :" , icomponent
-       end select
-       call vstring_free ( string2 )
-    enddo
+    call assertVstring_charstringindex ( listOfComponents , 1 , "comp" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 2 , "lang" , "Wrong vstrlist_split. (2)" )
+    call assertVstring_charstringindex ( listOfComponents , 3 , "fortran" , "Wrong vstrlist_split. (2)" )
     call vstring_free ( string1 )
     call vstrlist_free ( listOfComponents )
     !
@@ -678,12 +627,15 @@ contains
     !
     call strlist_reference_check ()
   end subroutine test_m_vstringlist_split
+  !
+  ! test_mstringlist_search --
+  !   Test searching in a list of strings.
+  !
   subroutine test_mstringlist_search ()
     type ( t_vstringlist ) :: list1
     type ( t_vstringlist ) :: list2
     integer :: strindex
     integer :: length
-    type ( t_vstring ) :: string1
     !
     !
     ! Check the number of lists references
@@ -781,9 +733,7 @@ contains
     list2 = vstrlist_lsearch ( list1 , "la*" , allitems = .false. )
     length = vstrlist_length ( list2 )
     call assert ( length == 1 , "Wrong vstrlist_search" )
-    string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring_charstring ( string1 , "lang" , "Wrong vstrlist_search (2)" )
-    call vstring_free ( string1 )
+    call assertVstring_charstringindex ( list2 , 1 , "lang" , "Wrong vstrlist_search (2)" )
     call vstrlist_free ( list1 )
     call vstrlist_free ( list2 )
     !
@@ -809,12 +759,8 @@ contains
     list2 = vstrlist_lsearch ( list1 , "C*" , allitems = .true. )
     length = vstrlist_length ( list2 )
     call assert ( length == 2 , "Wrong vstrlist_search" )
-    string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring_charstring ( string1 , "C++" , "Wrong vstrlist_search (2)" )
-    call vstring_free ( string1 )
-    string1 = vstrlist_index ( list2 , 2 )
-    call assertVstring_charstring ( string1 , "C#" , "Wrong vstrlist_search (2)" )
-    call vstring_free ( string1 )
+    call assertVstring_charstringindex ( list2 , 1 , "C++" , "Wrong vstrlist_search (2)" )
+    call assertVstring_charstringindex ( list2 , 2 , "C#" , "Wrong vstrlist_search (2)" )
     call vstrlist_free ( list1 )
     call vstrlist_free ( list2 )
     !
@@ -829,9 +775,7 @@ contains
     list2 = vstrlist_lsearch ( list1 , "C*" )
     length = vstrlist_length ( list2 )
     call assert ( length == 1 , "Wrong vstrlist_search" )
-    string1 = vstrlist_index ( list2 , 1 )
-    call assertVstring_charstring ( string1 , "C++" , "Wrong vstrlist_search (2)" )
-    call vstring_free ( string1 )
+    call assertVstring_charstringindex ( list2 , 1 , "C++" , "Wrong vstrlist_search (2)" )
     call vstrlist_free ( list1 )
     call vstrlist_free ( list2 )
     !
@@ -840,32 +784,262 @@ contains
     call strlist_reference_check ()
   end subroutine test_mstringlist_search
   !
-  ! assert --
-  !   Check that the given test is true and updates the assertion system.
+  ! test_mstringlist_sort --
+  !   Test string list sorting.
   !
-  subroutine assert (test, message)
-    implicit none
-    logical         , intent(in) :: test
-    character(len=*), intent(in) :: message
-    character(len=50) :: origin
-    integer, parameter :: MSG_LEN = 200
-    character (len= MSG_LEN ) :: msg
-    origin = "test_m_vstringlist.f90"
-    assertTestIndex = assertTestIndex + 1
-    if (.NOT.test) then
-       write(msg,*) "-> Test #", assertTestIndex , " FAIL"
-       call logmsg ( msg )
-       write(msg,*) "Origin:", origin
-       call logmsg ( msg )
-       write(msg,*) "Error: ", trim(message)
-       call logmsg ( msg )
-       assertTotalTestFail = assertTotalTestFail + 1
+  subroutine test_mstringlist_sort ()
+    type ( t_vstringlist ) :: list1
+    type ( t_vstringlist ) :: list2
+    integer :: length
+    !
+    !
+    ! Check the number of lists references
+    !
+    call strlist_reference_check ()
+    !
+    call logmsg ( "Test : vstrlist_sort with no option" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "comp" )
+    call vstrlist_append ( list1 , "lang" )
+    call vstrlist_append ( list1 , "fortran" )
+    list2 = vstrlist_sort ( list1 )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "comp" , "Wrong vstrlist_sort (1)" )
+    call assertVstring_charstringindex ( list2 , 2 , "fortran" , "Wrong vstrlist_sort (1)" )
+    call assertVstring_charstringindex ( list2 , 3 , "lang" , "Wrong vstrlist_sort (1)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with increasing option as true" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "comp" )
+    call vstrlist_append ( list1 , "lang" )
+    call vstrlist_append ( list1 , "fortran" )
+    list2 = vstrlist_sort ( list1 , increasing = .true. )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "comp" , "Wrong vstrlist_sort (2)" )
+    call assertVstring_charstringindex ( list2 , 2 , "fortran" , "Wrong vstrlist_sort (2)" )
+    call assertVstring_charstringindex ( list2 , 3 , "lang" , "Wrong vstrlist_sort (2)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with increasing option as false" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "comp" )
+    call vstrlist_append ( list1 , "lang" )
+    call vstrlist_append ( list1 , "fortran" )
+    list2 = vstrlist_sort ( list1 , increasing = .false. )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "lang" , "Wrong vstrlist_sort (3)" )
+    call assertVstring_charstringindex ( list2 , 2 , "fortran" , "Wrong vstrlist_sort (3)" )
+    call assertVstring_charstringindex ( list2 , 3 , "comp" , "Wrong vstrlist_sort (3)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with classtype as ascii" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "comp" )
+    call vstrlist_append ( list1 , "lang" )
+    call vstrlist_append ( list1 , "fortran" )
+    list2 = vstrlist_sort ( list1 , classtype = "ascii" )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "comp" , "Wrong vstrlist_sort (4)" )
+    call assertVstring_charstringindex ( list2 , 2 , "fortran" , "Wrong vstrlist_sort (4)" )
+    call assertVstring_charstringindex ( list2 , 3 , "lang" , "Wrong vstrlist_sort (4)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with classtype as dictionnary" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "bigbang" )
+    call vstrlist_append ( list1 , "bigBoy" )
+    call vstrlist_append ( list1 , "bigboy" )
+    list2 = vstrlist_sort ( list1 , classtype = "dictionnary" )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "bigbang" , "Wrong vstrlist_sort (5)" )
+    ! One cannot state about the 2nd element and the 3d, since the order 
+    ! is not stated.
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with classtype as dictionnary and decreasing" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "bigbang" )
+    call vstrlist_append ( list1 , "bigBoy" )
+    call vstrlist_append ( list1 , "bigboy" )
+    list2 = vstrlist_sort ( list1 , classtype = "dictionnary" , increasing = .false.)
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    ! One cannot state about the 1st and the 2d since the order 
+    ! is not stated.
+    call assertVstring_charstringindex ( list2 , 3 , "bigbang" , "Wrong vstrlist_sort (6)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with integers" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "4" )
+    call vstrlist_append ( list1 , "2" )
+    call vstrlist_append ( list1 , "10" )
+    list2 = vstrlist_sort ( list1 , classtype = "integer" )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "2" , "Wrong vstrlist_sort (7)" )
+    call assertVstring_charstringindex ( list2 , 2 , "4" , "Wrong vstrlist_sort (7)" )
+    call assertVstring_charstringindex ( list2 , 3 , "10" , "Wrong vstrlist_sort (7)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with decreasing integers" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "4" )
+    call vstrlist_append ( list1 , "2" )
+    call vstrlist_append ( list1 , "10" )
+    list2 = vstrlist_sort ( list1 , increasing = .false. , classtype = "integer" )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "10" , "Wrong vstrlist_sort (8)" )
+    call assertVstring_charstringindex ( list2 , 2 , "4" , "Wrong vstrlist_sort (8)" )
+    call assertVstring_charstringindex ( list2 , 3 , "2" , "Wrong vstrlist_sort (8)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with real" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "4." )
+    call vstrlist_append ( list1 , "-2." )
+    call vstrlist_append ( list1 , "10." )
+    list2 = vstrlist_sort ( list1 , classtype = "real" )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "-2." , "Wrong vstrlist_sort (9)" )
+    call assertVstring_charstringindex ( list2 , 2 , "4." , "Wrong vstrlist_sort (9)" )
+    call assertVstring_charstringindex ( list2 , 3 , "10." , "Wrong vstrlist_sort (9)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with decreasing real" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "4." )
+    call vstrlist_append ( list1 , "-2." )
+    call vstrlist_append ( list1 , "10." )
+    list2 = vstrlist_sort ( list1 , increasing = .false. , classtype = "real" )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "10." , "Wrong vstrlist_sort (10)" )
+    call assertVstring_charstringindex ( list2 , 2 , "4." , "Wrong vstrlist_sort (10)" )
+    call assertVstring_charstringindex ( list2 , 3 , "-2." , "Wrong vstrlist_sort (10)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with customized command" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "Newton" )
+    call vstrlist_append ( list1 , "Michael" )
+    call vstrlist_append ( list1 , "Einstein" )
+    list2 = vstrlist_sort ( list1 , test_compare )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "Michael" , "Wrong vstrlist_sort (10)" )
+    call assertVstring_charstringindex ( list2 , 2 , "Einstein" , "Wrong vstrlist_sort (10)" )
+    call assertVstring_charstringindex ( list2 , 3 , "Newton" , "Wrong vstrlist_sort (10)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with customized command and unique" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "Newton" )
+    call vstrlist_append ( list1 , "Michael" )
+    call vstrlist_append ( list1 , "Einstein" )
+    call vstrlist_append ( list1 , "Michael" )
+    call vstrlist_append ( list1 , "Einstein" )
+    call vstrlist_append ( list1 , "Einstein" )
+    list2 = vstrlist_sort ( list1 , test_compare , unique = .true. )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "Michael" , "Wrong vstrlist_sort (11)" )
+    call assertVstring_charstringindex ( list2 , 2 , "Einstein" , "Wrong vstrlist_sort (11)" )
+    call assertVstring_charstringindex ( list2 , 3 , "Newton" , "Wrong vstrlist_sort (11)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with integer and unique" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "3" )
+    call vstrlist_append ( list1 , "2" )
+    call vstrlist_append ( list1 , "2" )
+    call vstrlist_append ( list1 , "1" )
+    call vstrlist_append ( list1 , "3" )
+    call vstrlist_append ( list1 , "2" )
+    list2 = vstrlist_sort ( list1 , classtype = "integer" , unique = .true. )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "1" , "Wrong vstrlist_sort (12)" )
+    call assertVstring_charstringindex ( list2 , 2 , "2" , "Wrong vstrlist_sort (12)" )
+    call assertVstring_charstringindex ( list2 , 3 , "3" , "Wrong vstrlist_sort (12)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with ascii and unique" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "Newton" )
+    call vstrlist_append ( list1 , "Michael" )
+    call vstrlist_append ( list1 , "Einstein" )
+    call vstrlist_append ( list1 , "Michael" )
+    call vstrlist_append ( list1 , "Einstein" )
+    call vstrlist_append ( list1 , "Einstein" )
+    list2 = vstrlist_sort ( list1 , classtype = "ascii" , unique = .true. )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 3 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "Einstein" , "Wrong vstrlist_sort (13)" )
+    call assertVstring_charstringindex ( list2 , 2 , "Michael" , "Wrong vstrlist_sort (13)" )
+    call assertVstring_charstringindex ( list2 , 3 , "Newton" , "Wrong vstrlist_sort (13)" )
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+    call logmsg ( "Test : vstrlist_sort with classtype as dictionnary and unique" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "bigbang" )
+    call vstrlist_append ( list1 , "bigBoy" )
+    call vstrlist_append ( list1 , "bigboy" )
+    list2 = vstrlist_sort ( list1 , classtype = "dictionnary" , unique = .true. )
+    length = vstrlist_length ( list2 )
+    call assert ( length == 2 , "Wrong vstrlist_sort length" )
+    call assertVstring_charstringindex ( list2 , 1 , "bigbang" , "Wrong vstrlist_sort (14)" )
+    ! One cannot state about the 2d since the order 
+    ! is not stated : it may be bigBoy or bigboy.
+    call vstrlist_free ( list1 )
+    call vstrlist_free ( list2 )
+    !
+  end subroutine test_mstringlist_sort
+  !
+  ! Compare the two strings with special comparison.
+  !
+  integer function test_compare ( string_a , string_b )
+    use m_vstring, only : t_vstring
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    logical :: equalsreference_a
+    logical :: equalsreference_b
+    equalsreference_a = vstring_equals ( string_a , "Michael" )
+    equalsreference_b = vstring_equals ( string_b , "Michael" )
+    if ( equalsreference_a ) then
+       if ( equalsreference_b ) then
+          test_compare = 0
+       else
+          test_compare = -1
+       endif
+    elseif ( equalsreference_b ) then
+          test_compare = 1       
     else
-       write(msg,*) "-> Test #", assertTestIndex , " PASS"
-       call logmsg ( msg )
-       assertTotalTestSuccess = assertTotalTestSuccess + 1
+       test_compare = vstring_compare ( string_a , string_b )
     endif
-  end subroutine assert
+  end function test_compare
   !
   ! assertString --
   !   Check that the computed string is equal to the expected string
@@ -963,13 +1137,13 @@ contains
     character ( len = 200 ) :: char_string
     logical :: equals
     equals = vstring_equals ( computedString , expectedString )
-    call vstring_tocharstring ( expectedString , len ( char_string ) , char_string )
+    call vstring_cast ( expectedString , len ( char_string ) , char_string )
     ! CAUTION !
     ! The trim removes the blanks so that the blanks of the real string are not displayed !
     if ( .NOT.equals ) then
        write ( msg , * ) "String expected :-", trim ( char_string ), "-"
        call logmsg ( msg )
-       call vstring_tocharstring ( computedString , len ( char_string ) , char_string )
+       call vstring_cast ( computedString , len ( char_string ) , char_string )
        write ( msg , * ) "String computed :-", trim ( char_string ) , "-"
        call logmsg ( msg )
     endif
@@ -991,55 +1165,21 @@ contains
     call vstring_free ( expectedVString )
   end subroutine assertVstring_charstring
   !
-  ! logmsg --
-  !   Write a message into the log file
+  ! assertVstring_charstringindex --
+  !   Check that the vstring at index #icomponent of the given vstring list 
+  !   is equal to the expected character string and updates the assertion system.
   !
-  subroutine logmsg ( message )
+  subroutine assertVstring_charstringindex ( list , icomponent , expectedString , message )
     implicit none
+    type ( t_vstringlist ), intent(in) :: list
+    integer , intent(in) :: icomponent
+    character ( len=* ), intent(in) :: expectedString
     character(len=*), intent(in) :: message
-    write(6,*) trim(message)
-    write(log_unit,*) trim(message)
-  end subroutine logmsg
-  !
-  ! log_startup --
-  !   Startup logger
-  !
-  subroutine log_startup ( filename )
-    implicit none
-    character(len=*), intent(in) :: filename
-    open ( log_unit , file=filename, action = "write")
-  end subroutine log_startup
-  !
-  ! log_shutdown --
-  !   Shutdown logger
-  !
-  subroutine log_shutdown ( )
-    implicit none
-    close ( log_unit )
-  end subroutine log_shutdown
-  !
-  ! assert_startup --
-  !   Startup assertion system.
-  !
-  subroutine assert_startup ( )
-    implicit none
-    assertTotalTestFail = 0
-    assertTotalTestSuccess = 0
-    assertTestIndex = 0
-  end subroutine assert_startup
-  !
-  ! assert_shutdown --
-  !   Shutdown assertion system.
-  !
-  subroutine assert_shutdown ( )
-    implicit none
-    character (len= 200 ) :: msg
-    call logmsg ( "**********************" )
-    call logmsg ( "End of tests." )
-    write ( msg , * ) "Total number of success tests : ", assertTotalTestSuccess
-    call logmsg ( msg )
-    write ( msg , * ) "Total number of failing tests : ", assertTotalTestFail
-    call logmsg ( msg )
-  end subroutine assert_shutdown
+    type ( t_vstring ) :: computedString
+    computedString = vstrlist_index ( list , icomponent )
+    call assertVstring_charstring ( computedString , expectedString , message )
+    call vstring_free ( computedString )
+  end subroutine assertVstring_charstringindex
+
 end program test_m_vstringlist
 
