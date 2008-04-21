@@ -3,6 +3,16 @@
 !
 !     See the example/test program for the way to use this
 !
+!     IMPORTANT NOTE:
+!     --------------
+!     This file is deprecated in favour of "qsortarray_template.f90"
+!     Please use this file and its test program.
+!
+!     The reason is that there are several interface issues
+!     (the need for a use statement when defining the interface to
+!     the comparison function). The current file does not even
+!     compile properly.
+!
 !     Note:
 !     The data that need to be sorted are stored in
 !     an array. A comparison function is used to enable

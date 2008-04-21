@@ -3,6 +3,11 @@
 !
 !     See: sorting.f90 for more details
 !
+!     IMPORTANT NOTE:
+!     --------------
+!     This file is deprecated - use test_qsortarray_template.f90
+!     instead
+!
 !     $Id$
 !
 module sorting_data
