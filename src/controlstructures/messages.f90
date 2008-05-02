@@ -8,12 +8,23 @@
 !     Requirements:
 !     - This file is included in a module - see example/test program
 !     - A module "msg_data_definitions" that defines:
-!       -  Type STATE_DATA
-!       -  Type MSG_DATA
+!       - Type STATE_DATA
+!       - Type MSG_DATA
+!       - Integer parameter INIT
+!
+implicit none
+
+!
+! Standard message types
+!
+!! integer, parameter :: INIT = 0 ! Tricky bit!
+
+!
+! Private definitions
 !
 type MESSAGE
-    character*len=40) :: name
-    integer           :: time
+    real              :: time
+    integer           :: type
     type(MSG_DATA)    :: data
 end type
 
@@ -21,9 +32,13 @@ private :: MESSAGE
 type(MESSAGE), dimension(:), allocatable, private :: queue
 integer, save, private                            :: max_queue = 1000
 
-...
+real, private          :: system_time
+integer, private, save :: last_msg  = 0
+logical, private, save :: stop_loop = .false.
+logical, private       :: error
+logical, private       :: debug = .true.
 
-public  :: msg_loop, msg_put, msg_put_back
+public  :: msg_loop, msg_put
 private :: msg_loop_print
 private :: msg_loop_default
 private :: msg_print_default
@@ -42,41 +57,42 @@ contains
 !     None
 !
 subroutine msg_exit
-    system_time = stop_time
+    stop_loop = .true.
 end subroutine msg_exit
 
-! msg_put_back --
-!     Tells the message loop to keep the current message
+! msg_error --
+!     Registers an error
 !
 ! Arguments:
-!     None
+!     text             Error text
 !
-subroutine msg_put_back
-    delete = .false.
-end subroutine msg_put_back
+subroutine msg_error( text )
+    character(len=*), intent(in) :: text
+    write(*,*) 'ERROR: ', trim(text)
+    error = .true.
+end subroutine msg_error
 
-! msg_delete_current --
-!     Tells the scanning message loop to delete the current message
+! msg_print_default --
+!     Default print routine
 !
 ! Arguments:
-!     None
+!     lurep         LU-number for report file
+!     state         State of the computation
+!     time          System time
+!     type          Type of the current message
+!     msg           Message data
 !
-subroutine msg_delete_current
-    delete_current = .true.
-end subroutine msg_delete_current
+subroutine msg_print_default( lurep, state, time, type, msg )
+    integer, intent(in)             :: lurep
+    type(STATE_DATA), intent(inout) :: state
+    real, intent(in)                :: time
+    integer, intent(in)             :: type
+    type(MSG_DATA), intent(in)      :: msg
 
-! msg_system_time --
-!     Return the current system time
-!
-! Arguments:
-!     None
-!
-subroutine msg_system_time( time )
-    integer, intent(out) :: time
+    ! TODO
+    write(*,'(a,f12.4,a,i5)') 'Time: ', time, ' - type: ', type
 
-    time = system_time
-
-end subroutine msg_system_time
+end subroutine msg_print_default
 
 ! msg_loop_default --
 !     Dispatch the messages to the routine that actually handles them.
@@ -89,12 +105,12 @@ end subroutine msg_system_time
 subroutine msg_loop_default( state, machine )
     type(STATE_DATA) :: state
     interface
-        subroutine machine( state, msg, data )
+        subroutine machine( state, time, type, data )
             use msg_data_definitions
             implicit none
             type(STATE_DATA), intent(inout) :: state
-            character(len=*), intent(in)    :: msg
-            integer, intent(in)             :: time
+            real, intent(in)                :: time
+            integer, intent(in)             :: type
             type(MSG_DATA), intent(in)      :: data
         end subroutine
     end interface
@@ -115,26 +131,31 @@ end subroutine msg_loop_default
 subroutine msg_loop_print( state, machine, print_debug )
     type(STATE_DATA) :: state
     interface
-        subroutine machine( state, msg, time, data )
+        subroutine machine( state, time, type, data )
             use msg_data_definitions
             implicit none
             type(STATE_DATA), intent(inout) :: state
-            character(len=*), intent(in)    :: msg
-            integer, intent(in)             :: time
+            real, intent(in)                :: time
+            integer, intent(in)             :: type
             type(MSG_DATA), intent(in)      :: data
         end subroutine
     end interface
     interface
-        subroutine print_debug( lurep, state, msg, time, data )
+        subroutine print_debug( lurep, state, time, type, data )
             use msg_data_definitions
             implicit none
             integer, intent(in)             :: lurep
             type(STATE_DATA), intent(inout) :: state
-            character(len=*), intent(in)    :: msg
-            integer, intent(in)             :: time
+            real, intent(in)                :: time
+            integer, intent(in)             :: type
             type(MSG_DATA), intent(in)      :: data
         end subroutine
     end interface
+
+    integer :: lurep = 10
+    real    :: time
+    integer :: count = 0
+    integer :: i
 
 !
 ! This _uninitialised_ variable is used for special messages
@@ -144,62 +165,54 @@ subroutine msg_loop_print( state, machine, print_debug )
 !
 ! Initialise the queue
 !
-    first_msg = 1
-    last_msg  = 0
-    call msg_put( 'INIT', start_time, data )
+    error       = .false.
+    system_time = 0.0
+    stop_loop   = .false.
+
+    call msg_put( system_time, INIT, neutral_data )
 
 !
 ! Enter the message loop
 !
-    stop        = .false.
-    system_time = start_time
+    do while( .not. stop_loop )
+        count = count + 1; if ( count > 40 ) stop
+        !write(*,*) 'last_msg: ', last_msg
+        !write(*,'(f12.4,i5)') (queue(i)%time, queue(i)%type ,i=1,last_msg )
 
-    do while( system_time < stop_time )
-        do i = first_msg, last_msg
-            if ( queue(i)%time >= 0 ) then
-                idmsg = i
-                exit
-            endif
-        enddo
-
-        delete = .true.
+        !
+        ! Any messages in the queue? If not, we are done
+        !
+        if ( last_msg <= 0 ) then
+            exit
+        endif
 
         !
         ! Pass the message to the handler,
         ! print debug information, if requested
         !
+        system_time = queue(1)%time
+        time        = system_time
+
         if ( debug ) then
-            call print_debug( lurep, state, queue(idmsg)%name, &
-                     queue(idmsg)%time, queue(idmsg)%data )
+            call print_debug( lurep, state, time, &
+                     queue(1)%type, queue(1)%data )
         endif
 
-        call machine( state, queue(idmsg)%name, queue(idmsg)%time, &
-                 queue(idmsg)%data )
+        time = system_time
+        call machine( state, time, queue(1)%type, queue(1)%data )
 
         !
-        ! A message that has been passed, will be
-        ! deleted, unless msg_put_back() has been called.
+        ! Remove the first message
         !
-        if ( delete ) then
-            queue(idmsg)%time = -1
-        endif
-
-        !
-        ! Always increase the ID of the first message to
-        ! be examined
-        !
-        first_msg = first_msg + 1
-
-        !
-        ! Put in a 'TIME' message, if we have handled
-        ! all messages with a creation time smaller than
-        ! the current system time
-        !
-        if ( queue(first_msg)%time > system_time ) then
-            system_time = system_time + 1
-            call msg_put( 'TIME', system_time, neutral_data )
-        endif
+        call deallocate_msg_data( queue(1)%data )
+        queue(1:last_msg-1) = queue(2:last_msg)
+        last_msg = last_msg - 1
     enddo
+
+    !
+    ! Be prepared for the next loop
+    !
+    last_msg    = 0
 
 end subroutine msg_loop_print
 
@@ -207,76 +220,61 @@ end subroutine msg_loop_print
 !     Put a message in the (sorted) message queue
 !
 ! Arguments:
-!     msg           Name/type of the message
 !     time          Time at which the message is posted
+!     type          Type of the message
 !     data          Data associated with the message
 !
-subroutine msg_put( msg, time, data )
-    character(len=*), intent(in) :: msg
-    integer, intent(in)          :: time
+subroutine msg_put( time, type, data )
+    real, intent(in)             :: time
+    integer, intent(in)          :: type
     type(MSG_DATA), intent(in)   :: data
+
+    integer                      :: i
+    integer                      :: insert
+
+    !
+    ! Initialise the queue if needed
+    !
+    if ( .not. allocated(queue) ) then
+        allocate( queue(1:max_queue) )
+    endif
+
+    !
+    ! Accept only messages with a time equal/later than the system time
+    !
+    if ( time < system_time ) then
+        call msg_error( 'Time of message before system time!' )
+        return
+    endif
 
     !
     ! Do we have enough space for the message in the queue"?
     !
     if ( last_msg >= max_queue ) then
-        mask     = queue%time /= -1
-        last_msg = count(mask)
-        if ( last_msg >= max_queue ) then
-            error = .true.
-            call msg_error( "Queue full" )
-            return
-        else
-            queue(1:last_msg) = pack( queue, mask )
-        endif
-    endif
-
-    !
-    ! Insert the message in the queue, first the
-    ! special times
-    !
-
-    later_time = system_time + 1
-    if ( last_msg > 0 ) later_time = queue(last_msg)%time + 1
-
-    if ( time == msg_last ) then
-        last_msg             = last_msg + 1
-        queue(last_msg)%name = msg
-        queue(last_msg)%time = later_time
-        queue(last_msg)%data = data
+        error = .true.
+        call msg_error( "Queue full" )
         return
     endif
 
-    insert = last_msg + 1
-
-    if ( msg == msg_now ) then
-        do i = 1,last_msg
-            if ( queue(i)%time > system_time ) then
-                insert = i ! Insert before this message
-                exit
-            endif
-        enddo
-    elseif ( time == msg_immediate ) then
-        do i = 1,last_msg
-            if ( queue(i)%time >= system_time ) then
-                insert = i ! Insert before this message
-                exit
-            endif
-        enddo
-    else
-        do i = 1,last_msg
-            if ( queue(i)%time > time ) then
-                insert = i ! Insert before this message
-                exit
-            endif
-        enddo
-    endif
+    !
+    ! Insert the message in the queue
+    !
+    insert = last_msg+1
+    do i = 1,last_msg
+        if ( queue(i)%time > time ) then
+            insert = i ! Insert before this message
+            exit
+        endif
+    enddo
 
     queue(insert+1:last_msg+1) = queue(insert:last_msg)
-    queue(insert)%name         = msg
     queue(insert)%time         = time
-    queue(insert)%data         = data
+    queue(insert)%type         = type
+    call copy_msg_data( data, queue(insert)%data )
     last_msg                   = last_msg + 1
+
+    !write(*,*) 'msg_put:',last_msg, time, type, data
+    !write(*,*) '    first:',queue(1)%time, queue(1)%type, queue(1)%data
 end subroutine msg_put
 
 ! End of general module text

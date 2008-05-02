@@ -74,11 +74,12 @@ type(ipc_comm) function ipc_open( me )
     ipc_open%me = me
 end function ipc_open
 
-subroutine ipc_send_start( comm, dest, tag, id, lun )
+subroutine ipc_send_start( comm, dest, tag, id )
     type(ipc_comm)   :: comm
     character(len=*) :: dest
     character(len=*) :: tag
     integer          :: id
+
     integer          :: lun
 
     lun = 10
@@ -137,7 +138,7 @@ subroutine ipc_send_finish( comm )
 
 end subroutine
 
-subroutine ipc_receive_start( comm, src, tag, id, lun )
+subroutine ipc_receive_start( comm, src, tag, id )
     type(ipc_comm)   :: comm
     character(len=*) :: src
     character(len=*) :: tag
@@ -223,71 +224,3 @@ include "ipc_file_data.f90"
 
 end module ipc_file
 
-! Test program:
-!     Send messages from one instantation to the other
-!
-program test_ipc_file
-
-    use ipc_file
-
-    implicit none
-
-    type(ipc_comm)    :: comm
-
-    integer           :: i
-    integer           :: id
-    integer           :: lun
-    real              :: v
-    character(len=20) :: myid
-    character(len=20) :: task
-    character(len=20) :: keyword
-    character(len=20) :: value
-    character(len=20) :: tag
-    character(len=20) :: connection
-    logical           :: error
-
-    !
-    ! Read the information from the command-line:
-    ! - Id of the instance
-    ! - Task and which one to connect to
-    !
-    do i = 1,2
-        read( *, * ) keyword, value
-        write( *, * ) 'Read: ', keyword, value
-        select case (keyword)
-            case('id')
-                myid = value
-            case('send', 'receive')
-                task       = keyword
-                connection = value
-        end select
-    enddo
-
-    comm = ipc_open( myid )
-    !
-    ! Depending on the task we either send a number or receive it
-    ! and print it
-    !
-    write( *, * ) 'Task: >>',task, '<<'
-    if ( task == 'send' ) then
-        do i = 1,10
-            id = i
-            write( *, * ) myid, ': sending ... ', v, id
-            call random_number( v )
-            call ipc_send_start( comm, connection, 'number', id, lun )
-            call ipc_send_data( comm, v, error )
-            write( *, * ) myid, ': sent ', v, id
-            call ipc_send_finish( comm )
-        enddo
-    else
-        tag = 'number'
-        do i = 1,10
-            id = i
-            write( *, * ) myid, ': receiving ... '
-            call ipc_receive_start( comm, connection, tag, id, lun )
-            call ipc_receive_data( comm, v, error )
-            write( *, * ) myid, ': received ', v, id
-            call ipc_receive_finish( comm )
-        enddo
-    endif
-end program
