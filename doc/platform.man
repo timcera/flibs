@@ -1,0 +1,137 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin flibs/platform n 1.0]
+[copyright {2005 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[moddesc flibs]
+[titledesc {Platform-dependent routines and features}]
+
+[description]
+
+The [strong platform] contains parameters to identify the
+platform the program is running on and several routines to interact with
+the operating system, for instance:
+
+[list_begin bullet]
+[bullet]
+The parameter PLATFORM_OS identifies the operating system and the
+parameter PLATFORM_PLATFORM identifies the general category.
+
+[bullet]
+The subroutine platform_system() hides the platform-specific details of
+running an external command or program.
+
+[list_end]
+
+[section ROUTINES]
+The module contains the following routines:
+
+[list_begin definitions]
+
+[call [cmd "use platform"]]
+To import the subroutines, use this module.
+
+
+[call [cmd "platform_system( command, status )"]]
+Run an external command or program, optionally retrieving the status of
+that command.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" command]
+Command to run (note: this is quite likely platform-dependent)
+
+[arg_def "integer" status]
+Optional argument returning the status (note: the information contained
+in it is not very reliable - some systems do not give any informatio)
+
+[list_end]
+[nl]
+
+
+[call [cmd "os_type = platform_get_os()"]]
+Return the type of operating system, one of:
+PLATFORM_OS_WINDOWS_95, PLATFORM_OS_WINDOWS_NT,
+PLATFORM_OS_MACOS, PLATFORM_OS_SUNOS, PLATFORM_OS_LINUX,
+PLATFORM_OS_UNIX
+
+[nl]
+
+
+[call [cmd "platform_type = platform_get_platform()"]]
+Return the category of platform, one of:
+PLATFORM_PLATFORM_WINDOWS, PLATFORM_PLATFORM_MAC, PLATFORM_PLATFORM_UNIX
+
+[nl]
+
+
+[call [cmd "call platform_get_environment_variable( envvar, value)"]]
+Retrieve the value of an environment variable. There is no indication of
+whether the variable indeed exists and it is up to the calling program
+to provide a string argument sufficiently long to hold the value.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" envvar]
+The name of the environment variable (note: this is case-sensitive on
+some platforms, case-insensitive on others. This is entirely up to the
+platform).
+
+[arg_def "character(len=*)" envvar]
+Value of the environment variable upon return. As the underlying
+routines give no indication of its existence, it is probably best to
+fill it with a known value first (like: "????") to check it.
+
+[list_end]
+
+[list_end]
+
+
+[section COMPILING]
+There is nothing magic about this module: the platform-specific
+information has to be provided at compile time via preprocessor macros.
+As almost all Fortran compilers offer a preprocessor option, this
+should cause little trouble. The makefile for this module contains a
+template for how to do this.
+
+[para]
+
+[emph "Operating System dependency:"]
+[para]
+It should be compiled by defining several preprocessing macros, to
+select from the various operating systems and compilers for which this module
+is made for.
+Choose your OS between one of these:
+[para]
+_OS_WINDOWS_95 , _OS_WINDOWS_NT , _OS_MAC , _OS_SUN , _OS_LINUX , _OS_UNIX
+
+[para]
+[emph "System fortran extension:"]
+[para]
+Depending on the compiler, the SYSTEM fortran extension is provided
+as a subroutine or a function. See in your manual for the specific
+settings.
+For example, this is a short list of compilers and their particular
+SYSTEM provided:
+
+[list_begin bullet]
+[bullet]
+subroutine: Intel Fortran, gfortran
+
+[bullet]
+function : g95.
+[list_end]
+
+Choose your SYSTEM version between one of these:
+[para]
+_PLATFORM_SYSTEM_SUBROUTINE , _PLATFORM_SYSTEM_FUNCTION
+
+
+[emph "Environment variables extension:"]
+The fortran 2003 standard introduces a standard way of accessing
+to the environment variables. Older compilers does not match
+that standard but provide extensions to access to environment variables.
+Choose your option between one of these:
+[para]
+_INTEL_FORTRAN_PORTABILITY_ROUTINES , _FORTRAN_2003
+
+
+[manpage_end]

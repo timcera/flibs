@@ -44,6 +44,7 @@ interface fsm_loop_print
 end interface
 
 integer, parameter :: FSM_INIT = 0
+character(len=10), parameter:: FSM_INIT_CHAR = 'INIT'
 
 contains
 
@@ -233,7 +234,7 @@ subroutine fsm_loop_print_char( state, machine, print_debug )
 !
 ! Initialise the machine
 !
-    call fsm_set_state( fsm, FSM_INIT )
+    call fsm_set_state( fsm, FSM_INIT_CHAR )
     fsm%finished = .false.
 
 !

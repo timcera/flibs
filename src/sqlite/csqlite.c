@@ -3,6 +3,7 @@
 
       $Id$
 */
+#if !defined(LOWERCASE) && !defined(DBL_UNDERSCORE)
 #ifdef WIN32
 #define FTNCALL __stdcall
 #define INBETWEEN
@@ -26,9 +27,34 @@
 #define sqlite3_column_text_c_         SQLITE3_COLUMN_TEXT_C
 #define sqlite3_get_table_1_c_         SQLITE3_GET_TABLE_1_C
 #define sqlite3_get_table_2_c_         SQLITE3_GET_TABLE_2_C
-#else
+#endif /* WIN32 */
+#endif /* !defined(LOWERCASE) && !defined(DBL_UNDERSCORE) */
+
+#if defined(LOWERCASE) || defined(DBL_UNDERSCORE)
 #define FTNCALL
-#endif
+#if defined(DBL_UNDERSCORE)
+#define sqlite3_open_c_                sqlite3_open_c__
+#define sqlite3_close_c_               sqlite3_close_c__
+#define sqlite3_do_c_                  sqlite3_do_c__
+#define sqlite3_finalize_c_            sqlite3_finalize_c__
+#define sqlite3_reset_c_               sqlite3_reset_c__
+#define sqlite3_step_c_                sqlite3_step_c__
+#define sqlite3_insert_c_              sqlite3_insert_c__
+#define sqlite3_prepare_c_             sqlite3_prepare_c__
+#define sqlite3_column_count_c_        sqlite3_column_count_c__
+#define sqlite3_column_name_type_c_    sqlite3_column_name_type_c__
+#define sqlite3_errmsg_c_              sqlite3_errmsg_c__
+#define sqlite3_bind_int_c_            sqlite3_bind_int_c__
+#define sqlite3_bind_null_c_           sqlite3_bind_null_c__
+#define sqlite3_bind_double_c_         sqlite3_bind_double_c__
+#define sqlite3_bind_text_c_           sqlite3_bind_text_c__
+#define sqlite3_column_int_c_          sqlite3_column_int_c__
+#define sqlite3_column_double_c_       sqlite3_column_double_c__
+#define sqlite3_column_text_c_         sqlite3_column_text_c__
+#define sqlite3_get_table_1_c_         sqlite3_get_table_1_c__
+#define sqlite3_get_table_2_c_         sqlite3_get_table_2_c__
+#endif /* defined(DBL_UNDERSCORE) */
+#endif /* defined(LOWERCASE) || defined(DBL_UNDERSCORE) */
 
 #include <string.h>
 #include "sqlite3.h"

@@ -1,3 +1,8 @@
+2008-05-04 arjenmarkus@sourceforge.net
+   * index.html: added the vstring and vstringlist modules, as well as finite_state and messages
+   * finite_state: updated the test program, wrote the documentation
+   * messages: updated the module and the test program
+
 2008-03-16 arjenmarkus@sourceforge.net
    * testmake: a complete application to create test programs
    * chksys: a set of programs to check properties of the compiler
