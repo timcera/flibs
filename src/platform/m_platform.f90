@@ -173,19 +173,13 @@ contains
   ! Arguments:
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
   !       upon return
-  !   Under windows, status are unused and therefore allways set to 0.
   ! Caution !
   !   Under Windows the "call system" may generate the display of a console.
-  ! Caution !
-  !   The standard is that a status different from 0 is an error.
-  !   In fact, under Windows, the value of the status has no signification.
-  !   I got status 1 or 5228135 with a good result.
   !
   subroutine platform_system ( command , status )
     character (len=*), intent(in) :: command
     integer, intent ( out ), optional :: status
     integer :: local_status
-    integer :: platform
 #ifdef _PLATFORM_SYSTEM_SUBROUTINE
     call system ( command , local_status )
 #endif
@@ -206,12 +200,7 @@ contains
 #endif
 #endif
     if (present(status)) then
-       platform = platform_get_platform ()
-       if (platform == PLATFORM_PLATFORM_WINDOWS) then
-          status = 0
-       else
-          local_status = status
-       endif
+       status = local_status
     endif
   end subroutine platform_system
   !
