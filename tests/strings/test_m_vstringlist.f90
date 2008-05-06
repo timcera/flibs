@@ -791,6 +791,13 @@ contains
     type ( t_vstringlist ) :: list1
     type ( t_vstringlist ) :: list2
     integer :: length
+    interface
+       integer function test_compare ( string_a , string_b )
+         use m_vstring, only : t_vstring
+         type(t_vstring), intent(in) :: string_a
+         type(t_vstring), intent(in) :: string_b
+       end function test_compare
+    end interface
     !
     !
     ! Check the number of lists references
@@ -1018,29 +1025,6 @@ contains
     !
   end subroutine test_mstringlist_sort
   !
-  ! Compare the two strings with special comparison.
-  !
-  integer function test_compare ( string_a , string_b )
-    use m_vstring, only : t_vstring
-    type(t_vstring), intent(in) :: string_a
-    type(t_vstring), intent(in) :: string_b
-    logical :: equalsreference_a
-    logical :: equalsreference_b
-    equalsreference_a = vstring_equals ( string_a , "Michael" )
-    equalsreference_b = vstring_equals ( string_b , "Michael" )
-    if ( equalsreference_a ) then
-       if ( equalsreference_b ) then
-          test_compare = 0
-       else
-          test_compare = -1
-       endif
-    elseif ( equalsreference_b ) then
-          test_compare = 1       
-    else
-       test_compare = vstring_compare ( string_a , string_b )
-    endif
-  end function test_compare
-  !
   ! assertString --
   !   Check that the computed string is equal to the expected string
   !   and updates the assertion system.
@@ -1182,4 +1166,27 @@ contains
   end subroutine assertVstring_charstringindex
 
 end program test_m_vstringlist
+  !
+  ! Compare the two strings with special comparison.
+  !
+  integer function test_compare ( string_a , string_b )
+    use m_vstring, only : t_vstring , vstring_equals , vstring_compare
+    type(t_vstring), intent(in) :: string_a
+    type(t_vstring), intent(in) :: string_b
+    logical :: equalsreference_a
+    logical :: equalsreference_b
+    equalsreference_a = vstring_equals ( string_a , "Michael" )
+    equalsreference_b = vstring_equals ( string_b , "Michael" )
+    if ( equalsreference_a ) then
+       if ( equalsreference_b ) then
+          test_compare = 0
+       else
+          test_compare = -1
+       endif
+    elseif ( equalsreference_b ) then
+          test_compare = 1       
+    else
+       test_compare = vstring_compare ( string_a , string_b )
+    endif
+  end function test_compare
 
