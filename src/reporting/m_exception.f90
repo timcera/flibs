@@ -59,6 +59,9 @@
 !        write(6,*) "No problem, continue."
 !     end select
 !
+! Copyright (c) 2008 Michael Baudin
+!
+! $Id$
 !
 module m_exception
   implicit none
