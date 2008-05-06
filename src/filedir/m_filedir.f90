@@ -1,13 +1,16 @@
 !
 ! m_filedir.f90 --
-!   Manipulate file and directory names
+!   Manipulate file and directory names.
+!
+!   Obsolete : use m_vfile instead to get the advantage of dynamic strings,
+!   and several bug fixes and features improvements.
 !
 !   The module contains the following functions:
 !   filedir_rootname       Return the name without an extension
 !   filedir_extension      Return the extension
-!   filedir_tail       Return the name without the directory (if present)
+!   filedir_tail           Return the name without the directory (if present)
 !   filedir_dirname        Return the directory name
-!   filedir_join         Concatenate a directory name and a file name
+!   filedir_join           Concatenate a directory name and a file name
 !   filedir_add_extension  Add an extension to a file name
 !
 !   The functions actually perform fairly simple string manipulations.
