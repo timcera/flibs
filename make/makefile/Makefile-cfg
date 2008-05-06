@@ -30,15 +30,15 @@ VERSION = debug
 #VERSION = profiled
 
 ifeq ($(VERSION),debug)
-	FOPTS_BASE += -g -D_DEBUG -D$(OS_TAG) 
+	FOPTS_BASE += -g -D_DEBUG  
 	LOPTS_BASE += -g
 endif
 ifeq ($(VERSION),release)
-	FOPTS_BASE +=  -D$(OS_TAG) -O2
+	FOPTS_BASE +=   -O2
 	LOPTS_BASE = 
 endif
 ifeq ($(VERSION),optimized)
-	FOPTS_BASE += -O3 -mtune=pentium4  
+	FOPTS_BASE += -O3 -mtune=pentium4   
 	LOPTS_BASE += -O3
 endif
 ifeq ($(VERSION),profiled)

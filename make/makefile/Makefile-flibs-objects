@@ -22,9 +22,11 @@ $(libdir)/timing.o
 objects_2 = 
 # Objects from /src/datastructures
 objects_3 = 
-# Objects from /src/file
+# Objects from /src/filedir
 objects_4 = \
-$(libdir)/m_filedir.o
+$(libdir)/m_filedir.o \
+$(libdir)/m_vfile.o \
+$(libdir)/m_fileunit.o
 # Objects from /src/funit
 objects_5 = \
 $(libdir)/funit.o \
@@ -43,9 +45,11 @@ $(libdir)/globmatch.o \
 $(libdir)/stringmanip.o \
 $(libdir)/stringquery.o \
 $(libdir)/m_vstring.o \
+$(libdir)/m_vstringformat.o \
 $(libdir)/m_vstringlist.o \
 $(libdir)/textstr.o
 # Objects from /src/platform
 objects_9 = \
-$(libdir)/m_platform.o
+$(libdir)/m_platform.o \
+$(libdir)/m_vstrplatform.o
 

@@ -38,11 +38,14 @@ $(libdir)/sorting.o:
 
 $(libdir)/vectors.o:
 
-$(libdir)/file_sample_error.o:$(libdir)/m_filesystem_parameters.o
-
 $(libdir)/m_filedir.o:$(libdir)/m_platform.o
 
-$(libdir)/m_filesystem_parameters.o:
+$(libdir)/m_vfile.o:$(libdir)/m_platform.o
+$(libdir)/m_vfile.o:$(libdir)/m_vstring.o
+$(libdir)/m_vfile.o:$(libdir)/m_vstringformat.o
+$(libdir)/m_vfile.o:$(libdir)/m_vstrplatform.o
+$(libdir)/m_vfile.o:$(libdir)/m_fileunit.o
+$(libdir)/m_vfile.o:$(libdir)/m_vstringlist.o
 
 $(libdir)/funit.o:
 

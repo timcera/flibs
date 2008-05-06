@@ -24,6 +24,7 @@ EXE_TEST_FILSYS = $(bindir)/test_m_filedir.exe
 EXE_TEST_PLATFORM = $(bindir)/test_m_platform.exe
 EXE_TEST_VSTRING = $(bindir)/test_m_vstring.exe
 EXE_TEST_VSTRINGLIST = $(bindir)/test_m_vstringlist.exe
+EXE_TEST_VFILE = $(bindir)/test_m_vfile.exe
 #
 # List of the archive files
 #
@@ -34,8 +35,12 @@ all: $(archive) tests
 
 archive: $(libdir) $(bindir) $(archive_flibs) 
 
-tests: $(libdir) $(bindir) $(archive_flibs) $(EXE_TEST_FILSYS) $(EXE_TEST_PLATFORM) \
-$(EXE_TEST_VSTRING) $(EXE_TEST_VSTRINGLIST)
+tests: $(libdir) $(bindir) $(archive_flibs) \
+$(EXE_TEST_FILSYS) \
+$(EXE_TEST_PLATFORM) \
+$(EXE_TEST_VSTRING) \
+$(EXE_TEST_VSTRINGLIST) \
+$(EXE_TEST_VFILE)
 
 $(libdir): 
 	$(MKDIR) -p $(libdir)
@@ -76,6 +81,9 @@ $(EXE_TEST_VSTRINGLIST): $(libdir)/test_m_vstringlist.o $(objects)
 	$(ECHO) "Linking : $(shell basename $@)"
 	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
 
+$(EXE_TEST_VFILE): $(libdir)/test_m_vfile.o $(objects)
+	$(ECHO) "Linking : $(shell basename $@)"
+	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
 #
 # Deletes all generated files
 #
