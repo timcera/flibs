@@ -151,7 +151,7 @@
 !       except for vstring_match)
 !   - g95 May  3 2007 : tested with _VSTRING_POINTER, OK
 !
-!   Dynamic buffer
+!   Dynamic or static buffer
 !   The internal algorithms provided by m_vstrings are based on 
 !   basic fortran character strings. In several situations, the 
 !   dynamic vstring has to be converted into a basic fortran character
@@ -187,6 +187,11 @@
 !       are not consistent strings, probably because of a bug
 !       in the implementation of len = pure function value in IVF8.
 !     - Fortran does not allow to manage character encodings such as UTF8.
+!
+!   Preprocessing
+!   The following preprocessing macro must be considered :
+!   _VSTRING_STATIC_BUFFER : see  the section "Dynamic or static buffer"
+!   _VSTRING_ALLOCATABLE or _VSTRING_POINTER : see the section "Allocatable or pointer"
 !
 ! ******************************************************************************
 ! *                                                                            *
@@ -310,7 +315,7 @@ module m_vstring
      module procedure vstring_new_from_integer
   end interface vstring_new
   !
-  ! vstring_tocharstring --
+  ! vstring_cast --
   !   Generic converter from a vstring to a basic fortran data type 
   !
   interface vstring_cast
@@ -455,7 +460,7 @@ contains
   !   The created vstring has length 0 and no character.
   !
   subroutine vstring_new_empty ( this )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     call vstring_new_from_charstring ( this , "" )
   end subroutine vstring_new_empty
   !
@@ -466,7 +471,7 @@ contains
   !     characters found in char_string.
   !
   subroutine vstring_new_from_charstring ( this , char_string )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     character(LEN=*), intent(in)    :: char_string
     character ( len = 200) :: message
     integer :: length
@@ -497,8 +502,8 @@ contains
   !   Constructor based on a vstring ( simple copy ).
   !
   subroutine vstring_new_from_vstring ( this , vstring )
-    type(t_vstring), intent(inout) :: this
-    type(t_vstring), intent(in) :: vstring
+    type ( t_vstring ) , intent(inout) :: this
+    type ( t_vstring ) , intent(in) :: vstring
     integer :: length
     character ( len = 200) :: message
     integer :: icharacter
@@ -532,7 +537,7 @@ contains
   !   Constructor based on an array of characters
   !
   subroutine vstring_new_from_chararray ( this , chararray )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     character(len=1), dimension(:), intent(in) :: chararray
     integer :: length
     character ( len = 300 ) :: message
@@ -565,9 +570,9 @@ contains
   !   This can be considered as an implementation of "vstring_repeat".
   !
   subroutine vstring_new_from_integer ( this , ncount , string )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     integer, intent(in) :: ncount
-    type(t_vstring), intent(in), optional :: string
+    type ( t_vstring ) , intent(in), optional :: string
     integer :: length
     character ( len = 300 ) :: message
     type(t_vstring) :: string_real
@@ -638,7 +643,7 @@ contains
   !   same target as the one that is."
   !
   subroutine vstring_free ( this )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     logical :: string_allocated
     character ( len = 300 ) :: message
     integer :: status
@@ -694,7 +699,7 @@ contains
   !   Returns .true. if the string is allocated.
   !
   pure logical function vstring_exists ( this )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
 #ifdef _VSTRING_ALLOCATABLE
     vstring_exists = allocated ( this%chars )
 #endif
@@ -711,8 +716,8 @@ contains
   !   If length is specified, then only the first length characters are used in the comparison.
   !
   function vstring_equals_vstring ( this , string_b , nocase , length ) result (op_eq)
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in) :: string_b
     logical , intent (in), optional :: nocase
     integer , intent ( in ), optional :: length
     logical                          :: op_eq
@@ -810,7 +815,7 @@ contains
   !   Interface to vstring_equals_vstring to manage character string.
   !
   function vstring_equals_charstring ( this , string_b , nocase , length ) result (op_eq)
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character(len=*), intent(in) :: string_b
     logical , intent ( in ), optional :: nocase
     integer , intent ( in ), optional :: length
@@ -828,7 +833,7 @@ contains
   !   string is truncated.
   !
   subroutine vstring_cast_charstringfixed ( this , length , char_string )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(in)              :: length
     character ( LEN = length ) , intent(out) :: char_string
     integer :: length_this
@@ -852,7 +857,7 @@ contains
   !   string is truncated.
   !
   subroutine vstring_cast_charstringauto ( this , char_string )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character ( LEN = * ) , intent(out) :: char_string
     integer :: length_this
     integer :: icharacter
@@ -880,7 +885,7 @@ contains
   !   Compute the length of a varying string
   !
   pure function vstring_length ( this ) result (length)
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer                          :: length
     logical :: string_allocated
     string_allocated = vstring_exists ( this )
@@ -900,8 +905,8 @@ contains
   !   Returns a new string made by the concatenation of two varying strings.
   !
   function vstring_concat_vstring ( this , string_b ) result (concat_string)
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in) :: string_b
     type(t_vstring)             :: concat_string
     integer                          :: len_string_a
     integer :: concat_length
@@ -925,7 +930,7 @@ contains
   !   Interface to vstring_concat_vstring to manage character strings
   !
   function vstring_concat_charstring ( this , string_b ) result (concat_string)
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character(len=*), intent(in) :: string_b
     type(t_vstring)             :: concat_string
     type(t_vstring) :: vstring_b
@@ -941,8 +946,8 @@ contains
   !   If -length is specified, then only the first length characters are used in the comparison.
   !
   function vstring_compare_vstring ( this , string_b , nocase , length ) result ( compare )
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in) :: string_b
     logical , intent (in), optional :: nocase
     integer , intent ( in ), optional :: length
     integer                     :: compare
@@ -1052,7 +1057,7 @@ contains
   !   Interface to vstring_compare_vstring to manage character string.
   !
   function vstring_compare_charstring ( this , string_b , nocase , length ) result ( compare )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character (len=*), intent(in) :: string_b
     logical , intent ( in ), optional :: nocase
     integer , intent ( in ), optional :: length
@@ -1070,8 +1075,8 @@ contains
   !   newlines, and carriage returns).
   !
   function vstring_trim_vstring ( this , chars ) result ( trim_string )
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in), optional :: chars
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in), optional :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring)             :: chars_real
     type(t_vstring) :: trimmedLeft
@@ -1108,7 +1113,7 @@ contains
   !   Interface to vstring_trim_vstring to manage character strings.
   !
   function vstring_trim_charstring ( this , chars ) result ( trim_string )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character (len=*), intent(in) :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring) :: vchars
@@ -1124,8 +1129,8 @@ contains
   !   (spaces, tabs, newlines, and carriage returns).
   !
   function vstring_trimleft_vstring ( this , chars ) result ( trim_string )
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in), optional :: chars
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in), optional :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring)             :: chars_real
     integer :: length
@@ -1184,7 +1189,7 @@ contains
   !   Interface to vstring_trimleft_vstring to manage character strings.
   !
   function vstring_trimleft_charstring ( this , chars ) result ( trim_string )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character (len=*), intent(in) :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring) :: vchars
@@ -1198,8 +1203,8 @@ contains
   !   If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).
   !
   function vstring_trimright_vstring ( this , chars ) result ( trim_string )
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in), optional :: chars
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in), optional :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring)             :: chars_real
     integer :: length
@@ -1258,7 +1263,7 @@ contains
   !   Interface to vstring_trimright_vstring to manage character strings.
   !
   function vstring_trimright_charstring ( this , chars ) result ( trim_string )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character (len=*), intent(in) :: chars
     type(t_vstring)             :: trim_string
     type(t_vstring) :: vchars
@@ -1275,8 +1280,8 @@ contains
   !   in the current string specified by the index.
   !
   function vstring_first_vstring ( this , string2 , first ) result ( firstIndex )
-    type(t_vstring), intent(in)   :: this
-    type(t_vstring), intent(in)   :: string2
+    type ( t_vstring ) , intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: string2
     integer, intent(in), optional :: first
     integer                       :: firstIndex
     integer :: startIndex
@@ -1331,7 +1336,7 @@ contains
   !   Interface to vstring_first_vstring to manage character strings
   !
   function vstring_first_charstring ( this , string2 , first ) result ( firstIndex )
-    type(t_vstring), intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: this
     character(len=*), intent(in)   :: string2
     integer, intent(in), optional :: first
     integer                       :: firstIndex
@@ -1349,8 +1354,8 @@ contains
   !   string specified by the index.
   !
   function vstring_last_vstring ( this , string2 , last ) result ( first )
-    type(t_vstring), intent(in)   :: this
-    type(t_vstring), intent(in)   :: string2
+    type ( t_vstring ) , intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: string2
     integer, intent(in), optional :: last
     integer                       :: first
     integer :: lastIndex
@@ -1405,7 +1410,7 @@ contains
   !   Interface to vstring_last_vstring to manage character strings
   !
   function vstring_last_charstring ( this , string2 , first ) result ( firstIndex )
-    type(t_vstring), intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: this
     character(len=*), intent(in)   :: string2
     integer, intent(in), optional :: first
     integer                       :: firstIndex
@@ -1425,7 +1430,7 @@ contains
   ! TODO : first and last may be specified as for the index method.
   !
   function vstring_range ( this , first , last ) result ( string_range )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(in)         :: first , last
     type(t_vstring)             :: string_range
     character ( len = 200) :: message
@@ -1458,7 +1463,7 @@ contains
   ! TODO : index can be given as the string "end" and corresponds to the last char of the string.
   !
   function vstring_index ( this , charIndex ) result ( string_index )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(in)         :: charIndex
     type(t_vstring)             :: string_index
     integer :: status
@@ -1480,7 +1485,7 @@ contains
   !   at (inclusive).
   !
   function vstring_toupper ( this , first , last ) result ( new_upper )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer , intent ( in ), optional :: first
     integer , intent ( in ), optional :: last
     type(t_vstring) :: new_upper
@@ -1534,7 +1539,7 @@ contains
   !   at (inclusive).
   !
   function vstring_tolower ( this , first , last ) result ( new_lower )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer , intent ( in ), optional :: first
     integer , intent ( in ), optional :: last
     type(t_vstring) :: new_lower
@@ -1589,7 +1594,7 @@ contains
   !   to the char index in the string to stop at (inclusive).
   !
   function vstring_totitle ( this , first , last ) result ( new_title )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer , intent ( in ), optional :: first
     integer , intent ( in ), optional :: last
     type(t_vstring) :: new_title
@@ -1696,7 +1701,7 @@ contains
   !   Reversed string
   !
   function vstring_reverse ( this ) result ( new_reverse )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     type(t_vstring) :: new_reverse
     integer :: icharacter
     integer :: length
@@ -1790,7 +1795,7 @@ contains
   !   If this is "@", then iachar is 64.
   !
   function vstring_iachar ( this ) result ( new_iachar )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer :: new_iachar
     integer :: length
     character ( len = 200 ) :: message
@@ -1814,7 +1819,7 @@ contains
   !   this : the current string
   !
   function vstring_ichar ( this ) result ( new_ichar )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer :: new_ichar
     integer :: length
     character ( len = 200 ) :: message
@@ -1839,8 +1844,8 @@ contains
   !   when the concat is to be done "in place".
   !
   subroutine vstring_append_vstring ( this , string_b )
-    type(t_vstring), intent(inout) :: this
-    type(t_vstring), intent(in) :: string_b
+    type ( t_vstring ) , intent(inout) :: this
+    type ( t_vstring ) , intent(in) :: string_b
     type(t_vstring) :: old_string
     integer :: status
     call vstring_check_string ( this , "vstring_append_vstring" , status )
@@ -1861,7 +1866,7 @@ contains
   !   Interface to manage character strings
   !
   subroutine vstring_append_charstring ( this , string_b )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     character(len=*), intent(in) :: string_b
     type(t_vstring) :: vstring_b
     call vstring_new ( vstring_b , string_b )
@@ -1889,9 +1894,9 @@ contains
   !   it will return the string 02c322c222c.
   !
   function vstring_map ( this , map_old , map_new , nocase ) result ( stringmap )
-    type(t_vstring), intent(inout) :: this
-    type(t_vstring), dimension( : ), intent(in) :: map_old
-    type(t_vstring), dimension( : ), intent(in) :: map_new
+    type ( t_vstring ) , intent(inout) :: this
+    type ( t_vstring ) , dimension( : ), intent(in) :: map_old
+    type ( t_vstring ) , dimension( : ), intent(in) :: map_new
     logical, intent(in), optional :: nocase
     type(t_vstring) :: stringmap
     integer :: imap
@@ -2018,10 +2023,10 @@ contains
   !   If newstring is specified, then it is placed in the removed character range.
   !
   function vstring_replace ( this , first , last , newstring ) result ( stringreplace )
-    type(t_vstring), intent(inout) :: this
+    type ( t_vstring ) , intent(inout) :: this
     integer, intent(in) :: first
     integer, intent(in) :: last
-    type(t_vstring), intent(in), optional :: newstring
+    type ( t_vstring ) , intent(in), optional :: newstring
     type(t_vstring) :: stringreplace
     type(t_vstring) :: part1
     type(t_vstring) :: part2
@@ -2088,8 +2093,8 @@ contains
   !   This is a simple interface to the standard fortran intrinsic "index".
   !
   function vstring_charindex ( this , substring , back ) result ( charindex )
-    type(t_vstring), intent(in)   :: this
-    type(t_vstring), intent(in)   :: substring
+    type ( t_vstring ) , intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: substring
     logical, intent(in), optional :: back
     integer :: charindex
 #ifdef _VSTRING_STATIC_BUFFER
@@ -2127,8 +2132,8 @@ contains
   !   This is a simple interface to the standard fortran intrinsic "scan".
   !
   function vstring_scan ( this , substring , back ) result ( charindex )
-    type(t_vstring), intent(in)   :: this
-    type(t_vstring), intent(in)   :: substring
+    type ( t_vstring ) , intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: substring
     logical, intent(in), optional :: back
     integer :: charindex
 #ifdef _VSTRING_STATIC_BUFFER
@@ -2167,8 +2172,8 @@ contains
   !   This is a simple interface to the standard fortran intrinsic "verify".
   !
   function vstring_verify ( this , substring , back ) result ( charindex )
-    type(t_vstring), intent(in)   :: this
-    type(t_vstring), intent(in)   :: substring
+    type ( t_vstring ) , intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: substring
     logical, intent(in), optional :: back
     integer :: charindex
 #ifdef _VSTRING_STATIC_BUFFER
@@ -2204,7 +2209,7 @@ contains
   !   This is a simple interface to the standard fortran intrinsic "adjustl".
   !
   function vstring_adjustl ( this ) result ( newstring )
-    type(t_vstring), intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: this
     type(t_vstring) :: newstring
 #ifdef _VSTRING_STATIC_BUFFER
     character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
@@ -2231,7 +2236,7 @@ contains
   !   This is a simple interface to the standard fortran intrinsic "adjustr".
   !
   function vstring_adjustr ( this ) result ( newstring )
-    type(t_vstring), intent(in)   :: this
+    type ( t_vstring ) , intent(in)   :: this
     type(t_vstring) :: newstring
 #ifdef _VSTRING_STATIC_BUFFER
     character ( len = VSTRING_BUFFER_SIZE ) :: this_charstring
@@ -2275,8 +2280,8 @@ contains
   !       This provides a way of avoiding the special interpretation of the characters *?[]\ in pattern.
   !
   recursive function vstring_match_vstring ( this , pattern , nocase ) result ( match )
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in) :: pattern
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in) :: pattern
     logical , intent(in) , optional :: nocase
     logical :: match
     logical :: equals
@@ -2516,7 +2521,7 @@ contains
   !   Interface to vstring_match_vstring to manage character strings.
   !
   recursive function vstring_match_charstring ( this , pattern , nocase ) result ( match )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character(len=*), intent(in) :: pattern
     logical , intent(in) , optional :: nocase
     logical :: match
@@ -2541,7 +2546,7 @@ contains
   !
   recursive function vstring_expandcharset ( this ) result ( expanded )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     type(t_vstring) :: expanded
     type(t_vstring) :: minus
     integer :: firstminus
@@ -2657,7 +2662,7 @@ contains
   !
   logical function vstring_is ( this , class , strict , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character(len=*), intent(in) :: class
     logical, intent(in) , optional :: strict
     integer, intent(out) , optional :: failindex
@@ -2747,7 +2752,7 @@ contains
   !
   logical function vstring_isdigit ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_DIGITS )
@@ -2760,7 +2765,7 @@ contains
   !
   logical function vstring_isinteger ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_DIGITS )
@@ -2774,7 +2779,7 @@ contains
   !
   logical function vstring_isalpha ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_LOWER )
@@ -2788,7 +2793,7 @@ contains
   !
   logical function vstring_isalnum ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_LOWER )
@@ -2803,7 +2808,7 @@ contains
   !
   logical function vstring_islogical ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     logical :: mylogical
     ! 7 is the largest possible length of a logical.
@@ -2824,7 +2829,7 @@ contains
   !
   logical function vstring_isreal ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     real :: mydata
 #ifdef _VSTRING_STATIC_BUFFER
@@ -2849,7 +2854,7 @@ contains
   !
   logical function vstring_istrue ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     logical :: mylogical
     character ( len = 7 ) :: logicalstring
@@ -2875,7 +2880,7 @@ contains
   !
   logical function vstring_isfalse ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     logical :: mylogical
     character ( len = 7 ) :: logicalstring
@@ -2900,7 +2905,7 @@ contains
   !
   logical function vstring_islower ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_LOWER )
@@ -2913,7 +2918,7 @@ contains
   !
   logical function vstring_isupper ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_UPPER )
@@ -2926,7 +2931,7 @@ contains
   !
   logical function vstring_isspace ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_WHITESPACE )
@@ -2939,7 +2944,7 @@ contains
   !
   logical function vstring_ispunct ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_PUNCTUATION )
@@ -2952,7 +2957,7 @@ contains
   !
   logical function vstring_isxdigit ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset , VSTRING_HEXDIGITS )
@@ -2965,7 +2970,7 @@ contains
   !
   logical function vstring_isascii ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     vstring_isascii = vstring_isinasciirange ( this , 0 , 127 , failindex )
   end function vstring_isascii
@@ -2977,7 +2982,7 @@ contains
   !
   logical function vstring_iscontrol ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     logical :: isinrange1
     logical :: isinrange2
@@ -3002,7 +3007,7 @@ contains
   !
   logical function vstring_isprint ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     vstring_isprint = vstring_isinasciirange ( this , 32 , 126 , failindex )
   end function vstring_isprint
@@ -3014,7 +3019,7 @@ contains
   !
   logical function vstring_isgraph ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     vstring_isgraph = vstring_isinasciirange ( this , 33 , 126 , failindex )
   end function vstring_isgraph
@@ -3024,7 +3029,7 @@ contains
   !
   logical function vstring_iswordchar ( this , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: failindex
     type(t_vstring) :: characterset
     call vstring_new ( characterset )
@@ -3050,8 +3055,8 @@ contains
   !
   logical function vstring_isincharset ( this , characterset , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
-    type(t_vstring), intent(in) :: characterset
+    type ( t_vstring ) , intent(in) :: this
+    type ( t_vstring ) , intent(in) :: characterset
     integer, intent(out), optional :: failindex
     integer :: icharacter
     integer :: length
@@ -3094,7 +3099,7 @@ contains
   !
   logical function vstring_isinasciirange ( this , asciimin , asciimax , failindex )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer , intent(in) :: asciimin , asciimax
     integer, intent(out), optional :: failindex
     integer :: icharacter
@@ -3138,7 +3143,7 @@ contains
   !   Returns the integer stored in the current string.
   !
   subroutine vstring_cast_tointeger ( this , value )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(out) :: value
     character ( len = 200 ) :: message
 #ifdef _VSTRING_STATIC_BUFFER
@@ -3168,7 +3173,7 @@ contains
   !   Returns the real stored in the current string.
   !
   subroutine vstring_cast_toreal ( this , value )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     real, intent(out) :: value
     character ( len = 200 ) :: message
 #ifdef _VSTRING_STATIC_BUFFER
@@ -3198,9 +3203,9 @@ contains
   !   Returns the double precision stored in the current string.
   !
   subroutine vstring_cast_todp ( this , value )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     double precision, intent(out) :: value
-    character ( len = 200 ) :: message
+    character ( len = 500 ) :: message
 #ifdef _VSTRING_STATIC_BUFFER
     character ( len = VSTRING_BUFFER_SIZE ) :: char_string
 #else
@@ -3282,7 +3287,7 @@ contains
   !
   subroutine vstring_check_index ( this , charIndex , origin , status )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     integer, intent(in)         :: charIndex
     character ( len = * ), intent(in), optional :: origin
     character ( len = 200 ) :: message
@@ -3328,7 +3333,7 @@ contains
   !   Check that the given string is correct and generates an error if not.
   !
   subroutine vstring_check_string ( this , origin , status )
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character ( len = 200) :: message
     character ( len = * ), intent(in), optional :: origin
     integer, intent(out), optional :: status
@@ -3356,7 +3361,7 @@ contains
   !
   subroutine vstring_error ( this , message , origin )
     implicit none
-    type(t_vstring), intent(in) :: this
+    type ( t_vstring ) , intent(in) :: this
     character ( len = * ), intent (in) :: message
     character ( len = * ), intent(in), optional :: origin
     integer :: length
