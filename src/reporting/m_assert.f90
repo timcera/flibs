@@ -37,6 +37,10 @@
 !   To control more precisely the behaviour of the m_assert component
 !   when an exception occurs, the user can directly configure m_exception.
 !
+! Copyright (c) 2008 Michael Baudin
+!
+! $Id$
+!
 module m_assert
   use m_exception, only : &
        exception_raiseError , &
