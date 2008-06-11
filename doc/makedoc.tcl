@@ -5,6 +5,11 @@
 
 package require doctools
 
+#
+# formatfile --
+#   Process the given manfile and generate the associated
+#   html file.
+#
 proc formatfile {manfile} {
     ::doctools::new mdt
     mdt configure -file $manfile
@@ -20,7 +25,11 @@ proc formatfile {manfile} {
     mdt destroy
     return $htmlfile
 }
-
+#
+# computefilename --
+#   Replace the extension in the given filename
+#   with the given new extension.
+#
 proc computefilename {filename newextension} {
     set lastdot [string last "." $filename]
     incr lastdot -1
@@ -29,6 +38,10 @@ proc computefilename {filename newextension} {
     return $newname
 }
 
+#
+# processall --
+#   Process all man files in the current directory.
+#
 proc processall {} {
     set manfiles [glob "*.man"]
     foreach filename $manfiles {
@@ -42,12 +55,25 @@ proc processall {} {
     }
     return ""
 }
+#
+# isuptodate --
+#   Returns 1 if the given man file is up-to-date,
+#   with respect to the associated htmlfile.
+#
 proc isuptodate {manfile} {
     set htmlfile [computefilename $manfile .html]
-    set time1 [file mtime $manfile]
-    set time2 [file mtime $htmlfile]
-    set result [expr {$time1< $time2}]
+    set fexists [file exists $htmlfile]
+    if {$fexists==0} then {
+        set result 0
+    } else {
+        set time1 [file mtime $manfile]
+        set time2 [file mtime $htmlfile]
+        set result [expr {$time1< $time2}]
+    }
     return $result
 }
+#
+# Executable part of the script.
+#
 processall
 

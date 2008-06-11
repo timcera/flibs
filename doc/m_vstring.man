@@ -1,6 +1,7 @@
 [comment {-*- flibs -*- doctools manpage}]
 [manpage_begin flibs/m_vstrings n 1.0]
 [copyright {2008 Michael Baudin michael.baudin@gmail.com}]
+[copyright {2008 Arjen Markus arjenmarkus@sourceforge.net}]
 [moddesc flibs]
 [titledesc {Processing strings}]
 
@@ -242,8 +243,18 @@ in the implementation of len = pure function value in IVF8.
    This module was originally based on the iso_varying_string.f90 module 
    by Rich Townsend.
 
-
 [section METHODS]
+
+In the following definitions, the [arg this] argument has, 
+depending on the method, one of the the following definitions :
+[list_begin arg]
+[arg_def "type ( t_vstring ) , intent(inout) ::" this]
+[list_end]
+[list_begin arg]
+[arg_def "type ( t_vstring ) , intent(in) ::" this]
+[list_end]
+The "intent(in)" or "intent(inout)" declaration depends on the 
+method and is what it is expected to be (if not, it is a bug).
 
 [list_begin definitions]
 
@@ -803,6 +814,9 @@ Example : If i is 64, then char is "@".
 
 
 [list_end]
+
+[section TODO]
+Refactor the component and use datastructures/vectors.f90
 
 
 

@@ -4,7 +4,7 @@
 </head>
 <! -- Generated from file 'm_vstring.man' by tcllib/doctools with format 'html'
    -->
-<! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com
+<! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com   -- Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net
    -->
 <! -- CVS: $Id$ flibs/m_vstrings.n
    -->
@@ -14,6 +14,7 @@
 <h2><a name="name">NAME</a></h2>
 <p>
 <p> flibs/m_vstrings - Processing strings
+
 
 
 
@@ -37,6 +38,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#methods">METHODS</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#interface_to_standard_fortran">INTERFACE TO STANDARD FORTRAN</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#static_methods">STATIC METHODS</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#todo">TODO</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
 <h2><a name="synopsis">SYNOPSIS</a></h2>
 <p>
@@ -354,9 +356,19 @@ in the implementation of len = pure function value in IVF8.
    This module was originally based on the iso_varying_string.f90 module 
    by Rich Townsend.
 
-
 <h2><a name="methods">METHODS</a></h2>
 <p>
+
+In the following definitions, the <i class='arg'>this</i> argument has, 
+depending on the method, one of the the following definitions :
+<dl>
+<dt>type ( t_vstring ) , intent(inout) :: <i class='arg'>this</i><dd>
+</dl>
+<dl>
+<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>this</i><dd>
+</dl>
+The &quot;intent(in)&quot; or &quot;intent(inout)&quot; declaration depends on the 
+method and is what it is expected to be (if not, it is a bug).
 
 <dl>
 
@@ -1046,10 +1058,15 @@ Example : If i is 64, then char is &quot;@&quot;.
 
 </dl>
 
+<h2><a name="todo">TODO</a></h2>
+<p>
+Refactor the component and use datastructures/vectors.f90
+
 
 
 
 <h2><a name="copyright">COPYRIGHT</a></h2>
 <p>
 Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com<br>
+Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net<br>
 </body></html>
