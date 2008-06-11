@@ -1,9 +1,10 @@
 !
 ! m_vstring --
-!   This module provides services to manage strings of dynamic length.
+!   This module provides OO services to manage strings of dynamic length.
 !   The goal of the current component is to provide higher-level
-!   services that the standard fortran currently provides,
-!   considering Tcl as a model for string management.
+!   services that the standard fortran currently provides.
+!   The component provides methods which mimic the services 
+!   available in the Tcl language.
 !   It provides string comparison, string search and string 
 !   matching methods.
 !   See in test_m_vstring to see a complete example of the 
@@ -175,6 +176,16 @@
 !   by the compiler at hand. For example, problems with the dynamic 
 !   length character string have been experienced with Intel Fortran 8.
 !
+!   Design
+!   This component has been designed with OO principles in mind.
+!   This is why the first argument of every method is named "this",
+!   which is the current object.
+!   If another string is required as a second argument, it may be either 
+!   of type dynamic or as a character(len=*) type, to improve
+!   usability.
+!   This component is meant to evolve following the fortran 2003 standard 
+!   and OO type-bound procedures.
+!
 !   Limitations
 !     - No regular expression algorithm is provided.
 !       But vstring_match allows to do string matching in glob-style.
@@ -192,6 +203,13 @@
 !   The following preprocessing macro must be considered :
 !   _VSTRING_STATIC_BUFFER : see  the section "Dynamic or static buffer"
 !   _VSTRING_ALLOCATABLE or _VSTRING_POINTER : see the section "Allocatable or pointer"
+!
+!   History
+!   This module was originally based on the iso_varying_string.f90 module 
+!   by Rich Townsend.
+!
+!   TODO
+!   - Refactor the component and use datastructures/vectors.f90
 !
 ! ******************************************************************************
 ! *                                                                            *
@@ -224,7 +242,8 @@
 ! *                                                                            *
 ! ******************************************************************************
 !
-! Copyright (c) 2008 Michael Baudin
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
+! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
 !
 ! $Id$
 !
@@ -709,21 +728,21 @@ contains
   end function vstring_exists
   !
   ! vstring_equals_vstring --
-  !   Perform a character-by-character comparison of strings string1 and string2.
+  !   Perform a character-by-character comparison of strings this and string2.
   !   Returns true if this and string2 are identical, or .false when not.
   !   If nocase is set to true, the case of the characters is not taken into account.
   !   The default behaviour is to take into account for case of characters.
   !   If length is specified, then only the first length characters are used in the comparison.
   !
-  function vstring_equals_vstring ( this , string_b , nocase , length ) result (op_eq)
+  function vstring_equals_vstring ( this , string2 , nocase , length ) result (op_eq)
     type ( t_vstring ) , intent(in) :: this
-    type ( t_vstring ) , intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: string2
     logical , intent (in), optional :: nocase
     integer , intent ( in ), optional :: length
     logical                          :: op_eq
     logical :: nocase_real
-    integer :: length_a
-    integer :: length_b
+    integer :: length1
+    integer :: length2
     integer :: icharacter
     type(t_vstring) :: char1
     type(t_vstring) :: char2
@@ -738,7 +757,7 @@ contains
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
-    call vstring_check_string ( string_b , "vstring_equals" , status )
+    call vstring_check_string ( string2 , "vstring_equals" , status )
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
@@ -753,9 +772,9 @@ contains
     !
     ! If the length parameter is here, it must be consistent with both strings lengths
     !
-    length_a = vstring_length ( this )
-    length_b = vstring_length ( string_b )
-    length_min = min ( length_a , length_b )
+    length1 = vstring_length ( this )
+    length2 = vstring_length ( string2 )
+    length_min = min ( length1 , length2 )
     if ( present ( length ) ) then
        if ( length > length_min ) then
           write ( message , * ) "The given number of characters to compare ", length ,&
@@ -772,7 +791,7 @@ contains
     !
     op_eq = .true.
     if ( .NOT. present ( length ) ) then
-       if (length_a/=length_b) then
+       if (length1/=length2) then
           op_eq = .false.
        endif
     endif
@@ -786,7 +805,7 @@ contains
           ! Compute the character at index #icharacter, with modified case if necessary.
           !
           char1 = vstring_index ( this , icharacter )
-          char2 = vstring_index ( string_b , icharacter )
+          char2 = vstring_index ( string2 , icharacter )
           if ( nocase_real ) then
              char1_case = vstring_tolower ( char1 )
              char2_case = vstring_tolower ( char2 )
@@ -814,23 +833,24 @@ contains
   ! vstring_equals_charstring --
   !   Interface to vstring_equals_vstring to manage character string.
   !
-  function vstring_equals_charstring ( this , string_b , nocase , length ) result (op_eq)
+  function vstring_equals_charstring ( this , string2 , nocase , length ) result (op_eq)
     type ( t_vstring ) , intent(in) :: this
-    character(len=*), intent(in) :: string_b
+    character(len=*), intent(in) :: string2
     logical , intent ( in ), optional :: nocase
     integer , intent ( in ), optional :: length
     logical                          :: op_eq
-    type(t_vstring) :: vstring_b
-    call vstring_new ( vstring_b , string_b )
-    op_eq = vstring_equals_vstring ( this , vstring_b , nocase , length )
-    call vstring_free ( vstring_b )
+    type(t_vstring) :: vstring2
+    call vstring_new ( vstring2 , string2 )
+    op_eq = vstring_equals_vstring ( this , vstring2 , nocase , length )
+    call vstring_free ( vstring2 )
   end function vstring_equals_charstring
   !
   ! vstring_cast_charstringfixed --
   !   Convert a varying string into a character string
   !   (fixed length)
-  !   If the number of characters is not sufficient, the 
-  !   string is truncated.
+  !   If the number of characters in the target charstring 
+  !   is not large enough, the target charstring is truncated, that is, 
+  !   contains only the first characters of the current dynamic string.
   !
   subroutine vstring_cast_charstringfixed ( this , length , char_string )
     type ( t_vstring ) , intent(in) :: this
@@ -853,8 +873,9 @@ contains
   ! vstring_cast_charstringauto --
   !   Convert a varying string into a character string
   !   (automatic length)
-  !   If the number of characters is not sufficient, the 
-  !   string is truncated.
+  !   If the number of characters in the target charstring 
+  !   is not large enough, the target charstring is truncated, that is, 
+  !   contains only the first characters of the current dynamic string.
   !
   subroutine vstring_cast_charstringauto ( this , char_string )
     type ( t_vstring ) , intent(in) :: this
@@ -881,8 +902,98 @@ contains
     end do
   end subroutine vstring_cast_charstringauto
   !
+  ! vstring_cast_tointeger --
+  !   Returns the integer stored in the current string.
+  !
+  subroutine vstring_cast_tointeger ( this , value )
+    type ( t_vstring ) , intent(in) :: this
+    integer, intent(out) :: value
+    character ( len = 200 ) :: message
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
+#else
+    character ( len = vstring_length ( this ) ) :: char_string
+#endif
+    logical :: hastype
+    hastype = vstring_is ( this , "integer" )
+    if ( .NOT. hastype ) then
+       write ( message , * ) "Current string is not an integer in vstring_cast_tointeger"
+       call vstring_error ( this , message )
+    else
+       call vstring_cast ( this , char_string )
+       read ( char_string , * , err = 100 , end = 100) value
+    endif
+    return
+100 continue
+    !
+    ! An error was generated while reading in buffer.
+    !
+    write ( message , * ) "The string could not be converted to integer in vstring_cast_tointeger"
+    call vstring_error ( this , message )
+  end subroutine vstring_cast_tointeger
+  !
+  ! vstring_cast_toreal --
+  !   Returns the real stored in the current string.
+  !
+  subroutine vstring_cast_toreal ( this , value )
+    type ( t_vstring ) , intent(in) :: this
+    real, intent(out) :: value
+    character ( len = 200 ) :: message
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
+#else
+    character ( len = vstring_length ( this ) ) :: char_string
+#endif
+    logical :: hastype
+    hastype = vstring_is ( this , "real" )
+    if ( .NOT. hastype ) then
+       write ( message , * ) "Current string is not a real in vstring_cast_toreal"
+       call vstring_error ( this , message )
+    else
+       call vstring_cast ( this , char_string )
+       read ( char_string , * , err = 100 , end = 100) value
+    endif
+    return
+100 continue
+    !
+    ! An error was generated while reading in buffer.
+    !
+    write ( message , * ) "The string could not be converted to real in vstring_cast_toreal"
+    call vstring_error ( this , message )
+  end subroutine vstring_cast_toreal
+  !
+  ! vstring_cast_todp --
+  !   Returns the double precision stored in the current string.
+  !
+  subroutine vstring_cast_todp ( this , value )
+    type ( t_vstring ) , intent(in) :: this
+    double precision, intent(out) :: value
+    character ( len = 500 ) :: message
+#ifdef _VSTRING_STATIC_BUFFER
+    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
+#else
+    character ( len = vstring_length ( this ) ) :: char_string
+#endif
+    logical :: hastype
+    hastype = vstring_is ( this , "real" )
+    if ( .NOT. hastype ) then
+       write ( message , * ) "Current string is not a real in vstring_cast_toreal"
+       call vstring_error ( this , message )
+    else
+       call vstring_cast ( this , char_string )
+       read ( char_string , * , err = 100 , end = 100) value
+    endif
+    return
+100 continue
+    !
+    ! An error was generated while reading in buffer.
+    !
+    write ( message , * ) "The string could not be converted to real in vstring_cast_toreal"
+    call vstring_error ( this , message )
+  end subroutine vstring_cast_todp
+  !
   ! vstring_length --
-  !   Compute the length of a varying string
+  !   Returns the length of the current dynamic string.
   !
   pure function vstring_length ( this ) result (length)
     type ( t_vstring ) , intent(in) :: this
@@ -902,11 +1013,11 @@ contains
   end function vstring_length
   !
   ! vstring_concat_vstring --
-  !   Returns a new string made by the concatenation of two varying strings.
+  !   Returns a new string made by the concatenation of two dynamic strings.
   !
-  function vstring_concat_vstring ( this , string_b ) result (concat_string)
+  function vstring_concat_vstring ( this , string2 ) result (concat_string)
     type ( t_vstring ) , intent(in) :: this
-    type ( t_vstring ) , intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: string2
     type(t_vstring)             :: concat_string
     integer                          :: len_string_a
     integer :: concat_length
@@ -915,44 +1026,46 @@ contains
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
-    call vstring_check_string ( string_b , "vstring_concat" , status )
+    call vstring_check_string ( string2 , "vstring_concat" , status )
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
     len_string_a = vstring_length(this)
-    concat_length = len_string_a+vstring_length(string_b)
+    concat_length = len_string_a+vstring_length(string2)
     call vstring_new ( concat_string , concat_length )
     concat_string % chars(:len_string_a) = this%chars
-    concat_string % chars(len_string_a+1:) = string_b%chars
+    concat_string % chars(len_string_a+1:) = string2%chars
   end function vstring_concat_vstring
   !
   ! vstring_concat_charstring --
   !   Interface to vstring_concat_vstring to manage character strings
   !
-  function vstring_concat_charstring ( this , string_b ) result (concat_string)
+  function vstring_concat_charstring ( this , string2 ) result (concat_string)
     type ( t_vstring ) , intent(in) :: this
-    character(len=*), intent(in) :: string_b
+    character(len=*), intent(in) :: string2
     type(t_vstring)             :: concat_string
-    type(t_vstring) :: vstring_b
-    call vstring_new ( vstring_b , string_b )
-    concat_string = vstring_concat_vstring ( this , vstring_b )
-    call vstring_free ( vstring_b )
+    type(t_vstring) :: vstring2
+    call vstring_new ( vstring2 , string2 )
+    concat_string = vstring_concat_vstring ( this , vstring2 )
+    call vstring_free ( vstring2 )
   end function vstring_concat_charstring
   !
   ! vstring_compare_vstring --
-  !   Perform a character-by-character comparison of strings string1 and string2.
-  !   Returns -1, 0, or 1, depending on whether string1 is lexicographically less
+  !   Perform a character-by-character comparison of strings this and string2.
+  !   Returns -1, 0, or 1, depending on whether this is lexicographically less
   !   than, equal to, or greater than string2.
-  !   If -length is specified, then only the first length characters are used in the comparison.
+  !   If nocase is set to true, the case of the characters is not taken into account.
+  !   The default behaviour is to take into account for case of characters.
+  !   If length is specified, then only the first length characters are used in the comparison.
   !
-  function vstring_compare_vstring ( this , string_b , nocase , length ) result ( compare )
+  function vstring_compare_vstring ( this , string2 , nocase , length ) result ( compare )
     type ( t_vstring ) , intent(in) :: this
-    type ( t_vstring ) , intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: string2
     logical , intent (in), optional :: nocase
     integer , intent ( in ), optional :: length
     integer                     :: compare
     integer :: common_length
-    integer :: length_this , length_b
+    integer :: length_this , length2
     integer :: icharacter
     logical :: comparison_done
     logical :: nocase_real
@@ -974,7 +1087,7 @@ contains
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
-    call vstring_check_string ( string_b , "vstring_compare" , status )
+    call vstring_check_string ( string2 , "vstring_compare" , status )
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
@@ -982,8 +1095,8 @@ contains
     ! Initialize
     !
     length_this = vstring_length ( this )
-    length_b = vstring_length ( string_b )
-    common_length = min ( length_this , length_b )
+    length2 = vstring_length ( string2 )
+    common_length = min ( length_this , length2 )
     comparison_done = .false.
     !
     ! If the length optional parameter is given, reduce the number of characters which are compared.
@@ -1004,7 +1117,7 @@ contains
        ! Compute the character at index #icharacter, with modified case if necessary.
        !
        char1 = vstring_index ( this , icharacter )
-       char2 = vstring_index ( string_b , icharacter )
+       char2 = vstring_index ( string2 , icharacter )
        if ( nocase_real ) then
           char1_case = vstring_tolower ( char1 )
           char2_case = vstring_tolower ( char2 )
@@ -1042,9 +1155,9 @@ contains
           ! proved that all characters from 1 to length are equal.
           compare = VSTRING_COMPARE_EQUAL
        else
-          if ( length_this == length_b ) then
+          if ( length_this == length2 ) then
              compare = VSTRING_COMPARE_EQUAL
-          elseif ( length_this > length_b ) then
+          elseif ( length_this > length2 ) then
              compare = VSTRING_COMPARE_GREATER
           else
              compare = VSTRING_COMPARE_LOWER
@@ -1056,16 +1169,16 @@ contains
   ! vstring_compare_charstring --
   !   Interface to vstring_compare_vstring to manage character string.
   !
-  function vstring_compare_charstring ( this , string_b , nocase , length ) result ( compare )
+  function vstring_compare_charstring ( this , string2 , nocase , length ) result ( compare )
     type ( t_vstring ) , intent(in) :: this
-    character (len=*), intent(in) :: string_b
+    character (len=*), intent(in) :: string2
     logical , intent ( in ), optional :: nocase
     integer , intent ( in ), optional :: length
     integer                     :: compare
-    type(t_vstring) :: vstring_b
-    call vstring_new ( vstring_b , string_b )
-    compare = vstring_compare_vstring ( this , vstring_b , nocase , length )
-    call vstring_free ( vstring_b )
+    type(t_vstring) :: vstring2
+    call vstring_new ( vstring2 , string2 )
+    compare = vstring_compare_vstring ( this , vstring2 , nocase , length )
+    call vstring_free ( vstring2 )
   end function vstring_compare_charstring
   !
   ! vstring_trim_vstring --
@@ -1718,7 +1831,7 @@ contains
   end function vstring_reverse
   !
   ! vstring_random --
-  !   Fill a string with a random sequence of letters
+  !   Fill a string with required length and randomized characters.
   ! Arguments:
   !   length : the length of the random string to compute.
   ! Result:
@@ -1836,42 +1949,42 @@ contains
   !
   ! vstring_append_vstring --
   !   Append the given string at the end of the current string.
-  !   If the given string (string_b) is of length greater than zero,
+  !   If the given string (string2) is of length greater than zero,
   !   that means that the length of the current string will be greater
   !   after the call to vstring_append.
   ! Note
   !   That method can be called as a convenient alternative to vstring_concat,
   !   when the concat is to be done "in place".
   !
-  subroutine vstring_append_vstring ( this , string_b )
+  subroutine vstring_append_vstring ( this , string2 )
     type ( t_vstring ) , intent(inout) :: this
-    type ( t_vstring ) , intent(in) :: string_b
+    type ( t_vstring ) , intent(in) :: string2
     type(t_vstring) :: old_string
     integer :: status
     call vstring_check_string ( this , "vstring_append_vstring" , status )
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
-    call vstring_check_string ( string_b , "vstring_append_vstring" , status )
+    call vstring_check_string ( string2 , "vstring_append_vstring" , status )
     if ( status /= VSTRING_ERROR_OK ) then
        return
     endif
     call vstring_new ( old_string , this )
     call vstring_free ( this )
-    this = vstring_concat ( old_string , string_b )
+    this = vstring_concat ( old_string , string2 )
     call vstring_free ( old_string )
   end subroutine vstring_append_vstring
   !
   ! vstring_append_charstring --
   !   Interface to manage character strings
   !
-  subroutine vstring_append_charstring ( this , string_b )
+  subroutine vstring_append_charstring ( this , string2 )
     type ( t_vstring ) , intent(inout) :: this
-    character(len=*), intent(in) :: string_b
-    type(t_vstring) :: vstring_b
-    call vstring_new ( vstring_b , string_b )
-    call vstring_append_vstring ( this , vstring_b )
-    call vstring_free ( vstring_b )
+    character(len=*), intent(in) :: string2
+    type(t_vstring) :: vstring2
+    call vstring_new ( vstring2 , string2 )
+    call vstring_append_vstring ( this , vstring2 )
+    call vstring_free ( vstring2 )
   end subroutine vstring_append_charstring
   !
   ! vstring_map --
@@ -2085,9 +2198,9 @@ contains
   end function vstring_replace
   !
   ! vstring_charindex --
-  !   Returns the position of the start of the first occurrence of string SUBSTRING
-  !   as a substring in the current string, counting from one. If SUBSTRING is not present
-  !   in the current string, zero is returned. If the BACK argument is present and true, the
+  !   Returns the position of the start of the first occurrence of string substring
+  !   as a sub-string in the current string, counting from one. If substring is not present
+  !   in the current string, zero is returned. If the back argument is present and true, the
   !   return value is the start of the last occurrence rather than the first.
   ! Note :
   !   This is a simple interface to the standard fortran intrinsic "index".
@@ -3138,96 +3251,6 @@ contains
        endif
     endif
   end function vstring_isinasciirange
-  !
-  ! vstring_cast_tointeger --
-  !   Returns the integer stored in the current string.
-  !
-  subroutine vstring_cast_tointeger ( this , value )
-    type ( t_vstring ) , intent(in) :: this
-    integer, intent(out) :: value
-    character ( len = 200 ) :: message
-#ifdef _VSTRING_STATIC_BUFFER
-    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
-#else
-    character ( len = vstring_length ( this ) ) :: char_string
-#endif
-    logical :: hastype
-    hastype = vstring_is ( this , "integer" )
-    if ( .NOT. hastype ) then
-       write ( message , * ) "Current string is not an integer in vstring_cast_tointeger"
-       call vstring_error ( this , message )
-    else
-       call vstring_cast ( this , char_string )
-       read ( char_string , * , err = 100 , end = 100) value
-    endif
-    return
-100 continue
-    !
-    ! An error was generated while reading in buffer.
-    !
-    write ( message , * ) "The string could not be converted to integer in vstring_cast_tointeger"
-    call vstring_error ( this , message )
-  end subroutine vstring_cast_tointeger
-  !
-  ! vstring_cast_toreal --
-  !   Returns the real stored in the current string.
-  !
-  subroutine vstring_cast_toreal ( this , value )
-    type ( t_vstring ) , intent(in) :: this
-    real, intent(out) :: value
-    character ( len = 200 ) :: message
-#ifdef _VSTRING_STATIC_BUFFER
-    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
-#else
-    character ( len = vstring_length ( this ) ) :: char_string
-#endif
-    logical :: hastype
-    hastype = vstring_is ( this , "real" )
-    if ( .NOT. hastype ) then
-       write ( message , * ) "Current string is not a real in vstring_cast_toreal"
-       call vstring_error ( this , message )
-    else
-       call vstring_cast ( this , char_string )
-       read ( char_string , * , err = 100 , end = 100) value
-    endif
-    return
-100 continue
-    !
-    ! An error was generated while reading in buffer.
-    !
-    write ( message , * ) "The string could not be converted to real in vstring_cast_toreal"
-    call vstring_error ( this , message )
-  end subroutine vstring_cast_toreal
-  !
-  ! vstring_cast_todp --
-  !   Returns the double precision stored in the current string.
-  !
-  subroutine vstring_cast_todp ( this , value )
-    type ( t_vstring ) , intent(in) :: this
-    double precision, intent(out) :: value
-    character ( len = 500 ) :: message
-#ifdef _VSTRING_STATIC_BUFFER
-    character ( len = VSTRING_BUFFER_SIZE ) :: char_string
-#else
-    character ( len = vstring_length ( this ) ) :: char_string
-#endif
-    logical :: hastype
-    hastype = vstring_is ( this , "real" )
-    if ( .NOT. hastype ) then
-       write ( message , * ) "Current string is not a real in vstring_cast_toreal"
-       call vstring_error ( this , message )
-    else
-       call vstring_cast ( this , char_string )
-       read ( char_string , * , err = 100 , end = 100) value
-    endif
-    return
-100 continue
-    !
-    ! An error was generated while reading in buffer.
-    !
-    write ( message , * ) "The string could not be converted to real in vstring_cast_toreal"
-    call vstring_error ( this , message )
-  end subroutine vstring_cast_todp
   !
   ! TODO :
   ! vstring_read --

@@ -1,6 +1,6 @@
 !
 ! m_vstringlist.f90
-!   This module provides services to manage lists of 
+!   This module provides OO services to manage lists of 
 !   vstrings.
 !
 !   A list of strings can be created with vstrlist_new and 
@@ -62,6 +62,24 @@
 !
 !     list2 = vstrlist_search ( list , "fortran 9*" )
 !
+!   Design
+!   This component has been designed with OO principles in mind.
+!   This is why the first argument of every method is named "this",
+!   which is the current object.
+!   If another string is required as a second argument, it may be either 
+!   of type dynamic or as a character(len=*) type, to improve
+!   usability.
+!   This component is meant to evolve following the fortran 2003 standard 
+!   and OO type-bound procedures.
+!
+!   Preprocessing
+!   The following preprocessing macro must be considered :
+!   _VSTRINGLIST_ALLOCATABLE or _VSTRINGLIST_POINTER : see the section 
+!     "Allocatable or pointer" in the documentation of the m_vstring module.
+!
+!   TODO
+!   - Refactor the component and use datastructures/vectors.f90
+! 
 ! Copyright (c) 2008 Michael Baudin
 !   
 module m_vstringlist
@@ -232,7 +250,8 @@ module m_vstringlist
 contains
   !
   ! vstrlist_new_from_empty --
-  !   Constructor for an empty list of strings
+  !   Creates a new empty list of strings, that is, a list with 
+  !   0 strings.
   !
   subroutine vstrlist_new_from_empty ( this )
     type ( t_vstringlist ) , intent(inout) :: this
@@ -244,7 +263,7 @@ contains
   end subroutine vstrlist_new_from_empty
   !
   ! vstrlist_new_from_string --
-  !   Constructor from one vstring
+  !   Creates a new string list from one vstring
   !
   subroutine vstrlist_new_from_string ( this , string )
     type ( t_vstringlist ) , intent(inout) :: this
@@ -258,7 +277,7 @@ contains
   end subroutine vstrlist_new_from_string
   !
   ! vstrlist_new_from_charstring --
-  !   Constructor from one character string
+  !   Creates a new string list from one character string
   !
   subroutine vstrlist_new_from_charstring ( this , string )
     type ( t_vstringlist ) , intent(inout) :: this
@@ -270,7 +289,8 @@ contains
   end subroutine vstrlist_new_from_charstring
   !
   ! vstrlist_new_from_array --
-  !   Constructor from an array of vstrings
+  !   Creates a new string list from an array of vstrings.
+  !   The number of elements in the new string list is the length of the array.
   !
   subroutine vstrlist_new_from_array ( this , array )
     type ( t_vstringlist ) , intent(inout) :: this
@@ -289,7 +309,8 @@ contains
   end subroutine vstrlist_new_from_array
   !
   ! vstrlist_new_from_list --
-  !   Constructor from a list of vstrings
+  !   Creates a new string list with from the existing list of strings "list".
+  !   This implements the copy of a list of strings.
   !
   subroutine vstrlist_new_from_list ( this , list )
     type ( t_vstringlist ) , intent(inout) :: this
@@ -316,7 +337,7 @@ contains
   end subroutine vstrlist_new_from_list
   !
   ! vstrlist_new_from_integer --
-  !   Constructor for list of n empty strings
+  !   Creates a new string list made of "length" empty strings.
   !
   subroutine vstrlist_new_from_integer ( this , length )
     type ( t_vstringlist ) , intent(inout) :: this
@@ -380,7 +401,8 @@ contains
   end function vstrlist_reference_get
   !
   ! vstrlist_length --
-  !   Returns the number of elements in the list.
+  !   Returns the length, that is, the number of strings, in the current
+  !   list of strings.
   !
   integer function vstrlist_length ( this )
     type ( t_vstringlist ) , intent(in) :: this
@@ -388,7 +410,7 @@ contains
   end function vstrlist_length
   !
   ! vstrlist_exists --
-  !   Returns .true. if the current list has been created.
+  !   Returns .true. if the string list has allready been created.
   !
   logical function vstrlist_exists ( this )
     type ( t_vstringlist ) , intent(in) :: this
@@ -401,13 +423,15 @@ contains
   end function vstrlist_exists
   !
   ! vstrlist_index --
-  !   Creates a new vstring by getting the vstring at the given index in the list.
-  !   Generates an error if the given index does not exist.
+  !   Returns a new vstring by getting the vstring at the given index "icomponent" 
+  !   in the list.
+  !   Generates an error if the given index "icomponent" does not exist, that is,
+  !   is lower than 1 or greater than the number of strings in the list.
   !
   function vstrlist_index ( this , icomponent ) result ( newstring )
     type ( t_vstringlist ) , intent(in) :: this
+    integer , intent(in) :: icomponent
     type ( t_vstring ) :: newstring
-    integer :: icomponent
     integer :: status
     character ( len = 500 ) :: message
     call vstrlist_checkindex ( this , icomponent , status )
@@ -458,7 +482,7 @@ contains
   end subroutine vstrlist_append_list
   !
   ! vstrlist_concat_string --
-  !   Creates a new list by concatenating the current list to the given string.
+  !   Returns a new list by concatenating the current list to the given string.
   ! Arguments
   !   string : the string to be concatenated
   !   newlist : the concatenated list
@@ -549,7 +573,7 @@ contains
   function vstrlist_insert_string ( this , strindex, string ) result ( newlist )
     type ( t_vstringlist ) , intent(in) :: this
     type ( t_vstring ) , intent(in) :: string
-    integer , intent ( in ) :: strindex
+    integer , intent (in) :: strindex
     type ( t_vstringlist ) :: newlist
     ! Local variables
     integer :: newlength
@@ -605,7 +629,7 @@ contains
   end function vstrlist_insert_charstring
   !
   ! vstrlist_range --
-  !   Creates a new list by extracting items of index  
+  !   Returns a new list by extracting items of index  
   !   from first and last (included).
   ! Arguments
   !   first : the index of the first element to include
@@ -644,40 +668,41 @@ contains
   end function vstrlist_range
   !
   ! vstrlist_set_vstring --
-  !   Set the newstring vstring argument at the given strindex,
+  !   Set the vstring "string" at the given "strindex" in the list,
   !   replacing the existing vstring by the new one.
   ! Arguments
   !   strindex : the index where to put the new string
-  !   newstring : the new string
+  !   string : the new string
   !
-  subroutine vstrlist_set_vstring ( this , strindex , newstring )
+  subroutine vstrlist_set_vstring ( this , strindex , string )
     type ( t_vstringlist ) , intent(inout) :: this
     integer , intent(in) :: strindex
-    type ( t_vstring ) , intent(in) :: newstring
+    type ( t_vstring ) , intent(in) :: string
     integer :: status
     call vstrlist_checkindex ( this , strindex , status )
     if ( status /= VSTRINGLIST_ERROR_OK ) then
        return
     endif
     call vstring_free ( this % array ( strindex ) )
-    call vstring_new ( this % array ( strindex ) , newstring )
+    call vstring_new ( this % array ( strindex ) , string )
   end subroutine vstrlist_set_vstring
   !
   ! vstrlist_set_charstring --
-  !   Interface to vstrlist_set_vstring to manage character strings.
+  !   Set the character(len=*) "string" at the given "strindex" in the list,
+  !   replacing the existing vstring by the new one.
   !
-  subroutine vstrlist_set_charstring ( this , strindex , newstring )
+  subroutine vstrlist_set_charstring ( this , strindex , string )
     type ( t_vstringlist ) , intent(inout) :: this
     integer , intent(in) :: strindex
-    character(len=*) , intent(in) :: newstring
+    character(len=*) , intent(in) :: string
     type ( t_vstring ) :: newvstring
-    call vstring_new ( newvstring , newstring )
+    call vstring_new ( newvstring , string )
     call vstrlist_set_vstring ( this , strindex , newvstring )
     call vstring_free ( newvstring )
   end subroutine vstrlist_set_charstring
   !
   ! vstrlist_split_vstring --
-  !   Computes an list of vstrings whose elements are the components in the current string.
+  !   Returns an list of vstrings whose elements are the components in the current string.
   !   Returns a list of vstrings created by splitting string at each character that is in 
   !   the splitChars argument. Each element of the result array will consist of 
   !   the characters from string that lie between instances of the characters in 
@@ -765,7 +790,7 @@ contains
   end function vstrlist_split_vstring
   !
   ! vstrlist_split_vstring --
-  !   Interface to vstrlist_split_vstring to manage character strings
+  !   Same as previous but with character(len=*) [arg splitChars].
   !
   function vstrlist_split_charstring ( this , splitChars ) result ( newlist )
     implicit none
@@ -779,7 +804,7 @@ contains
   end function vstrlist_split_charstring
   !
   ! vstrlist_join_vstring --
-  !   This command returns the string formed by joining all 
+  !   Returns the string formed by joining all 
   !   of the elements of list together with joinString separating 
   !   each adjacent pair of elements. 
   !   The joinString argument defaults to a space character.
@@ -828,7 +853,7 @@ contains
   end function vstrlist_join_vstring
   !
   ! vstrlist_join_charstring --
-  !   Interface to vstrlist_join to manage char strings
+  !   Same as previous but with character(len=*) joinString.
   !
   function vstrlist_join_charstring ( this , joinString ) result ( newstring )
     implicit none
@@ -849,9 +874,12 @@ contains
   !   pattern : the pattern against which the items of the list are compared.
   !   first : If the optional argument "first" is provided, then the list is searched 
   !     starting at position first.
+  !     Default value of first is 1
   !   notmatch : If the optional argument "notmatch" is provided, this negates the sense 
   !     of the match, returning the index of the first non-matching value in the list.
-  !   exact : The list element must contain exactly the same string as pattern.
+  !     Default value of notmatch is .false.
+  !   exact : Set to true so that the list element must contain exactly the same string as pattern.
+  !     Default value of exact is .false.
   ! TODO :
   !    -ascii
   !    -decreasing
@@ -927,7 +955,7 @@ contains
   end function vstrlist_search_vstring
   !
   ! vstrlist_search_charstring --
-  !   Interface to vstrlist_search_vstring to manage character string pattern
+  !   Same as previous with character (len=*) "pattern".
   !
   function vstrlist_search_charstring ( this , pattern , first , notmatch , &
        exact ) result ( strindex )
@@ -947,7 +975,7 @@ contains
   ! vstrlist_lsearch_vstring --
   !   This command searches the elements of list to see if one of them matches 
   !   pattern. If so, the command returns the list of the first matching element.
-  !   If not, the command returns 0.
+  !   If not, the command returns an empty list.
   ! Arguments
   !   pattern : the pattern against which the items of the list are compared.
   !   first : If the optional argument "first" is provided, then the list is searched 
@@ -956,6 +984,7 @@ contains
   !     of the match, returning the index of the first non-matching value in the list.
   !   exact : The list element must contain exactly the same string as pattern.
   !   allitems : If provided and true, returns the list of all matching elements.
+  !      Default value of "allitems" is .false.
   ! TODO :
   !    -ascii
   !    -decreasing
@@ -1020,7 +1049,7 @@ contains
   end function vstrlist_lsearch_vstring
   !
   ! vstrlist_lsearch_charstring --
-  !   Interface to vstrlist_lsearch_vstring to manage character string pattern
+  !   Same as previous with character(len=*) "pattern".
   !
   function vstrlist_lsearch_charstring ( this , pattern , first , notmatch , &
        exact , allitems ) result ( newlist )
@@ -1046,12 +1075,12 @@ contains
 #include "qsortarray_template.f90"
   !
   ! vstrlist_sort_basic --
-  !   Sort the elements of a list.
-  !   This command sorts the elements of list, returning a new list in sorted order.
+  !   This command sorts the elements of list and returns a new list in sorted order.
   ! Arguments
   !   increasing, optional : If provided and true or not provided, sort the list in increasing order 
   !     (``smallest'' items first).
   !     If provided and false, sort the list in decreasing order (``largest'' items first).
+  !     Default value of "increasing" is true.
   !   classtype, optional : 
   !     If provided, converts the items of the list into that class of data before comparing 
   !     the items. The possible values of classtype are :
@@ -1068,9 +1097,9 @@ contains
   !
   function vstrlist_sort_basic ( this , increasing , classtype , unique ) result ( newlist )
     type ( t_vstringlist ) , intent(in) :: this
-    logical, optional , intent(in) :: increasing
-    character(len=*), optional , intent(in) :: classtype
-    logical, optional , intent(in) :: unique
+    logical , intent(in), optional :: increasing
+    character(len=*) , intent(in), optional :: classtype
+    logical , intent(in), optional :: unique
     type ( t_vstringlist ) :: newlist
     logical :: increasing_real
     character(len=200) :: classtype_real
@@ -1148,10 +1177,11 @@ contains
   end function vstrlist_sort_basic
   !
   ! vstrlist_sort_command --
-  !   Sort the elements of a list.
-  !   This command sorts the elements of list, returning a new list in sorted order.
+  !   This command sorts the elements of list and returns a new list in sorted order.
   ! Arguments
   !   command : use that function as a comparison function.
+  !     The command is expected to return -1, 0, or 1, depending on whether 
+  !     string_a is lexicographically less than, equal to, or greater than string_b.
   !   unique, optional :: if provided and true, then only the last set of duplicate 
   !     elements found in the list will be retained. Note that duplicates are 
   !     determined relative to the comparison used in the sort.
