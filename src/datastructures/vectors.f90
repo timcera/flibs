@@ -23,10 +23,16 @@ type VECTOR
 end type VECTOR
 
 private
-public :: VECTOR, VECTOR_DATA
-public :: vector_create, vector_append, vector_at, &
-          vector_size, vector_put, vector_delete_elements, &
-          vector_destroy, vector_insert_empty
+public :: VECTOR
+public :: VECTOR_DATA
+public :: vector_create
+public :: vector_append
+public :: vector_at
+public :: vector_size
+public :: vector_put
+public :: vector_delete_elements
+public :: vector_destroy
+public :: vector_insert_empty
 
 real, parameter :: growth_rate = 1.1
 
