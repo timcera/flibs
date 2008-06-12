@@ -1,7 +1,7 @@
 !
 ! m_vstringformat --
 !
-!   This module provides services to format one string, that is to 
+!   The module m_vstringformat provides services to format one string, that is to 
 !   say to convert a basic fortran data type into a dynamic vstring.
 !   The current version of m_vstringformat can handle logical variables
 !   and integers of all kinds. The format can be given by the client code,
@@ -115,7 +115,7 @@
 !     be printed with a sign, even if positive.
 !   - etc...
 !
-! Copyright (c) 2008 Michael Baudin
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
 ! $Id$
 !
@@ -138,7 +138,9 @@ module m_vstringformat
   public :: vstring_format
   !
   ! vstring_format --
-  !   Generic converter from a basic fortran data type into a vstring
+  !   Generic converter from a basic fortran data type into a vstring.
+  !   Returns a new dynamic string with type t_vstring by formating the
+  !   given value against the optional format fmt.
   ! Arguments :
   !   value : logical to format
   !     or integer of kind 1, 2, 4 or 8 to format
@@ -194,7 +196,7 @@ contains
   end function vstring_format_auto_logical
   !
   ! vstring_format_char_logical --
-  !   Returns a new vstring by formatting a logical with automatic format.
+  !   Returns a new vstring by formatting a logical with the given format.
   !
   function vstring_format_char_logical ( value , fmt ) result ( newstring )
     logical , intent(in) :: value
@@ -213,7 +215,7 @@ contains
   end function vstring_format_char_logical
   !
   ! vstring_format_vstring_logical --
-  !   Returns a new vstring by formatting a logical with automatic format.
+  !   Returns a new vstring by formatting a logical with the given vstring format.
   !
   function vstring_format_vstring_logical ( value , fmt ) result ( newstring )
     logical , intent(in) :: value
