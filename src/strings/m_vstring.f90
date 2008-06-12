@@ -2522,7 +2522,15 @@ contains
              exit
           endif
           !
-          ! Solution #2 : Compare the end of the string against the pattern
+          ! Solution #2 : The string is empty and the subpattern after the "*" does not match.
+          ! => There is no match at all.
+          ! Note: this_substring is therefore empty and solution #3 would generate a infinite loop.
+          !
+          if ( this_length == 0 ) then
+             exit
+          endif
+          !
+          ! Solution #3 : Compare the end of the string against the pattern
           !
           match = vstring_match_vstring ( this_substring , pattern , nocase = nocase_real )
           if ( match ) then
