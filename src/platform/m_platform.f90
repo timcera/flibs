@@ -80,7 +80,8 @@
 ! _PLATFORM_STAT_FUNCTION
 ! _PLATFORM_SYSTEM_FUNCTION
 !
-! Copyright (c) 2008 Michael Baudin
+! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
 ! $Id$
 !
