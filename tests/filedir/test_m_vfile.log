@@ -1,0 +1,646 @@
+ -> Test # 1  PASS
+ -> Test # 2  PASS
+Test #1 : get_cwd
+Current working directory:
+D:/M.Baudin/PERSO/AtelierFortran/flibs/tests/filedir
+ -> Test # 3  PASS
+ Number of strings : 8
+ -> Test # 4  PASS
+ -> Test # 5  PASS
+Test #23 : change directories
+ -> Test # 6  PASS
+ -> Test # 7  PASS
+ -> Test # 8  PASS
+ Number of strings : 8
+ -> Test # 9  PASS
+vfile_isdirectory
+ -> Test # 10  PASS
+ -> Test # 11  PASS
+ -> Test # 12  PASS
+ -> Test # 13  PASS
+ -> Test # 14  PASS
+vfile_isfile
+ -> Test # 15  PASS
+ -> Test # 16  PASS
+ -> Test # 17  PASS
+ -> Test # 18  PASS
+filetype
+ -> Test # 19  PASS
+ -> Test # 20  PASS
+ -> Test # 21  PASS
+ -> Test # 22  PASS
+ -> Test # 23  PASS
+ Number of strings : 8
+ -> Test # 24  PASS
+ -> Test # 25  PASS
+ Number of strings : 8
+ -> Test # 26  PASS
+Test #27 : file mkdir
+ -> Test # 27  PASS
+ -> Test # 28  PASS
+ -> Test # 29  PASS
+ Number of strings : 8
+ -> Test # 30  PASS
+Test #28 : file mkdir
+ -> Test # 31  PASS
+ -> Test # 32  PASS
+ -> Test # 33  PASS
+ -> Test # 34  PASS
+ Number of strings : 8
+ -> Test # 35  PASS
+Test #29 : file mkdir
+ -> Test # 36  PASS
+ -> Test # 37  PASS
+ Number of strings : 8
+ -> Test # 38  PASS
+ -> Test # 39  PASS
+ Number of strings : 8
+ -> Test # 40  PASS
+ -> Test # 41  PASS
+ Number of strings : 8
+ -> Test # 42  PASS
+Test #3 : copy ascii
+ -> Test # 43  PASS
+ -> Test # 44  PASS
+ -> Test # 45  PASS
+ -> Test # 46  PASS
+ Number of strings : 8
+ -> Test # 47  PASS
+Test #3 : copy ascii with error
+ -> Test # 48  PASS
+ -> Test # 49  PASS
+ -> Test # 50  PASS
+ Number of strings : 8
+ -> Test # 51  PASS
+Test #4 : copy based on system
+ -> Test # 52  PASS
+ -> Test # 53  PASS
+ -> Test # 54  PASS
+ -> Test # 55  PASS
+ Number of strings : 8
+ -> Test # 56  PASS
+Test #5 : copy with overwrite
+ -> Test # 57  PASS
+ -> Test # 58  PASS
+ -> Test # 59  PASS
+ -> Test # 60  PASS
+ -> Test # 61  PASS
+ -> Test # 62  PASS
+ Number of strings : 8
+ -> Test # 63  PASS
+ -> Test # 64  PASS
+ -> Test # 65  PASS
+ -> Test # 66  PASS
+ -> Test # 67  PASS
+ Number of strings : 8
+ -> Test # 68  PASS
+Test #10 : copy -force
+ -> Test # 69  PASS
+ -> Test # 70  PASS
+ -> Test # 71  PASS
+ Number of strings : 8
+ -> Test # 72  PASS
+Test #8 : rename
+ -> Test # 73  PASS
+ -> Test # 74  PASS
+ -> Test # 75  PASS
+ -> Test # 76  PASS
+ Number of strings : 8
+ -> Test # 77  PASS
+Test #22 : touch files
+ -> Test # 78  PASS
+ Number of strings : 8
+ -> Test # 79  PASS
+Test #9 : atime
+File :
+declaration.txt
+ Atime : 1213280669
+ -> Test # 80  PASS
+ -> Test # 81  PASS
+ Number of strings : 8
+ -> Test # 82  PASS
+ -> Test # 83  PASS
+ Number of strings : 8
+ -> Test # 84  PASS
+ Number of strings : 8
+ -> Test # 85  PASS
+ -> Test # 86  PASS
+Test : file join (1)
+ -> Test # 87  PASS
+Test : file join (1)
+ -> Test # 88  PASS
+Test : file join (1)
+ -> Test # 89  PASS
+ -> Test # 90  PASS
+Test #11 : file extension (1)
+ -> Test # 91  PASS
+Test #12 : file extension without extension (2)
+ -> Test # 92  PASS
+ -> Test # 93  PASS
+ Number of strings : 8
+ -> Test # 94  PASS
+Test #13 : file tail without dirname (1)
+ -> Test # 95  PASS
+ -> Test # 96  PASS
+Test #14 : file tail with dirname (2)
+ -> Test # 97  PASS
+Test : file tail
+ -> Test # 98  PASS
+Test : file tail
+ -> Test # 99  PASS
+Test : file normalize
+ -> Test # 100  PASS
+Test : file normalize
+ -> Test # 101  PASS
+Test : file normalize
+ -> Test # 102  PASS
+ Number of strings : 8
+ -> Test # 103  PASS
+ -> Test # 104  PASS
+Test #15 : add extension (1)
+ -> Test # 105  PASS
+ -> Test # 106  PASS
+ Number of strings : 8
+ -> Test # 107  PASS
+Test #16 : add extension (2)
+ -> Test # 108  PASS
+ Number of strings : 8
+ -> Test # 109  PASS
+ -> Test # 110  PASS
+ Number of strings : 8
+ -> Test # 111  PASS
+ -> Test # 112  PASS
+ Number of strings : 8
+ -> Test # 113  PASS
+ -> Test # 114  PASS
+ -> Test # 115  PASS
+ Number of strings : 8
+ -> Test # 116  PASS
+ -> Test # 117  PASS
+ -> Test # 118  PASS
+Test #31 : vfile_pathtype
+ -> Test # 119  PASS
+ -> Test # 120  PASS
+ -> Test # 121  PASS
+ -> Test # 122  PASS
+ -> Test # 123  PASS
+ -> Test # 124  PASS
+ -> Test # 125  PASS
+ -> Test # 126  PASS
+ Number of strings : 8
+ -> Test # 127  PASS
+Test #17 : normalize
+ -> Test # 128  PASS
+Test : file normalize
+ -> Test # 129  PASS
+Test : file normalize
+Current working directory:
+D:/M.Baudin/PERSO/AtelierFortran/flibs/tests/filedir
+ -> Test # 130  PASS
+Test : file normalize
+ -> Test # 131  PASS
+Test : file normalize
+ -> Test # 132  PASS
+ -> Test # 133  PASS
+Test : file normalize
+ -> Test # 134  PASS
+Test : file normalize
+ -> Test # 135  PASS
+Test #30 : vfile_nativename
+ -> Test # 136  PASS
+ -> Test # 137  PASS
+ Number of strings : 8
+ -> Test # 138  PASS
+ Number of strings : 8
+ -> Test # 139  PASS
+Test #18 : temporary directory
+Temporary directory :
+C:/WINDOWS/TEMP
+ -> Test # 140  PASS
+ Number of strings : 8
+ -> Test # 141  PASS
+Test #21 : computes a temporary file name
+ -> Test # 142  PASS
+ -> Test # 143  PASS
+ -> Test # 144  PASS
+ -> Test # 145  PASS
+ Number of strings : 8
+ -> Test # 146  PASS
+ -> Test # 147  PASS
+ Number of strings : 8
+ -> Test # 148  PASS
+Entering test_vfile_findbypattern...
+ -> Test # 149  PASS
+ Number of strings : 8
+ -> Test # 150  PASS
+Split a file name
+ -> Test # 151  PASS
+ -> Test # 152  PASS
+ -> Test # 153  PASS
+Test : split a file name with a mix of \ and /
+ -> Test # 154  PASS
+ -> Test # 155  PASS
+ -> Test # 156  PASS
+ -> Test # 157  PASS
+ Number of strings : 8
+ -> Test # 158  PASS
+ -> Test # 159  PASS
+List files
+ -> Test # 160  PASS
+Expected string :
+declaration.txt
+ -> Test # 161  PASS
+Expected string :
+declaration2.txt
+ -> Test # 162  PASS
+ Number of strings : 8
+ -> Test # 163  PASS
+ -> Test # 164  PASS
+List files
+ -> Test # 165  PASS
+Expected string :
+testls/declaration.txt
+ -> Test # 166  PASS
+Expected string :
+testls/declaration2.txt
+ -> Test # 167  PASS
+ Number of strings : 8
+ -> Test # 168  PASS
+ -> Test # 169  PASS
+List files
+ -> Test # 170  PASS
+Expected string :
+testls2/declaration.txt
+ -> Test # 171  PASS
+Expected string :
+testls2/declaration2.txt
+ -> Test # 172  PASS
+ Number of strings : 8
+ -> Test # 173  PASS
+List files
+ -> Test # 174  PASS
+Expected string :
+testls2/subdir1
+ -> Test # 175  PASS
+Expected string :
+testls2/subdir2
+ -> Test # 176  PASS
+ Number of strings : 8
+ -> Test # 177  PASS
+List files
+ -> Test # 178  PASS
+ Number of strings : 8
+ -> Test # 179  PASS
+List files
+ -> Test # 180  PASS
+Expected string :
+testls3/adir
+ -> Test # 181  PASS
+Expected string :
+testls3/afile.txt
+ -> Test # 182  PASS
+Expected string :
+testls3/mdir
+ -> Test # 183  PASS
+Expected string :
+testls3/mfile.txt
+ -> Test # 184  PASS
+ Number of strings : 8
+ -> Test # 185  PASS
+List files
+ -> Test # 186  PASS
+Expected string :
+declaration.txt
+ -> Test # 187  PASS
+Expected string :
+declaration2.txt
+ -> Test # 188  PASS
+ Number of strings : 8
+ -> Test # 189  PASS
+ -> Test # 190  PASS
+Find files
+Found:
+testls/declaration.txt testls/declaration2.txt
+ -> Test # 191  PASS
+Expected string :
+testls/declaration.txt
+ -> Test # 192  PASS
+Expected string :
+testls/declaration2.txt
+ -> Test # 193  PASS
+ Number of strings : 8
+ -> Test # 194  PASS
+Found:
+testls4/adir testls4/afile.txt testls4/mdir testls4/mfile.txt testls4/zdir testls4/zfile.txt testls4/adir/afile.txt testls4/adir/mfile.txt testls4/adir/zfile.txt testls4/mdir/afile.txt testls4/mdir/mfile.txt testls4/mdir/zfile.txt testls4/zdir/afile.txt testls4/zdir/mfile.txt testls4/zdir/zfile.txt
+ -> Test # 195  PASS
+Expected string :
+testls4/afile.txt
+ -> Test # 196  PASS
+Expected string :
+testls4/mfile.txt
+ -> Test # 197  PASS
+Expected string :
+testls4/zfile.txt
+ -> Test # 198  PASS
+Expected string :
+testls4/adir
+ -> Test # 199  PASS
+Expected string :
+testls4/adir/afile.txt
+ -> Test # 200  PASS
+Expected string :
+testls4/adir/mfile.txt
+ -> Test # 201  PASS
+Expected string :
+testls4/adir/zfile.txt
+ -> Test # 202  PASS
+Expected string :
+testls4/mdir
+ -> Test # 203  PASS
+Expected string :
+testls4/mdir/afile.txt
+ -> Test # 204  PASS
+Expected string :
+testls4/mdir/mfile.txt
+ -> Test # 205  PASS
+Expected string :
+testls4/mdir/zfile.txt
+ -> Test # 206  PASS
+Expected string :
+testls4/zdir
+ -> Test # 207  PASS
+Expected string :
+testls4/zdir/afile.txt
+ -> Test # 208  PASS
+Expected string :
+testls4/zdir/mfile.txt
+ -> Test # 209  PASS
+Expected string :
+testls4/zdir/zfile.txt
+ -> Test # 210  PASS
+ Number of strings : 8
+ -> Test # 211  PASS
+Found:
+testls4/adir testls4/afile.txt testls4/mdir testls4/mfile.txt testls4/adir/afile.txt testls4/adir/mfile.txt testls4/mdir/afile.txt testls4/mdir/mfile.txt testls4/zdir/afile.txt testls4/zdir/mfile.txt
+ -> Test # 212  PASS
+Expected string :
+testls4/afile.txt
+ -> Test # 213  PASS
+Expected string :
+testls4/mfile.txt
+ -> Test # 214  PASS
+Expected string :
+testls4/adir
+ -> Test # 215  PASS
+Expected string :
+testls4/adir/afile.txt
+ -> Test # 216  PASS
+Expected string :
+testls4/adir/mfile.txt
+ -> Test # 217  PASS
+Expected string :
+testls4/mdir
+ -> Test # 218  PASS
+Expected string :
+testls4/mdir/afile.txt
+ -> Test # 219  PASS
+Expected string :
+testls4/mdir/mfile.txt
+ -> Test # 220  PASS
+Expected string :
+testls4/zdir/afile.txt
+ -> Test # 221  PASS
+Expected string :
+testls4/zdir/mfile.txt
+ -> Test # 222  PASS
+ Number of strings : 8
+ -> Test # 223  PASS
+Find without filter
+Found:
+testfind/adir testfind/afile.txt testfind/mdir testfind/mfile.txt testfind/zdir testfind/zfile.txt testfind/adir/afile.txt testfind/adir/mfile.txt testfind/adir/subdir testfind/adir/zfile.txt testfind/adir/subdir/adir testfind/adir/subdir/afile.txt testfind/adir/subdir/mdir testfind/adir/subdir/mfile.txt testfind/adir/subdir/zdir testfind/adir/subdir/zfile.txt testfind/adir/subdir/adir/afile.txt testfind/adir/subdir/adir/mfile.txt testfind/adir/subdir/adir/zfile.txt testfind/adir/subdir/mdir/afile.txt testfind/adir/subdir/mdir/mfile.txt testfind/adir/subdir/mdir/zfile.txt testfind/adir/subdir/zdir/afile.txt testfind/adir/subdir/zdir/mfile.txt testfind/adir/subdir/zdir/zfile.txt testfind/mdir/afile.txt testfind/mdir/mfile.txt testfind/mdir/subdir testfind/mdir/zfile.txt testfind/mdir/subdir/adir testfind/mdir/subdir/afile.txt testfind/mdir/subdir/mdir testfind/mdir/subdir/mfile.txt testfind/mdir/subdir/zdir testfind/mdir/subdir/zfile.txt testfind/mdir/subdir/adir/afile.txt testfind/mdir/subdir/adir/mfile.txt testfind/mdir/subdir/adir/zfile.txt testfind/mdir/subdir/mdir/afile.txt testfind/mdir/subdir/mdir/mfile.txt testfind/mdir/subdir/mdir/zfile.txt testfind/mdir/subdir/zdir/afile.txt testfind/mdir/subdir/zdir/mfile.txt testfind/mdir/subdir/zdir/zfile.txt testfind/zdir/afile.txt testfind/zdir/mfile.txt testfind/zdir/subdir testfind/zdir/zfile.txt testfind/zdir/subdir/adir testfind/zdir/subdir/afile.txt testfind/zdir/subdir/mdir testfind/zdir/subdir/mfile.txt testfind/zdir/subdir/zdir testfind/zdir/subdir/zfile.txt testfind/zdir/subdir/adir/afile.txt testfind/zdir/subdir/adir/mfile.txt testfind/zdir/subdir/adir/zfile.txt testfind/zdir/subdir/mdir/afile.txt testfind/zdir/subdir/mdir/mfile.txt testfind/zdir/subdir/mdir/zfile.txt testfind/zdir/subdir/zdir/afile.txt testfind/zdir/subdir/zdir/mfile.txt testfind/zdir/subdir/zdir/zfile.txt
+ -> Test # 224  PASS
+ -> Test # 225  PASS
+Expected string :
+testfind/adir
+ -> Test # 226  PASS
+Expected string :
+testfind/adir/afile.txt
+ -> Test # 227  PASS
+Expected string :
+testfind/adir/mfile.txt
+ -> Test # 228  PASS
+Expected string :
+testfind/adir/subdir
+ -> Test # 229  PASS
+Expected string :
+testfind/adir/subdir/adir
+ -> Test # 230  PASS
+Expected string :
+testfind/adir/subdir/adir/afile.txt
+ -> Test # 231  PASS
+Expected string :
+testfind/adir/subdir/adir/mfile.txt
+ -> Test # 232  PASS
+Expected string :
+testfind/adir/subdir/adir/zfile.txt
+ -> Test # 233  PASS
+Expected string :
+testfind/adir/subdir/afile.txt
+ -> Test # 234  PASS
+Expected string :
+testfind/adir/subdir/mdir
+ -> Test # 235  PASS
+Expected string :
+testfind/adir/subdir/mdir/afile.txt
+ -> Test # 236  PASS
+Expected string :
+testfind/adir/subdir/mdir/mfile.txt
+ -> Test # 237  PASS
+Expected string :
+testfind/adir/subdir/mdir/zfile.txt
+ -> Test # 238  PASS
+Expected string :
+testfind/adir/subdir/mfile.txt
+ -> Test # 239  PASS
+Expected string :
+testfind/adir/subdir/zdir
+ -> Test # 240  PASS
+Expected string :
+testfind/adir/subdir/zdir/afile.txt
+ -> Test # 241  PASS
+Expected string :
+testfind/adir/subdir/zdir/mfile.txt
+ -> Test # 242  PASS
+Expected string :
+testfind/adir/subdir/zdir/zfile.txt
+ -> Test # 243  PASS
+Expected string :
+testfind/adir/subdir/zfile.txt
+ -> Test # 244  PASS
+Expected string :
+testfind/adir/zfile.txt
+ -> Test # 245  PASS
+Expected string :
+testfind/afile.txt
+ -> Test # 246  PASS
+Expected string :
+testfind/mdir
+ -> Test # 247  PASS
+Expected string :
+testfind/mdir/afile.txt
+ -> Test # 248  PASS
+Expected string :
+testfind/mdir/mfile.txt
+ -> Test # 249  PASS
+Expected string :
+testfind/mdir/subdir
+ -> Test # 250  PASS
+Expected string :
+testfind/mdir/subdir/adir
+ -> Test # 251  PASS
+Expected string :
+testfind/mdir/subdir/adir/afile.txt
+ -> Test # 252  PASS
+Expected string :
+testfind/mdir/subdir/adir/mfile.txt
+ -> Test # 253  PASS
+Expected string :
+testfind/mdir/subdir/adir/zfile.txt
+ -> Test # 254  PASS
+Expected string :
+testfind/mdir/subdir/afile.txt
+ -> Test # 255  PASS
+Expected string :
+testfind/mdir/subdir/mdir
+ -> Test # 256  PASS
+Expected string :
+testfind/mdir/subdir/mdir/afile.txt
+ -> Test # 257  PASS
+Expected string :
+testfind/mdir/subdir/mdir/mfile.txt
+ -> Test # 258  PASS
+Expected string :
+testfind/mdir/subdir/mdir/zfile.txt
+ -> Test # 259  PASS
+Expected string :
+testfind/mdir/subdir/mfile.txt
+ -> Test # 260  PASS
+Expected string :
+testfind/mdir/subdir/zdir
+ -> Test # 261  PASS
+Expected string :
+testfind/mdir/subdir/zdir/afile.txt
+ -> Test # 262  PASS
+Expected string :
+testfind/mdir/subdir/zdir/mfile.txt
+ -> Test # 263  PASS
+Expected string :
+testfind/mdir/subdir/zdir/zfile.txt
+ -> Test # 264  PASS
+Expected string :
+testfind/mdir/subdir/zfile.txt
+ -> Test # 265  PASS
+Expected string :
+testfind/mdir/zfile.txt
+ -> Test # 266  PASS
+Expected string :
+testfind/mfile.txt
+ -> Test # 267  PASS
+Expected string :
+testfind/zdir
+ -> Test # 268  PASS
+Expected string :
+testfind/zdir/afile.txt
+ -> Test # 269  PASS
+Expected string :
+testfind/zdir/mfile.txt
+ -> Test # 270  PASS
+Expected string :
+testfind/zdir/subdir
+ -> Test # 271  PASS
+Expected string :
+testfind/zdir/subdir/adir
+ -> Test # 272  PASS
+Expected string :
+testfind/zdir/subdir/adir/afile.txt
+ -> Test # 273  PASS
+Expected string :
+testfind/zdir/subdir/adir/mfile.txt
+ -> Test # 274  PASS
+Expected string :
+testfind/zdir/subdir/adir/zfile.txt
+ -> Test # 275  PASS
+Expected string :
+testfind/zdir/subdir/afile.txt
+ -> Test # 276  PASS
+Expected string :
+testfind/zdir/subdir/mdir
+ -> Test # 277  PASS
+Expected string :
+testfind/zdir/subdir/mdir/afile.txt
+ -> Test # 278  PASS
+Expected string :
+testfind/zdir/subdir/mdir/mfile.txt
+ -> Test # 279  PASS
+Expected string :
+testfind/zdir/subdir/mdir/zfile.txt
+ -> Test # 280  PASS
+Expected string :
+testfind/zdir/subdir/mfile.txt
+ -> Test # 281  PASS
+Expected string :
+testfind/zdir/subdir/zdir
+ -> Test # 282  PASS
+Expected string :
+testfind/zdir/subdir/zdir/afile.txt
+ -> Test # 283  PASS
+Expected string :
+testfind/zdir/subdir/zdir/mfile.txt
+ -> Test # 284  PASS
+Expected string :
+testfind/zdir/subdir/zdir/zfile.txt
+ -> Test # 285  PASS
+Expected string :
+testfind/zdir/subdir/zfile.txt
+ -> Test # 286  PASS
+Expected string :
+testfind/zdir/zfile.txt
+ -> Test # 287  PASS
+Expected string :
+testfind/zfile.txt
+ -> Test # 288  PASS
+ Number of strings : 8
+ -> Test # 289  PASS
+Find files by pattern (1)
+Found:
+testfindbypattern/subdir/declaration.txt testfindbypattern/subdir/declaration2.txt
+ -> Test # 290  PASS
+Expected string :
+testfindbypattern/subdir/declaration.txt
+ -> Test # 291  PASS
+Expected string :
+testfindbypattern/subdir/declaration2.txt
+ -> Test # 292  PASS
+Find files by pattern when no directory is given
+Found:
+./subdir/declaration.txt ./subdir/declaration2.txt
+ -> Test # 293  PASS
+Expected string :
+./subdir/declaration.txt
+ -> Test # 294  PASS
+Expected string :
+./subdir/declaration2.txt
+ -> Test # 295  PASS
+ Number of strings : 8
+ -> Test # 296  PASS
+ -> Test # 297  PASS
+ -> Test # 298  PASS
+ Number of strings : 8
+ -> Test # 299  PASS
+ -> Test # 300  PASS
+Test suite completed
+**********************
+End of tests.
+ Total number of tests :  300
+ Total number of success tests :  300
+ Total number of failing tests :  0
