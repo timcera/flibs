@@ -36,7 +36,8 @@
 !   The following preprocessing macro must be considered :
 !   _VFILE_STATIC_BUFFER : see  the section "Dynamic or static buffer"
 !
-! Copyright (c) 2008 Michael Baudin
+! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
 ! $Id$
 !
@@ -240,10 +241,7 @@ contains
   subroutine vstrplatform_cd_charstring ( dirname , status )
     character(len=*), intent(in) :: dirname
     integer, intent(out) , optional :: status
-    type(t_vstring) :: dirname_vstring
-    call vstring_new ( dirname_vstring , dirname )
-    call vstrplatform_cd_vstring ( dirname_vstring , status )
-    call vstring_free ( dirname_vstring )
+    call platform_cd ( dirname , status )
   end subroutine vstrplatform_cd_charstring
   !
   ! vstrplatform_stat --
