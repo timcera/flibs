@@ -242,8 +242,6 @@ contains
     type ( t_vstring ) :: pattern
     logical :: match
     !
-    ! Test #40.1
-    !
     call logmsg ( "Test #40.1 vstring_match with star" )
     call vstring_new ( string1 , "1abcaababcabababc" )
     call vstring_new ( pattern , "*" )
@@ -251,8 +249,6 @@ contains
     call assert ( match , "Wrong vstring_match" )
     call vstring_free ( string1 )
     call vstring_free ( pattern )
-    !
-    ! Test #40.1.b
     !
     call logmsg ( "Test #40.1.b vstring_match with char string pattern" )
     call vstring_new ( string1 , "1abcaababcabababc" )
@@ -263,8 +259,6 @@ contains
     ! Check the number of strings references
     !
     call string_reference_check ()
-    !
-    ! Test #40.2
     !
     call logmsg ( "Test #40.2 vstring_match without special characters" )
     call vstring_new ( string1 , "1abcaababcabababc" )
@@ -278,8 +272,6 @@ contains
     !
     call string_reference_check ()
     !
-    ! Test #40.3
-    !
     call logmsg ( "Test #40.3 vstring_match with question" )
     call vstring_new ( string1 , "1" )
     call vstring_new ( pattern , '?' )
@@ -291,8 +283,6 @@ contains
     ! Check the number of strings references
     !
     call string_reference_check ()
-    !
-    ! Test #40.4
     !
     call logmsg ( "Test #40.4 vstring_match with question" )
     call vstring_new ( string1 , "12" )
@@ -306,8 +296,6 @@ contains
     !
     call string_reference_check ()
     !
-    ! Test #40.5
-    !
     call logmsg ( "Test #40.5 vstring_match with star" )
     call vstring_new ( string1 , "12" )
     call vstring_new ( pattern , "1*" )
@@ -320,13 +308,19 @@ contains
     !
     call string_reference_check ()
     !
-    ! Test #40.6
-    !
     call logmsg ( "Test #40.6 vstring_match with star" )
     call vstring_new ( string1 , "" )
     call vstring_new ( pattern , "*" )
     match = vstring_match ( string1 , pattern )
     call assert ( match , "Wrong vstring_match" )
+    call vstring_free ( string1 )
+    call vstring_free ( pattern )
+    !
+    call logmsg ( "vstring_match with star pattern (2)" )
+    call vstring_new ( string1 , "" )
+    call vstring_new ( pattern , "*.txt" )
+    match = vstring_match ( string1 , pattern )
+    call assert ( .NOT.match , "Wrong vstring_match" )
     call vstring_free ( string1 )
     call vstring_free ( pattern )
     !
@@ -542,13 +536,19 @@ contains
     call vstring_free ( string1 )
     call vstring_free ( pattern )
     !
-    ! Typical use
-    !
     call logmsg ( "Typical use" )
     call vstring_new ( string1 , "m_vstring.f90" )
     call vstring_new ( pattern , 'm_*.f90' )
     match = vstring_match ( string1 , pattern )
     call assert ( match , "Wrong vstring_match" )
+    call vstring_free ( string1 )
+    call vstring_free ( pattern )
+    !
+    call logmsg ( "Typical use" )
+    call vstring_new ( string1 , "D:/dir1/dir2/dir3/dirname" )
+    call vstring_new ( pattern , '*.txt' )
+    match = vstring_match ( string1 , pattern )
+    call assert ( .NOT.match , "Wrong vstring_match" )
     call vstring_free ( string1 )
     call vstring_free ( pattern )
     !
@@ -2403,6 +2403,7 @@ contains
     call string_reference_check ()
 
   end subroutine test_m_vstring_cast
+
   !
   ! assertString --
   !   Check that the computed string is equal to the expected string

@@ -199,6 +199,7 @@ contains
     type ( t_vstringlist ) :: list2
     type ( t_vstringlist ) :: list3
     integer :: length
+    integer :: i
     !
     ! Check the number of lists references
     !
@@ -339,6 +340,30 @@ contains
     !
     ! Free the list
     !
+    call vstrlist_free ( list1 )
+    !
+    call logmsg ( "Test : vstrlist_append a list several times" )
+    call vstrlist_new ( list1 )
+    call vstrlist_append ( list1 , "fortran" )
+    call vstrlist_append ( list1 , "C++" )
+    do i= 1, 3
+       call vstrlist_new ( list2 )
+       call vstrlist_append ( list2 , "fortran" )
+       call vstrlist_append ( list2 , "C++" )
+       call vstrlist_append ( list1 , list2 )
+       call vstrlist_free ( list2 )
+    end do
+    length = vstrlist_length ( list1 )
+    call assert ( length == 8, "Wrong number of elements.")
+    ! Check that the content is fine
+    call assertVstring_charstringindex ( list1 , 1 , "fortran" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 2 , "C++" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 3 , "fortran" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 4 , "C++" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 5 , "fortran" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 6 , "C++" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 7 , "fortran" , "Wrong vstrlist_append with list" )
+    call assertVstring_charstringindex ( list1 , 8 , "C++" , "Wrong vstrlist_append with list" )
     call vstrlist_free ( list1 )
     !
     ! Check the number of lists references
