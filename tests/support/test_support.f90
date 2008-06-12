@@ -5,8 +5,8 @@
 subroutine logmsg ( message )
   implicit none
   character(len=*), intent(in) :: message
-  write(6,*) trim(message)
-  write(log_unit,*) trim(message)
+  write(6,"(A)") trim(message)
+  write(log_unit,"(A)") trim(message)
 end subroutine logmsg
 !
 ! log_startup --
