@@ -189,8 +189,8 @@
 ! Compiler : gfortran
 ! _FS_RENAME_SUBROUTINE
 !
-! Copyright (c) 2008 Arjen Markus
-! Copyright (c) 2008 Michael Baudin
+! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
 !   $Id$
 !

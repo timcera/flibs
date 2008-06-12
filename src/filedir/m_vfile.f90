@@ -96,7 +96,7 @@
 !   file name.
 !
 !   One particularly useful command when dealing with files is 
-!   vfile_findByPattern. The command takes a string as an input
+!   vfile_findbypattern. The command takes a string as an input
 !   file pattern. It then computes the list of all files which
 !   match that pattern.
 !
@@ -181,8 +181,8 @@
 !   _VFILE_RENAME_SUBROUTINE
 !   _VFILE_GETCWD_SUBROUTINE
 !
-! Copyright (c) 2008 Arjen Markus
-! Copyright (c) 2008 Michael Baudin
+! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
 !   $Id$
 !
@@ -222,7 +222,9 @@ module m_vfile
        vstrlist_split , &
        vstrlist_index , &
        vstrlist_length , &
-       vstrlist_search
+       vstrlist_search , &
+       vstrlist_lsearch , &
+       vstrlist_join
   use m_vstrplatform, only : &
        vstrplatform_system, &
        vstrplatform_cd, &
@@ -241,11 +243,15 @@ module m_vfile
   public :: vfile_dirname
   public :: vfile_exists
   public :: vfile_extension
-  public :: vfile_findByPattern
+  public :: vfile_type
+  public :: vfile_find
+  public :: vfile_findbypattern
   public :: vfile_first_separator_index
   public :: vfile_isdirectory
+  public :: vfile_isfile
   public :: vfile_join
   public :: vfile_last_separator_index
+  public :: vfile_listfiles
   public :: vfile_mkdir
   public :: vfile_mtime
   public :: vfile_nativename
@@ -254,15 +260,16 @@ module m_vfile
   public :: vfile_pwd
   public :: vfile_rename
   public :: vfile_rootname
+  public :: vfile_size
   public :: vfile_separator
   public :: vfile_set_stoponerror
+  public :: vfile_shutdown
   public :: vfile_split
   public :: vfile_startup
   public :: vfile_tail
   public :: vfile_tempdir
   public :: vfile_tempfile
   public :: vfile_touch
-  public :: vfile_shutdown
   public :: vfile_volumes
   !
   ! vfile_join --
@@ -273,13 +280,31 @@ module m_vfile
      module procedure vfile_join_charstring
   end interface vfile_join
   !
-  ! vfile_findByPattern --
-  !   Generic file finder.
+  ! vfile_listfiles --
+  !   Generic file list.
   !
-  interface vfile_findByPattern
-     module procedure vfile_findByPattern_vstring
-     module procedure vfile_findByPattern_charstring
-  end interface vfile_findByPattern
+  interface vfile_listfiles
+     module procedure vfile_listfiles_vstring
+     module procedure vfile_listfiles_charstring
+  end interface vfile_listfiles
+  !
+  ! vfile_find --
+  !   Generic recursive file finder.
+  !
+  interface vfile_find
+     module procedure vfile_find_vstring
+     module procedure vfile_find_vstring_filter
+     module procedure vfile_find_charstring
+     module procedure vfile_find_charstring_filter
+  end interface vfile_find
+  !
+  ! vfile_findbypattern --
+  !   Generic recursive file finder with pattern.
+  !
+  interface vfile_findbypattern
+     module procedure vfile_findbypattern_vstring
+     module procedure vfile_findbypattern_charstring
+  end interface vfile_findbypattern
   !
   ! vfile_add_extension --
   !   Generic method to add an extension.
@@ -377,6 +402,30 @@ module m_vfile
      module procedure vfile_isdirectory_charstring
   end interface vfile_isdirectory
   !
+  ! vfile_isfile --
+  !   Generic method which returns .true. if the string is a file.
+  !
+  interface vfile_isfile
+     module procedure vfile_isfile_vstring
+     module procedure vfile_isfile_charstring
+  end interface vfile_isfile
+  !
+  ! vfile_type --
+  !   Generic method which returns the type of the file
+  !
+  interface vfile_type
+     module procedure vfile_type_vstring
+     module procedure vfile_type_charstring
+  end interface vfile_type
+  !
+  ! vfile_size --
+  !   Generic method  which returns the number of bytes of the file.
+  !
+  interface vfile_size
+     module procedure vfile_size_vstring
+     module procedure vfile_size_charstring
+  end interface vfile_size
+  !
   ! vfile_atime --
   !   Generic method  which returns the access time of the file.
   !
@@ -439,6 +488,7 @@ module m_vfile
   integer , parameter, public :: VFILE_ERROR_UNABLE_TO_DELETE_DIRECTORY = 6
   integer , parameter, public :: VFILE_ERROR_UNABLE_TO_CHANGE_DIRECTORY = 7
   integer , parameter, public :: VFILE_ERROR_CURRENT_OBJECT_IS_NOT_DIRECTORY = 8
+  integer , parameter, public :: VFILE_ERROR_UNKNOWN_FILE_TYPE = 9
   !
   ! Maximum number of columns in a text file
   !
@@ -484,6 +534,10 @@ module m_vfile
   ! Set to .true. if the static attributes have allready been initialized
   !
   logical :: vfile_static_initialized = .false.
+  !
+  ! Value of the pattern used in vfile_findbypattern_filtercmd
+  !
+  type ( t_vstring ), save :: vfile_findbypattern_pattern
 contains
   !
   ! vfile_startup --
@@ -1674,14 +1728,80 @@ contains
   ! vfile_isdirectory_charstring --
   !   Returns .true. if file name is a directory, .false. otherwise.
   !
-  function vfile_isdirectory_charstring ( filename ) result ( isdirectory )
-    character(len=*), intent(in) :: filename
-    logical :: isdirectory
-    type ( t_vstring ) :: filename_vstring
-    call vstring_new ( filename_vstring , filename )
-    isdirectory = vfile_isdirectory_vstring ( filename_vstring )
-    call vstring_free ( filename_vstring )
-  end function vfile_isdirectory_charstring
+#define _TEMPLATE_ROUTINE_NAME_CHARSTRING vfile_isdirectory_charstring
+#define _TEMPLATE_ROUTINE_NAME_VSTRING vfile_isdirectory_vstring
+#define _TEMPLATE_ROUTINE_VALUE logical
+#include "m_vfile_template_casttovstring1.f90"
+#undef _TEMPLATE_ROUTINE_NAME_CHARSTRING
+#undef _TEMPLATE_ROUTINE_NAME_VSTRING
+#undef _TEMPLATE_ROUTINE_VALUE
+  !
+  ! vfile_isfile_vstring --
+  !   Returns .true. if file name is a file, .false. otherwise.
+  !
+  function vfile_isfile_vstring ( filename ) result ( isfile )
+    type ( t_vstring ), intent(in) :: filename
+    logical :: isfile
+    logical :: fileexists
+    integer :: iostat
+    integer :: lun
+    fileexists = vfile_exists ( filename )
+    if ( fileexists ) then
+       !
+       ! I did not find a standard method in fortran.
+       ! So, use an heuristic : try to open it.
+       !
+       lun = vfile_open ( filename , iostat = iostat )
+       if ( iostat==0 ) then
+          isfile = .true.
+          close ( lun )
+       else
+          isfile = .false.
+       endif
+    else
+       isfile = .false.
+    endif
+  end function vfile_isfile_vstring
+  !
+  ! vfile_isfile_charstring --
+  !   Returns .true. if file name is a file, .false. otherwise.
+  !
+#define _TEMPLATE_ROUTINE_NAME_CHARSTRING vfile_isfile_charstring
+#define _TEMPLATE_ROUTINE_NAME_VSTRING vfile_isfile_vstring
+#define _TEMPLATE_ROUTINE_VALUE logical
+#include "m_vfile_template_casttovstring1.f90"
+#undef _TEMPLATE_ROUTINE_NAME_CHARSTRING
+#undef _TEMPLATE_ROUTINE_NAME_VSTRING
+#undef _TEMPLATE_ROUTINE_VALUE
+  !
+  ! vfile_size_vstring --
+  !   Returns an integer giving the size of file name in bytes. 
+  !   If the file doesn't exist or its size cannot be queried then an error is generated.
+  !
+  function vfile_size_vstring ( filename , status ) result ( vfile_size )
+    type ( t_vstring ), intent(in) :: filename
+    integer, dimension (1:13) :: statarray
+    integer, intent(out) , optional :: status
+    integer :: vfile_size
+    integer  :: local_status
+    call vstrplatform_stat ( filename , statarray , local_status )
+    vfile_size = statarray (8)
+    if (present ( status )) then
+       status = local_status
+    endif
+  end function vfile_size_vstring
+  !
+  ! vfile_size_charstring --
+  !   Returns an integer giving the size of file name in bytes. 
+  !   If the file doesn't exist or its size cannot be queried then an error is generated.
+  !
+#define _TEMPLATE_ROUTINE_NAME_CHARSTRING vfile_size_charstring
+#define _TEMPLATE_ROUTINE_NAME_VSTRING vfile_size_vstring
+#define _TEMPLATE_ROUTINE_VALUE integer
+#include "m_vfile_template_casttovstring1.f90"
+#undef _TEMPLATE_ROUTINE_NAME_CHARSTRING
+#undef _TEMPLATE_ROUTINE_NAME_VSTRING
+#undef _TEMPLATE_ROUTINE_VALUE
   !
   ! vfile_atime_vstring --
   !   Returns an integer representing the time at which file name was last accessed.
@@ -1905,98 +2025,453 @@ contains
 #undef _TEMPLATE_ROUTINE_NAME_VSTRING
 #undef _TEMPLATE_ROUTINE_VALUE
   !
-  ! vfile_findByPattern_vstring --
-  !   Returns a list of files which match the given pattern
+  ! vfile_find_vstring --
+  !   An implementation of the unix command find.
+  !   Returns a list of files or directories which are located in the 
+  !   given basedir directory, and, recursively, in all sub-directories.
+  !   Each file in the resulting list has a path relative to the given 
+  !   basedir directory.
   !
   ! Arguments:
+  !   basedir         If provided, this is the name of the base directory into which the search is done.
+  !     If not provided, the current directory is used by default.
+  !   TODO : filtercmd   The filtercmd, if provided, is interpreted as a command prefix and 
+  !     one argument is passed to it, the name of the file or directory find is currently 
+  !     looking at. Note that this name is not fully qualified. It has to be joined it with 
+  !     the result of pwd to get an absolute filename. The result of filtercmd is a boolean value 
+  !     that indicates if the current file should be included in the list of interesting files.
+  !
+  recursive function vfile_find_vstring ( basedir ) result ( listOfFiles )
+    type ( t_vstring ), intent(in), optional :: basedir
+    type ( t_vstringlist ) :: listOfFiles
+    type ( t_vstringlist ) :: listoffiles_currentdir
+    type ( t_vstring ) :: basedir_real
+    integer :: ifile
+    integer :: nbfiles
+    type ( t_vstring ) :: filename
+    logical :: isdirectory
+    !
+    ! Process options
+    !
+    if ( present ( basedir ) ) then
+       call vstring_new ( basedir_real , basedir )
+    else
+       call vfile_pwd ( basedir_real )
+    endif
+    !
+    ! Get the files directly in the current directory
+    !
+    listOfFiles = vfile_listfiles ( basedir )
+    !
+    ! Make a loop over the items in the list, and 
+    ! search in sub-directories.
+    !
+    nbfiles = vstrlist_length ( listOfFiles )
+    do ifile = 1 , nbfiles
+       filename = vstrlist_index ( listOfFiles , ifile )
+       isdirectory = vfile_isdirectory ( filename )
+       if ( isdirectory ) then
+          listoffiles_currentdir = vfile_find_vstring ( filename )
+          call vstrlist_append ( listOfFiles , listoffiles_currentdir )
+          call vstrlist_free ( listoffiles_currentdir )
+       endif
+       call vstring_free ( filename )
+    enddo
+    !
+    ! Clean-up
+    !
+    call vstring_free ( basedir_real )
+  end function vfile_find_vstring
+  !
+  ! vfile_find_vstring_filter --
+  !   An implementation of the unix command find.
+  !   Returns a list of files or directories which are located in the 
+  !   given basedir directory, and, recursively, in all sub-directories.
+  !   Each file in the resulting list has a path relative to the given 
+  !   basedir directory.
+  !
+  ! Arguments:
+  !   basedir         If provided, this is the name of the base directory into which the search is done.
+  !     If not provided, the current directory is used by default.
+  !   filtercmd   The filtercmd, if provided, is interpreted as a command prefix and 
+  !     one argument is passed to it, the name of the file or directory find is currently 
+  !     looking at. Note that this name is not fully qualified. It has to be joined it with 
+  !     the result of pwd to get an absolute filename. The result of filtercmd is a boolean value 
+  !     that indicates if the current file should be included in the list of interesting files.
+  !
+  recursive function vfile_find_vstring_filter ( basedir , filtercmd ) result ( listOfFiles )
+    type ( t_vstring ), intent(in), optional :: basedir
+    type ( t_vstringlist ) :: listOfFiles
+    interface
+       function filtercmd ( filename ) result ( keepfile )
+         use m_vstring, only : t_vstring
+         type ( t_vstring ), intent(in) :: filename
+         logical :: keepfile
+       end function filtercmd
+    end interface
+    type ( t_vstringlist ) :: listOfFiles_unfiltered
+    integer :: itemindex
+    integer :: nbfiles
+    type ( t_vstring ) :: filename
+    logical :: keepfile
+    !
+    ! Compute the list of files
+    !
+    listOfFiles_unfiltered = vfile_find_vstring ( basedir )
+    !
+    ! Apply the filter
+    !
+    call vstrlist_new ( listOfFiles )
+    nbfiles = vstrlist_length ( listOfFiles_unfiltered )
+    do itemindex = 1 , nbfiles
+       filename = vstrlist_index ( listOfFiles_unfiltered , itemindex )
+       keepfile = filtercmd ( filename )
+       if ( keepfile ) then
+          call vstrlist_append ( listOfFiles , filename )
+       endif
+       call vstring_free ( filename )
+    enddo
+    !
+    ! Cleanup
+    !
+    call vstrlist_free ( listOfFiles_unfiltered )
+  end function vfile_find_vstring_filter
+  !
+  ! vfile_find_charstring --
+  !   An implementation of the unix command find.
+  !   Returns a list of files or directories which are located in the 
+  !   given basedir directory, and, recursively, in all sub-directories.
+  !   Each file in the resulting list has a path relative to the given 
+  !   basedir directory.
+  !
+  recursive function vfile_find_charstring ( basedir ) result ( listOfFiles )
+    character(len=*), intent(in) :: basedir
+    type ( t_vstringlist ) :: listOfFiles
+    type ( t_vstring ) :: basedir_vstring
+    call vstring_new ( basedir_vstring , basedir )
+    listOfFiles = vfile_find_vstring ( basedir_vstring )
+    call vstring_free ( basedir_vstring )
+  end function vfile_find_charstring
+  !
+  ! vfile_find_charstring_filter --
+  !   An implementation of the unix command find.
+  !   Returns a list of files or directories which are located in the 
+  !   given basedir directory, and, recursively, in all sub-directories.
+  !   Each file in the resulting list has a path relative to the given 
+  !   basedir directory.
+  !
+  recursive function vfile_find_charstring_filter ( basedir , filtercmd ) result ( listOfFiles )
+    character(len=*), intent(in) :: basedir
+    type ( t_vstringlist ) :: listOfFiles
+    interface
+       function filtercmd ( filename ) result ( keepfile )
+         use m_vstring, only : t_vstring
+         type ( t_vstring ), intent(in) :: filename
+         logical :: keepfile
+       end function filtercmd
+    end interface
+    type ( t_vstring ) :: basedir_vstring
+    call vstring_new ( basedir_vstring , basedir )
+    listOfFiles = vfile_find_vstring_filter ( basedir_vstring , filtercmd )
+    call vstring_free ( basedir_vstring )    
+  end function vfile_find_charstring_filter
+  !
+  ! vfile_findbypattern_vstring --
+  !   Returns a list of files which match the given pattern.
+  !   Internally, this command is based on vfile_find, with a particular filter applied.
+  !
+  ! Arguments:
+  !   basedir         If provided, this is the name of the base directory into which the search is done.
+  !     If not provided, the current directory is used by default.
   !   pattern         Pattern for the file names (like: *.f90), with type t_vstring
   !
-  ! TODO : extend that subroutine so that it can do an optionnal recursive search into the subdirectories.
+  function vfile_findbypattern_vstring ( basedir , pattern ) result ( listOfFiles )
+    type ( t_vstring ), intent(in), optional :: basedir
+    type ( t_vstring ), intent(in) :: pattern
+    type ( t_vstringlist ) :: listOfFiles
+    type ( t_vstring ) :: basedir_real
+    if ( present ( basedir ) ) then
+       call vstring_new ( basedir_real , basedir )
+    else
+       call vstring_new ( basedir_real , "." )
+    endif
+    !
+    ! Store the pattern into a static member of the module
+    !
+    call vstring_new ( vfile_findbypattern_pattern , pattern )
+    !
+    ! Compute the list
+    !
+    listOfFiles = vfile_find ( basedir , vfile_findbypattern_filtercmd )
+    !
+    ! Clean-up
+    !
+    call vstring_free ( vfile_findbypattern_pattern )
+    call vstring_free ( basedir_real )
+  end function vfile_findbypattern_vstring
   !
-  function vfile_findByPattern_vstring ( pattern ) result ( listOfFiles )
-    type ( t_vstring ), intent(in)            :: pattern
+  ! vfile_findbypattern_filtercmd --
+  !   The filter used in vfile_findbypattern_vstring.
+  !
+  function vfile_findbypattern_filtercmd ( filename ) result ( keepfile )
+    use m_vstring, only : t_vstring
+    type ( t_vstring ), intent(in) :: filename
+    logical :: keepfile
+    keepfile = vstring_match ( filename , vfile_findbypattern_pattern )
+  end function vfile_findbypattern_filtercmd
+  !
+  ! vfile_findbypattern_charstring --
+  !   Returns a list of files which match the given pattern.
+  !   Internally, this command is based on vfile_find, with a particular filter applied.
+  !
+  ! Arguments:
+  !   basedir         If provided, this is the name of the base directory into 
+  !     which the search is done.
+  !     If not provided, the current directory is used by default.
+  !   pattern         Pattern for the file names (like: *.f90), with type character(len=*)
+  !
+  function vfile_findbypattern_charstring ( basedir , pattern ) result ( listOfFiles )
+    character(len=*), intent(in), optional :: basedir
+    character(len=*), intent(in) :: pattern
+    type ( t_vstringlist ) :: listOfFiles
+    type ( t_vstring ) :: basedir_vstring
+    type ( t_vstring ) :: pattern_vstring
+    if ( present ( basedir ) ) then
+       call vstring_new ( basedir_vstring , basedir )
+    else
+       call vstring_new ( basedir_vstring , "." )
+    endif
+    call vstring_new ( pattern_vstring , pattern )
+    listOfFiles = vfile_findbypattern_vstring ( basedir_vstring , pattern_vstring )
+    call vstring_free ( basedir_vstring )
+    call vstring_free ( pattern_vstring )
+  end function vfile_findbypattern_charstring
+  !
+  ! vfile_listfiles_vstring --
+  !   Returns a list of files in the given directory.
+  !   As expected, only the file tails are in the list.
+  !
+  ! Arguments:
+  !   directory, optional   If provided, the directory into which the list is to be computed.
+  !     If not provided, the current directory is used and only the file names are file tails.
+  !     If provided, the computed files names are relative and begin with the given 
+  !     directory (following the template directory/filetail).
+  !   filetypes, optional   If provided, only list files or directories which match filetypes,
+  !     with d (directory), f (plain file).
+  !     If not provided, the filetypes "d" , "f" list is used.
+  !   pattern, optional     If provided, only list files which match the given pattern.
+  !     If not provided, the "*" pattern is used.
+  !     The vstring_match command is used to compare the file against the pattern so that 
+  !     all the pattern types available in vstring_match are available in vfile_listfiles :
+  !     *
+  !       Matches any sequence of characters in string, including a null string.
+  !     ?
+  !       Matches any single character in string.
+  !     [chars]
+  !       Matches any character in the set given by chars. 
+  !       If a sequence of the form x-y appears in chars, then any character 
+  !       between x and y, inclusive, will match. 
+  !       When used with -nocase, the characters of the range are converted to lower case first. 
+  !       Whereas {[A-z]} matches '_' when matching case-sensitively ('_' falls between the 'Z' 
+  !       and 'a'), with -nocase this is considered like {[A-Za-z]} (and probably what was 
+  !       meant in the first place).
+  !     \x
+  !       Matches the single character x. 
+  !       This provides a way of avoiding the special interpretation of the characters *?[]\ in pattern.
+  !   tails, optional : If provided and true, only return the part of each file found 
+  !     which follows the last directory named in directory. 
+  !     Thus the statement
+  !       listoffiles = vfile_listfile ( tails = .true. , directory = directory , pattern = "*" )
+  !     is equivalent to 
+  !       call vfile_pwd ( cwd )
+  !       call vstrplatform_cd ( directory )
+  !       listoffiles = vfile_listfile ( tails = .true. , pattern = "*" )
+  !       call vstrplatform_cd ( cwd )
+  !     If provided and false, or not provided, the files are left as specified by the
+  !     directory argument.
+  ! TODO : filetypes with characterSpecial, blockSpecial, fifo, link, or socket.
+  !
+  recursive function vfile_listfiles_vstring ( directory , filetypes , pattern , tails ) result ( listOfFiles )
+    type ( t_vstring ), intent(in), optional :: directory
+    type ( t_vstringlist ), intent(in), optional :: filetypes
+    type ( t_vstring ), intent(in), optional :: pattern
+    logical, intent(in), optional :: tails
     type ( t_vstringlist ) :: listOfFiles
     type ( t_vstring ) :: tmpfile
     ! TODO : add features to read from a vstring so that current_filename is made dynamic
-    character (len=VFILE_BUFFER_SIZE) :: current_filename
+    character (len=VFILE_BUFFER_SIZE) :: filename_charstring
     integer :: luntmp
     integer :: ierr
-    integer :: platform
-    type ( t_vstring ) :: prefix
-    type ( t_vstring ) :: prefix_normalized
-    type ( t_vstring ) :: full_filename
-    type ( t_vstring ) :: prefix_dirname
+    type ( t_vstring ) :: filename
+    type ( t_vstring ) :: directory_real
+    type ( t_vstringlist ) :: filetypes_real
+    type ( t_vstring ) :: pattern_real
+    type ( t_vstringlist ) :: listOfFiles_filtered
+    integer :: fileindex
+    integer :: filenb
+    logical :: keepfiles
+    logical :: keepdirectories
+    integer :: itemindex
+    type ( t_vstring ) :: file_type
+    integer :: status
+    type ( t_vstring ) :: relativefilename
+    logical :: tails_real
+    type ( t_vstring ) :: cwd
     !
-    ! 1. Compute the list of files and redirect it to a temporary file.
+    ! Process options
+    !
+    if ( present ( directory ) ) then
+       call vstring_new ( directory_real , directory )
+    else
+       call vfile_pwd ( directory_real )
+    endif
+    if ( present ( filetypes ) ) then
+       call vstrlist_new ( filetypes_real , filetypes )
+    else
+       call vstrlist_new ( filetypes_real )
+       call vstrlist_append ( filetypes_real , "f" )
+       call vstrlist_append ( filetypes_real , "d" )
+    endif
+    if ( present ( pattern ) ) then
+       call vstring_new ( pattern_real , pattern )
+    else
+       call vstring_new ( pattern_real , "*" )
+    endif
+    if ( present ( tails ) ) then
+       tails_real = tails
+    else
+       tails_real = .false.
+    endif
+    !
+    ! 1. Process the tails option
+    !
+    if ( tails_real ) then
+       call vfile_pwd ( cwd )
+       call vstrplatform_cd ( directory )
+       listOfFiles = vfile_listfiles_vstring ( filetypes = filetypes_real , pattern = pattern_real )
+       call vstrplatform_cd ( cwd )
+       call vstring_free ( cwd )
+       ! Alternate return is not a recommended practice, but it is
+       ! better than a goto or a complicated call tree in that particular case.
+       call vstring_free ( directory_real )
+       call vstring_free ( pattern_real )
+       call vstrlist_free ( filetypes_real )
+       return
+    endif
+    !
+    ! 2. Compute the list of files and redirect it to a temporary file.
     !
     tmpfile = vfile_tempfile ()
     !
-    ! Execute the ls command
+    ! 3. Execute the ls command
     !
-    call vfile_findByPattern_computels ( pattern , tmpfile )
-    platform = platform_get_platform ()
+    call vfile_listfiles_execute ( directory_real , tmpfile )
     !
-    ! Under windows, we only get the file tails.
-    ! So we have to normalize these files tails from the pattern 
-    ! (which may contain a part of the path, e.g. "dir1/dir2/*.txt") 
-    ! to get the full file names.
+    ! 4. Analyse the content of the temporary file.
     !
-    if (platform == PLATFORM_PLATFORM_WINDOWS) then
-       call vstring_new ( prefix , pattern )
-       prefix_normalized = vfile_normalize ( prefix )
-       prefix_dirname = vfile_dirname ( prefix_normalized )
-    endif
+    luntmp = vfile_open ( tmpfile )
     !
-    ! 2. Analyse the content of the temporary file.
-    !
-    call vfile_findByPattern_opentmpfile ( tmpfile , luntmp )
-    !
-    ! 2.2 Fill the array
+    ! 4.1 Fill the array
     !
     call vstrlist_new ( listOfFiles )
     do 
-       read( luntmp, '(a)' , iostat = ierr ) current_filename
+       read( luntmp, '(a)' , iostat = ierr ) filename_charstring
        if ( ierr == 0 ) then
-          if (platform == PLATFORM_PLATFORM_WINDOWS) then
-             full_filename = vfile_join ( prefix_dirname , trim(current_filename) )
+          call vstring_new ( filename , trim(filename_charstring) )
+          !
+          ! If the directory was specified, use it in the filename
+          !
+          if ( present ( directory ) ) then
+             relativefilename = vfile_join ( directory , filename )
           else
-             call vstring_new ( full_filename , trim(current_filename) )
+             call vstring_new ( relativefilename , filename )
           endif
-          call vstrlist_append ( listOfFiles , full_filename )
-          call vstring_free ( full_filename )
+          call vstrlist_append ( listOfFiles , relativefilename )
+          call vstring_free ( filename )
+          call vstring_free ( relativefilename )
        else
           exit
        endif
     enddo
     !
-    ! 3. Delete the temporary file
+    ! 5. Delete the temporary file
     !
     close( luntmp, status = 'delete' )
     !
-    ! Clean-up
+    ! 6. Filter out the files which do not match the given list of file types.
     !
-    if (platform == PLATFORM_PLATFORM_WINDOWS) then
-       call vstring_free ( prefix )
-       call vstring_free ( prefix_normalized )
-       call vstring_free ( prefix_dirname )
-    endif
+    !
+    ! 6.1 Analyse the list of file types
+    !
+    itemindex = vstrlist_search ( filetypes_real , "f" )
+    keepfiles = ( itemindex /= 0 )
+    itemindex = vstrlist_search ( filetypes_real , "d" )
+    keepdirectories = ( itemindex /= 0 )
+    !
+    ! 6.2 Process the filter
+    !
+    call vstrlist_new ( listOfFiles_filtered )
+    filenb = vstrlist_length ( listOfFiles )
+    do fileindex = 1 , filenb
+       filename = vstrlist_index ( listOfFiles , fileindex )
+       file_type = vfile_type ( filename , status )
+       if ( status == 0 ) then
+          if ( keepfiles .AND. vstring_equals ( file_type , "file" ) ) then
+             call vstrlist_append ( listOfFiles_filtered , filename )
+          elseif ( keepdirectories .AND. vstring_equals ( file_type , "directory" ) ) then
+             call vstrlist_append ( listOfFiles_filtered , filename )
+          endif
+          call vstring_free ( file_type )
+       endif
+       call vstring_free ( filename )
+    enddo
+    call vstrlist_free ( listOfFiles )
+    call vstrlist_new ( listOfFiles , listOfFiles_filtered )
+    call vstrlist_free ( listOfFiles_filtered )
+    !
+    ! 7. Filter out the files which do not match the given pattern.
+    ! Note:
+    !   This is very simple with the vstrlist_lsearch command.
+    !
+    listOfFiles_filtered = vstrlist_lsearch ( listOfFiles , pattern_real , allitems = .true. )
+    call vstrlist_free ( listOfFiles )
+    call vstrlist_new ( listOfFiles , listOfFiles_filtered )
+    call vstrlist_free ( listOfFiles_filtered )
+    !
+    ! 8. Clean-up
+    !
     call vstring_free ( tmpfile )
+    call vstring_free ( directory_real )
+    call vstring_free ( pattern_real )
+    call vstrlist_free ( filetypes_real )
   contains
     !
-    ! vfile_findByPattern_computels --
+    ! vfile_listfiles_execute --
     !   Execute the "ls" command to get the list of files.
     ! Note :
-    !   filename routine may have been inlined directlly in vfile_findByPattern.
+    !   filename routine may have been inlined directlly in vfile_listfiles.
     !   But filename internal subroutine allows to use automatic arrays
     !   for the character string tmpfile_charstring.
     !   If, instead, we inline filename subroutine, the character string
     !   has to be declared with a static size.
     !
-    subroutine vfile_findByPattern_computels ( pattern , tmpfile )
-      type ( t_vstring ), intent(in) :: pattern
+    subroutine vfile_listfiles_execute ( directory , tmpfile )
+      type ( t_vstring ), intent(in) :: directory
       type ( t_vstring ), intent(in) :: tmpfile
       type ( t_vstring ) :: command
       type ( t_vstring ) :: tmpfile_native
+      type ( t_vstring ) :: pattern
+      type ( t_vstring ) :: cwd
+      !
+      ! Set the default pattern
+      !
+      call vstring_new ( pattern , "*" )
+      !
+      ! Go into the directory
+      ! TODO : manage cases where the directory does not exist.
+      !
+      call vfile_pwd ( cwd )
+      call vstrplatform_cd ( directory )
       !
       ! Convert the file name to native name to make the platform-specific
       ! command work.
@@ -2012,39 +2487,110 @@ contains
       call vstring_append ( command , " " )
       call vstring_append ( command , command_suppress_msg )
       call vstrplatform_system ( command )
+      !
+      ! Go back to the original directory
+      !
+      call vstrplatform_cd ( cwd )
+      !
+      ! Clean-up
+      !
       call vstring_free ( command )
       call vstring_free ( tmpfile_native )
-    end subroutine vfile_findByPattern_computels
-    !
-    ! vfile_findByPattern_opentmpfile --
-    !   Open the temporary file containing the ls result
-    ! Note :
-    !   filename routine may have been inlined directlly in vfile_findByPattern.
-    !   But filename internal subroutine allows to use automatic arrays
-    !   for the character string tmpfile_charstring.
-    !   If, instead, we inline filename subroutine, the character string
-    !   has to be declared with a static size.
-    !
-    subroutine vfile_findByPattern_opentmpfile ( tmpfile , luntmp )
-      type ( t_vstring ), intent(in) :: tmpfile
-      integer , intent(out) :: luntmp
-      luntmp = vfile_open ( tmpfile )
-    end subroutine vfile_findByPattern_opentmpfile
-  end function vfile_findByPattern_vstring
+      call vstring_free ( pattern )
+      call vstring_free ( cwd )
+    end subroutine vfile_listfiles_execute
+  end function vfile_listfiles_vstring
   !
-  ! vfile_findByPattern_charstring --
+  ! vfile_listfiles_charstring --
   !   Returns a list of files which match the given pattern
   !
   ! Arguments:
   !   pattern  Pattern for the file names (like: *.f90), with type character(len=*)
   !
-#define _TEMPLATE_ROUTINE_NAME_CHARSTRING vfile_findByPattern_charstring
-#define _TEMPLATE_ROUTINE_NAME_VSTRING vfile_findByPattern_vstring
-#define _TEMPLATE_ROUTINE_VALUE type(t_vstringlist)
-#include "m_vfile_template_casttovstring1.f90"
-#undef _TEMPLATE_ROUTINE_NAME_CHARSTRING
-#undef _TEMPLATE_ROUTINE_NAME_VSTRING
-#undef _TEMPLATE_ROUTINE_VALUE
+  function vfile_listfiles_charstring ( directory , filetypes , pattern , tails ) result ( listOfFiles )
+    character(len=*), intent(in) :: directory
+    type ( t_vstringlist ), intent(in), optional :: filetypes
+    character(len=*), intent(in), optional :: pattern
+    logical, intent(in), optional :: tails
+    type ( t_vstringlist ) :: listOfFiles
+    type ( t_vstring ) :: directory_vstring
+    type ( t_vstring ) :: pattern_vstring
+    call vstring_new ( directory_vstring , directory )
+    if ( present ( pattern ) ) then
+       call vstring_new ( pattern_vstring , pattern )
+    else
+       call vstring_new ( pattern_vstring , "*" )
+    endif
+    listOfFiles = vfile_listfiles_vstring ( directory_vstring , filetypes , pattern_vstring , tails )
+    call vstring_free ( directory_vstring )
+    call vstring_free ( pattern_vstring )
+  end function vfile_listfiles_charstring
+  !
+  ! vfile_type_vstring --
+  !   Returns a string giving the type of file name, which will be one of file, directory.
+  ! Arguments:
+  !   status, optional : If status is provided and the file type could be computed,
+  !     the status is set to 0.
+  !     If the status is provided and the file type could not be computed,
+  !     the status is set to VFILE_ERROR_UNKNOWN_FILE_TYPE.
+  !     If the status is not provided and the file type could not be computed,
+  !     an error is generated.
+  ! TODO : characterSpecial, blockSpecial, fifo, link, or socket.
+  !
+  function vfile_type_vstring ( filename , status ) result ( filetype )
+    type ( t_vstring ), intent(in) :: filename
+    integer , intent(out), optional :: status
+    type ( t_vstring ) :: filetype
+    logical :: isfile
+    logical :: isdirectory
+    type ( t_vstring ) :: message
+    if ( present ( status ) ) then
+       status = VFILE_ERROR_OK
+    endif
+    !
+    ! Try file
+    !
+    isfile = vfile_isfile ( filename )
+    if ( isfile ) then
+       call vstring_new ( filetype , "file" )
+       return
+    endif
+    !
+    ! Try directory
+    !
+    isdirectory = vfile_isdirectory ( filename )
+    if ( isdirectory ) then
+       call vstring_new ( filetype , "directory" )
+       return
+    endif
+    !
+    ! No type matches
+    !
+    if ( present ( status ) ) then
+       status = VFILE_ERROR_UNKNOWN_FILE_TYPE
+    else
+       call vstring_new ( message )
+       call vstring_append ( message , "No such file or directory:" )
+       call vstring_append ( message , filename )
+       call vstring_append ( message , " in vfile_type" )
+       call vfile_error ( message )
+       call vstring_free ( message )
+    endif
+  end function vfile_type_vstring
+  !
+  ! vfile_type_charstring --
+  !   Returns a string giving the type of file name, which will be one of file, directory,
+  !   or unknown if no type cannot be computed.
+  !
+  function vfile_type_charstring ( filename , status ) result ( filetype )
+    character(len=*), intent(in) :: filename
+    integer , intent(out), optional :: status
+    type ( t_vstring ) :: filetype
+    type ( t_vstring ) :: filename_vstring
+    call vstring_new ( filename_vstring , filename )
+    filetype = vfile_type_vstring ( filename_vstring , status )
+    call vstring_free ( filename_vstring )
+  end function vfile_type_charstring
   !
   ! vfile_split_vstring --
   !   Computes an array whose elements are the path components in name.
@@ -2159,11 +2705,6 @@ contains
       logical :: fexist
       type ( t_vstring ) :: message
       integer :: file_unit
-#ifdef _VFILE_STATIC_BUFFER
-      character ( len = VFILE_BUFFER_SIZE ) :: filename_charstring
-#else
-      character ( len = vstring_length(filename)) :: filename_charstring
-#endif
       fexist = vfile_exists ( filename )
       local_status = 0
       if ( fexist ) then
@@ -2962,7 +3503,6 @@ contains
     !
     function vfile_volumes_windows ( ) result ( listofvolumes )
       type ( t_vstringlist ) :: listofvolumes
-      type ( t_vstring ) :: message
       integer :: charindex
       type ( t_vstring ) :: letter
       type ( t_vstring ) :: filevolume
@@ -3009,7 +3549,6 @@ contains
     !
     function vfile_volumes_unix ( ) result ( listofvolumes )
       type ( t_vstringlist ) :: listofvolumes
-      type ( t_vstring ) :: message
       call vstrlist_new ( listofvolumes )
       call vstrlist_append ( listofvolumes , VFILE_PLATFORM_SEPARATOR_UNIX )
     end function vfile_volumes_unix

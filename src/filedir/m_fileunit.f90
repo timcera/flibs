@@ -42,6 +42,8 @@
 !   displays a full report about a given unit number by using the 
 !   "inquire" fortran intrinsic statement.
 !
+! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
+!
 module m_fileunit
   implicit none
   private
