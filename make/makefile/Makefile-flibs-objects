@@ -12,7 +12,6 @@ $(objects_9)
 # Objects from /src/computing
 objects_1 = \
 $(libdir)/automdiff.o \
-$(libdir)/combinations.o \
 $(libdir)/decimal.o \
 $(libdir)/interval_simple.o \
 $(libdir)/pointsets.o \
@@ -43,7 +42,6 @@ objects_8 = \
 $(libdir)/csv_file.o \
 $(libdir)/globmatch.o \
 $(libdir)/stringmanip.o \
-$(libdir)/stringquery.o \
 $(libdir)/m_vstring.o \
 $(libdir)/m_vstringformat.o \
 $(libdir)/m_vstringlist.o \
