@@ -2,7 +2,7 @@
 <html><head>
 <title>flibs/platform - flibs </title>
 </head>
-<! -- Generated from file 'm_platform.man' by tcllib/doctools with format 'html'
+<! -- Generated from file 'platform/m_platform.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;   -- Copyright &copy; 2008 Michael Baudin &lt;michael.baudin@gmail.com&gt;
    -->
@@ -38,9 +38,9 @@
 <p>
 <table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><b class='cmd'>use m_platform</b> </a></td></tr>
 <tr valign=top ><td ><a href="#2"><b class='cmd'>platform_system</b> (<i class='arg'>command</i> ?, status?)</a></td></tr>
-<tr valign=top ><td ><a href="#3"><b class='cmd'>platform_get_os()</b> </a></td></tr>
+<tr valign=top ><td ><a href="#3"><b class='cmd'>platform_get_os()</b> result ( currentos )</a></td></tr>
 <tr valign=top ><td ><a href="#4"><b class='cmd'>platform_osstring</b> (<i class='arg'>currentos</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#5"><b class='cmd'>platform_get_platform()</b> </a></td></tr>
+<tr valign=top ><td ><a href="#5"><b class='cmd'>platform_get_platform()</b> result ( currentplatform )</a></td></tr>
 <tr valign=top ><td ><a href="#6"><b class='cmd'>platform_platformstring</b> (<i class='arg'>currentplatform</i>)</a></td></tr>
 <tr valign=top ><td ><a href="#7"><b class='cmd'>platform_get_environment_variable</b> ( <i class='arg'>envvar</i> <i class='arg'>, value</i>)</a></td></tr>
 <tr valign=top ><td ><a href="#8"><b class='cmd'>platform_cd</b> ( <i class='arg'>dirname</i> ?, status?)</a></td></tr>
@@ -315,37 +315,36 @@ To import the subroutines, use this module.
 <br><br>
 <dt><a name="2"><b class='cmd'>platform_system</b> (<i class='arg'>command</i> ?, status?)</a><dd>
 
+<dl>
+<dt><strong>character(len=*)</strong> <i class='arg'>command</i><dd>
+<dt><strong>integer, intent ( out ), optional</strong> <i class='arg'>status</i><dd>
+</dl>
 Run an external command or program, optionally retrieving the status of
 that command. Under Windows the &quot;call system&quot; may generate the display of a console.
-
-<br><br>
-<dl>
-
-<dt>character(len=*) <i class='arg'>command</i><dd>
-Command to run (note: this is quite likely platform-dependent)
-
-<br><br>
-<dt>integer, intent ( out ), optional <i class='arg'>status</i><dd>
-Optional argument returning the status. Notice that the information contained
+Optional argument <i class='arg'>status</i> contains the execution status. 
+Notice that the information contained
 in it is not very reliable - some systems do not give any information.
+The <i class='arg'>command</i> to run is quite likely platform-dependent.
 
-</dl>
 <br><br>
+<dt><a name="3"><b class='cmd'>platform_get_os()</b> result ( currentos )</a><dd>
 
-<dt><a name="3"><b class='cmd'>platform_get_os()</b> </a><dd>
-
+<dl>
+<dt><strong>integer</strong> <i class='arg'>currentos</i><dd>
+</dl>
 Return the type of operating system, one of:
 PLATFORM_OS_WINDOWS_95, PLATFORM_OS_WINDOWS_NT,
 PLATFORM_OS_MACOS, PLATFORM_OS_SUNOS, PLATFORM_OS_LINUX,
-PLATFORM_OS_UNIX
+PLATFORM_OS_UNIX.
+The actual integer value should not be used directly ; instead, it
+should be compared against the PLATFORM_OS_* public variables.
 
-<br><br>
 
 <br><br>
 <dt><a name="4"><b class='cmd'>platform_osstring</b> (<i class='arg'>currentos</i>)</a><dd>
 
 <dl>
-<dt>character(len=*), intent(out) :: <i class='arg'>currentos</i><dd>
+<dt><strong>character(len=*), intent(out) ::</strong> <i class='arg'>currentos</i><dd>
 </dl>
 Returns a string containing the current operating system running on the current machine,
 one of &quot;Windows 95&quot;, &quot;Windows NT&quot;, &quot;MacOS&quot;, &quot;SunOS&quot;, 
@@ -354,51 +353,52 @@ one of &quot;Windows 95&quot;, &quot;Windows NT&quot;, &quot;MacOS&quot;, &quot;
 
 
 <br><br>
-<dt><a name="5"><b class='cmd'>platform_get_platform()</b> </a><dd>
+<dt><a name="5"><b class='cmd'>platform_get_platform()</b> result ( currentplatform )</a><dd>
 
+<dl>
+<dt><strong>integer</strong> <i class='arg'>currentplatform</i><dd>
+</dl>
 Return the category of platform, one of:
 PLATFORM_PLATFORM_WINDOWS, PLATFORM_PLATFORM_MAC, PLATFORM_PLATFORM_UNIX
+The actual integer value should not be used directly ; instead, it
+should be compared against the PLATFORM_PLATFORM_* public variables.
 
 <br><br>
 <dt><a name="6"><b class='cmd'>platform_platformstring</b> (<i class='arg'>currentplatform</i>)</a><dd>
 
 <dl>
-<dt>character(len=*), intent(out) :: <i class='arg'>currentplatform</i><dd>
+<dt><strong>character(len=*), intent(out) ::</strong> <i class='arg'>currentplatform</i><dd>
 </dl>
 Returns a string containing the current platform running on the current machine,
 one of &quot;Windows&quot;, &quot;Mac&quot;, &quot;Unix&quot;.
 
-<br><br>
+
 
 <br><br>
 <dt><a name="7"><b class='cmd'>platform_get_environment_variable</b> ( <i class='arg'>envvar</i> <i class='arg'>, value</i>)</a><dd>
 
-Retrieve the value of an environment variable. There is no indication of
+<dl>
+<dt><strong>character(len=*)</strong> <i class='arg'>envvar</i><dd>
+<dt><strong>character(len=*)</strong> <i class='arg'>value</i><dd>
+</dl>
+Retrieve the value of the environment variable <i class='arg'>envvar</i>. There is no indication of
 whether the variable indeed exists and it is up to the calling program
 to provide a string argument sufficiently long to hold the value.
-
-<br><br>
-<dl>
-
-<dt>character(len=*) <i class='arg'>envvar</i><dd>
-The name of the environment variable (note: this is case-sensitive on
+The environment variable <i class='arg'>envvar</i> is case-sensitive on
 some platforms, case-insensitive on others. This is entirely up to the
-platform).
+platform.
+As the underlying routines give no indication of the existence 
+of the environment variable, it is probably best to
+fill the <i class='arg'>value</i> with a known value first (like: &quot;????&quot;) 
+to check it.
+
 
 <br><br>
-<dt>character(len=*) <i class='arg'>envvar</i><dd>
-Value of the environment variable upon return. As the underlying
-routines give no indication of its existence, it is probably best to
-fill it with a known value first (like: &quot;????&quot;) to check it.
-
-</dl>
-
-
 <dt><a name="8"><b class='cmd'>platform_cd</b> ( <i class='arg'>dirname</i> ?, status?)</a><dd>
 
 <dl>
-<dt>character(len=*), intent(in) <i class='arg'>dirname</i><dd>
-<dt>integer, intent(out) , optional :: <i class='arg'>status</i><dd>
+<dt><strong>character(len=*), intent(in)</strong> <i class='arg'>dirname</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
 </dl>
 Change working directory to <i class='arg'>dirname</i>. 
 If <i class='arg'>status</i> is supplied, it contains 0 on success or nonzero error code
@@ -409,9 +409,9 @@ upon return
 <dt><a name="9"><b class='cmd'>platform_stat</b> ( <i class='arg'>filename</i> <i class='arg'>, statarray</i> ?, status?)</a><dd>
 
 <dl>
-<dt>character(len=*), intent(in) :: <i class='arg'>filename</i><dd>
-<dt>integer, dimension (1:13) , intent(out)  :: <i class='arg'>filename</i><dd>
-<dt>integer, intent(out) , optional :: <i class='arg'>status</i><dd>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, dimension (1:13) , intent(out)  ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
 </dl>
 Get status of the file <i class='arg'>filename</i> and fills the array <i class='arg'>statarray</i>
 with the following content.

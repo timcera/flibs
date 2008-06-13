@@ -232,32 +232,32 @@ The module contains the following routines.
 To import the subroutines, use this module.
 
 [call [cmd "platform_system"] ([arg command] [opt ", status"])]
+[list_begin arg]
+[arg_def [type "character(len=*)"] command]
+[arg_def [type "integer, intent ( out ), optional"] status]
+[list_end]
 Run an external command or program, optionally retrieving the status of
 that command. Under Windows the "call system" may generate the display of a console.
-
-[list_begin arg]
-
-[arg_def "character(len=*)" command]
-Command to run (note: this is quite likely platform-dependent)
-
-[arg_def "integer, intent ( out ), optional" status]
-Optional argument returning the status. Notice that the information contained
+Optional argument [arg status] contains the execution status. 
+Notice that the information contained
 in it is not very reliable - some systems do not give any information.
+The [arg command] to run is quite likely platform-dependent.
 
+[call [cmd "platform_get_os()"] result ( currentos )]
+[list_begin arg]
+[arg_def [type "integer"] currentos]
 [list_end]
-[nl]
-
-[call [cmd "platform_get_os()"]]
 Return the type of operating system, one of:
 PLATFORM_OS_WINDOWS_95, PLATFORM_OS_WINDOWS_NT,
 PLATFORM_OS_MACOS, PLATFORM_OS_SUNOS, PLATFORM_OS_LINUX,
-PLATFORM_OS_UNIX
+PLATFORM_OS_UNIX.
+The actual integer value should not be used directly ; instead, it
+should be compared against the PLATFORM_OS_* public variables.
 
-[nl]
 
 [call [cmd "platform_osstring"] ([arg currentos])]
 [list_begin arg]
-[arg_def "character(len=*), intent(out) ::" currentos]
+[arg_def [type "character(len=*), intent(out) ::"] currentos]
 [list_end]
 Returns a string containing the current operating system running on the current machine,
 one of "Windows 95", "Windows NT", "MacOS", "SunOS", 
@@ -265,43 +265,45 @@ one of "Windows 95", "Windows NT", "MacOS", "SunOS",
 
 
 
-[call [cmd "platform_get_platform()"]]
+[call [cmd "platform_get_platform()"]  result ( currentplatform )]
+[list_begin arg]
+[arg_def [type "integer"] currentplatform]
+[list_end]
 Return the category of platform, one of:
 PLATFORM_PLATFORM_WINDOWS, PLATFORM_PLATFORM_MAC, PLATFORM_PLATFORM_UNIX
+The actual integer value should not be used directly ; instead, it
+should be compared against the PLATFORM_PLATFORM_* public variables.
 
 [call [cmd "platform_platformstring"] ([arg currentplatform])]
 [list_begin arg]
-[arg_def "character(len=*), intent(out) ::" currentplatform]
+[arg_def [type "character(len=*), intent(out) ::"] currentplatform]
 [list_end]
 Returns a string containing the current platform running on the current machine,
 one of "Windows", "Mac", "Unix".
 
-[nl]
+
 
 [call [cmd "platform_get_environment_variable"] ( [arg envvar] [arg ", value"])]
-Retrieve the value of an environment variable. There is no indication of
+[list_begin arg]
+[arg_def [type "character(len=*)"] envvar]
+[arg_def [type "character(len=*)"] value]
+[list_end]
+Retrieve the value of the environment variable [arg envvar]. There is no indication of
 whether the variable indeed exists and it is up to the calling program
 to provide a string argument sufficiently long to hold the value.
-
-[list_begin arg]
-
-[arg_def "character(len=*)" envvar]
-The name of the environment variable (note: this is case-sensitive on
+The environment variable [arg envvar] is case-sensitive on
 some platforms, case-insensitive on others. This is entirely up to the
-platform).
-
-[arg_def "character(len=*)" envvar]
-Value of the environment variable upon return. As the underlying
-routines give no indication of its existence, it is probably best to
-fill it with a known value first (like: "????") to check it.
-
-[list_end]
+platform.
+As the underlying routines give no indication of the existence 
+of the environment variable, it is probably best to
+fill the [arg value] with a known value first (like: "????") 
+to check it.
 
 
 [call [cmd "platform_cd"] ( [arg dirname] [opt ", status"])]
 [list_begin arg]
-[arg_def "character(len=*), intent(in)" dirname]
-[arg_def "integer, intent(out) , optional ::" status]
+[arg_def [type "character(len=*), intent(in)"] dirname]
+[arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Change working directory to [arg dirname]. 
 If [arg status] is supplied, it contains 0 on success or nonzero error code
@@ -310,9 +312,9 @@ upon return
 
 [call [cmd "platform_stat"] ( [arg filename] [arg ", statarray"] [opt ", status"])]
 [list_begin arg]
-[arg_def "character(len=*), intent(in) ::" filename]
-[arg_def "integer, dimension (1:13) , intent(out)  ::" filename]
-[arg_def "integer, intent(out) , optional ::" status]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "integer, dimension (1:13) , intent(out)  ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Get status of the file [arg filename] and fills the array [arg statarray]
 with the following content.
