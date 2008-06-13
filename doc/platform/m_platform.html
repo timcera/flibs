@@ -1,19 +1,19 @@
 
 <html><head>
-<title>flibs/platform - flibs </title>
+<title>flibs/m_platform - flibs </title>
 </head>
 <! -- Generated from file 'platform/m_platform.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;   -- Copyright &copy; 2008 Michael Baudin &lt;michael.baudin@gmail.com&gt;
    -->
-<! -- CVS: $Id$ flibs/platform.n
+<! -- CVS: $Id$ flibs/m_platform.n
    -->
 
 <body>
-<h1> flibs/platform(n) 1.0  &quot;flibs&quot;</h1>
+<h1> flibs/m_platform(n) 1.0  &quot;flibs&quot;</h1>
 <h2><a name="name">NAME</a></h2>
 <p>
-<p> flibs/platform - Platform-dependent routines and features
+<p> flibs/m_platform - Platform-dependent routines and features
 
 
 
@@ -316,8 +316,8 @@ To import the subroutines, use this module.
 <dt><a name="2"><b class='cmd'>platform_system</b> (<i class='arg'>command</i> ?, status?)</a><dd>
 
 <dl>
-<dt><strong>character(len=*)</strong> <i class='arg'>command</i><dd>
-<dt><strong>integer, intent ( out ), optional</strong> <i class='arg'>status</i><dd>
+<dt><strong>character(len=*) ::</strong> <i class='arg'>command</i><dd>
+<dt><strong>integer, intent ( out ), optional ::</strong> <i class='arg'>status</i><dd>
 </dl>
 Run an external command or program, optionally retrieving the status of
 that command. Under Windows the &quot;call system&quot; may generate the display of a console.
@@ -330,7 +330,7 @@ The <i class='arg'>command</i> to run is quite likely platform-dependent.
 <dt><a name="3"><b class='cmd'>platform_get_os()</b> result ( currentos )</a><dd>
 
 <dl>
-<dt><strong>integer</strong> <i class='arg'>currentos</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>currentos</i><dd>
 </dl>
 Return the type of operating system, one of:
 PLATFORM_OS_WINDOWS_95, PLATFORM_OS_WINDOWS_NT,
@@ -356,7 +356,7 @@ one of &quot;Windows 95&quot;, &quot;Windows NT&quot;, &quot;MacOS&quot;, &quot;
 <dt><a name="5"><b class='cmd'>platform_get_platform()</b> result ( currentplatform )</a><dd>
 
 <dl>
-<dt><strong>integer</strong> <i class='arg'>currentplatform</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>currentplatform</i><dd>
 </dl>
 Return the category of platform, one of:
 PLATFORM_PLATFORM_WINDOWS, PLATFORM_PLATFORM_MAC, PLATFORM_PLATFORM_UNIX
@@ -378,8 +378,8 @@ one of &quot;Windows&quot;, &quot;Mac&quot;, &quot;Unix&quot;.
 <dt><a name="7"><b class='cmd'>platform_get_environment_variable</b> ( <i class='arg'>envvar</i> <i class='arg'>, value</i>)</a><dd>
 
 <dl>
-<dt><strong>character(len=*)</strong> <i class='arg'>envvar</i><dd>
-<dt><strong>character(len=*)</strong> <i class='arg'>value</i><dd>
+<dt><strong>character(len=*) ::</strong> <i class='arg'>envvar</i><dd>
+<dt><strong>character(len=*) ::</strong> <i class='arg'>value</i><dd>
 </dl>
 Retrieve the value of the environment variable <i class='arg'>envvar</i>. There is no indication of
 whether the variable indeed exists and it is up to the calling program
@@ -397,7 +397,7 @@ to check it.
 <dt><a name="8"><b class='cmd'>platform_cd</b> ( <i class='arg'>dirname</i> ?, status?)</a><dd>
 
 <dl>
-<dt><strong>character(len=*), intent(in)</strong> <i class='arg'>dirname</i><dd>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>dirname</i><dd>
 <dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
 </dl>
 Change working directory to <i class='arg'>dirname</i>. 

@@ -2,7 +2,7 @@
 <html><head>
 <title>flibs/m_vstrings - flibs </title>
 </head>
-<! -- Generated from file 'm_vstring.man' by tcllib/doctools with format 'html'
+<! -- Generated from file 'strings/m_vstring.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com   -- Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net
    -->
@@ -49,53 +49,53 @@
 <tr valign=top ><td ><a href="#5"><strong>vstring_new</strong> <i class='arg'>(this,chararray)</i></a></td></tr>
 <tr valign=top ><td ><a href="#6"><strong>vstring_new</strong> <i class='arg'>(this, ncount ?, vstring?)</i></a></td></tr>
 <tr valign=top ><td ><a href="#7"><strong>vstring_free</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#8"><strong>vstring_exists</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#9"><strong>vstring_equals </strong> <i class='arg'>(this, stringb ?, nocase,length?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#10"><strong>vstring_equals </strong> <i class='arg'>(this, string2 ?, nocase,length?)</i></a></td></tr>
+<tr valign=top ><td ><a href="#8"><strong>vstring_exists</strong> (<i class='arg'>this</i>) result ( exists )</a></td></tr>
+<tr valign=top ><td ><a href="#9"><strong>vstring_equals </strong> <i class='arg'>(this, stringb ?, nocase,length?)</i> result (equals)</a></td></tr>
+<tr valign=top ><td ><a href="#10"><strong>vstring_equals </strong> <i class='arg'>(this, string2 ?, nocase,length?)</i> result (equals)</a></td></tr>
 <tr valign=top ><td ><a href="#11"><strong>vstring_cast</strong> (<i class='arg'>this</i> ?, args?)</a></td></tr>
 <tr valign=top ><td ><a href="#12"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, length</i> <i class='arg'>, charstring</i>)</a></td></tr>
 <tr valign=top ><td ><a href="#13"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, charstring</i>)</a></td></tr>
 <tr valign=top ><td ><a href="#14"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, value</i>)</a></td></tr>
 <tr valign=top ><td ><a href="#15"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, value</i>)</a></td></tr>
 <tr valign=top ><td ><a href="#16"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, value</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#17"><strong>vstring_length</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#18"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i></a></td></tr>
-<tr valign=top ><td ><a href="#19"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i></a></td></tr>
+<tr valign=top ><td ><a href="#17"><strong>vstring_length</strong> (<i class='arg'>this</i>) result ( length )</a></td></tr>
+<tr valign=top ><td ><a href="#18"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i> result ( concat_string )</a></td></tr>
+<tr valign=top ><td ><a href="#19"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i> result ( concat_string )</a></td></tr>
 <tr valign=top ><td ><a href="#20"><strong>vstring_append</strong> <i class='arg'>(this,string2)</i></a></td></tr>
 <tr valign=top ><td ><a href="#21"><strong>vstring_append</strong> <i class='arg'>(this,string2)</i></a></td></tr>
-<tr valign=top ><td ><a href="#22"><strong>vstring_map</strong> <i class='arg'>(this , map_old , map_new ?, nocase?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#23"><strong>vstring_replace</strong> <i class='arg'>(this , first , last ?, newstring?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#24"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#25"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#26"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#27"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#28"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#29"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#30"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#31"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#32"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#33"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#34"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#35"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i></a></td></tr>
-<tr valign=top ><td ><a href="#36"><strong>vstring_range</strong> (<i class='arg'>this</i><i class='arg'>, first</i><i class='arg'>, last</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#37"><strong>vstring_index</strong> <i class='arg'>(this , charIndex )</i></a></td></tr>
-<tr valign=top ><td ><a href="#38"><strong>vstring_toupper</strong> (<i class='arg'>this</i>?, first??, last?)</a></td></tr>
-<tr valign=top ><td ><a href="#39"><strong>vstring_tolower</strong> (<i class='arg'>this</i>?, first??, last?)</a></td></tr>
-<tr valign=top ><td ><a href="#40"><strong>vstring_totitle</strong> (<i class='arg'>this</i>?, first??, last?)</a></td></tr>
-<tr valign=top ><td ><a href="#41"><strong>vstring_reverse</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#42"><strong>vstring_random</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#43"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?)</a></td></tr>
-<tr valign=top ><td ><a href="#44"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?)</a></td></tr>
-<tr valign=top ><td ><a href="#45"><strong>vstring_is</strong> (<i class='arg'>this</i> <i class='arg'>, class</i> ?, strict? ?, failindex?)</a></td></tr>
-<tr valign=top ><td ><a href="#46"><strong>vstring_iachar</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#47"><strong>vstring_ichar</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#48"><strong>vstring_charindex</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?)</a></td></tr>
-<tr valign=top ><td ><a href="#49"><strong>vstring_scan</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?)</a></td></tr>
-<tr valign=top ><td ><a href="#50"><strong>vstring_verify</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?)</a></td></tr>
-<tr valign=top ><td ><a href="#51"><strong>vstring_adjustl</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#52"><strong>vstring_adjustr</strong> (<i class='arg'>this</i>)</a></td></tr>
-<tr valign=top ><td ><a href="#53"><strong>vstring_achar</strong> <i class='arg'>(i)</i></a></td></tr>
-<tr valign=top ><td ><a href="#54"><strong>vstring_char</strong> <i class='arg'>(i)</i></a></td></tr>
+<tr valign=top ><td ><a href="#22"><strong>vstring_map</strong> <i class='arg'>(this , map_old , map_new ?, nocase?)</i> result ( stringmap )</a></td></tr>
+<tr valign=top ><td ><a href="#23"><strong>vstring_replace</strong> <i class='arg'>(this , first , last ?, newstring?)</i> result ( stringreplace )</a></td></tr>
+<tr valign=top ><td ><a href="#24"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i> result ( compare )</a></td></tr>
+<tr valign=top ><td ><a href="#25"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i> result ( compare )</a></td></tr>
+<tr valign=top ><td ><a href="#26"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a></td></tr>
+<tr valign=top ><td ><a href="#27"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a></td></tr>
+<tr valign=top ><td ><a href="#28"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a></td></tr>
+<tr valign=top ><td ><a href="#29"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a></td></tr>
+<tr valign=top ><td ><a href="#30"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a></td></tr>
+<tr valign=top ><td ><a href="#31"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a></td></tr>
+<tr valign=top ><td ><a href="#32"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i> result ( firstIndex )</a></td></tr>
+<tr valign=top ><td ><a href="#33"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i> result ( firstIndex )</a></td></tr>
+<tr valign=top ><td ><a href="#34"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i> result ( lastIndex )</a></td></tr>
+<tr valign=top ><td ><a href="#35"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i> result ( lastIndex )</a></td></tr>
+<tr valign=top ><td ><a href="#36"><strong>vstring_range</strong> (<i class='arg'>this</i><i class='arg'>, first</i><i class='arg'>, last</i>) result ( string_range )</a></td></tr>
+<tr valign=top ><td ><a href="#37"><strong>vstring_index</strong> <i class='arg'>(this , charIndex )</i> result ( string_index )</a></td></tr>
+<tr valign=top ><td ><a href="#38"><strong>vstring_toupper</strong> (<i class='arg'>this</i>?, first??, last?) result ( new_upper )</a></td></tr>
+<tr valign=top ><td ><a href="#39"><strong>vstring_tolower</strong> (<i class='arg'>this</i>?, first??, last?) result ( new_lower )</a></td></tr>
+<tr valign=top ><td ><a href="#40"><strong>vstring_totitle</strong> (<i class='arg'>this</i>?, first??, last?) result ( new_title )</a></td></tr>
+<tr valign=top ><td ><a href="#41"><strong>vstring_reverse</strong> (<i class='arg'>this</i>) result ( new_reverse )</a></td></tr>
+<tr valign=top ><td ><a href="#42"><strong>vstring_random</strong> (<i class='arg'>this</i>) result ( new_random )</a></td></tr>
+<tr valign=top ><td ><a href="#43"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?) result ( match )</a></td></tr>
+<tr valign=top ><td ><a href="#44"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?) result ( match )</a></td></tr>
+<tr valign=top ><td ><a href="#45"><strong>vstring_is</strong> (<i class='arg'>this</i> <i class='arg'>, class</i> ?, strict? ?, failindex?) result ( isinclass )</a></td></tr>
+<tr valign=top ><td ><a href="#46"><strong>vstring_iachar</strong> (<i class='arg'>this</i>) result ( new_iachar )</a></td></tr>
+<tr valign=top ><td ><a href="#47"><strong>vstring_ichar</strong> (<i class='arg'>this</i>) result ( new_ichar )</a></td></tr>
+<tr valign=top ><td ><a href="#48"><strong>vstring_charindex</strong> (<i class='arg'>this</i> <i class='arg'>, substring</i> ?, back?) result ( charindex )</a></td></tr>
+<tr valign=top ><td ><a href="#49"><strong>vstring_scan</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?) result ( charindex )</a></td></tr>
+<tr valign=top ><td ><a href="#50"><strong>vstring_verify</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?) result ( charindex )</a></td></tr>
+<tr valign=top ><td ><a href="#51"><strong>vstring_adjustl</strong> (<i class='arg'>this</i>) result ( newstring )</a></td></tr>
+<tr valign=top ><td ><a href="#52"><strong>vstring_adjustr</strong> (<i class='arg'>this</i>) result ( newstring )</a></td></tr>
+<tr valign=top ><td ><a href="#53"><strong>vstring_achar</strong> <i class='arg'>(i)</i> result ( new_achar )</a></td></tr>
+<tr valign=top ><td ><a href="#54"><strong>vstring_char</strong> <i class='arg'>(i)</i> result ( new_achar )</a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -362,10 +362,10 @@ in the implementation of len = pure function value in IVF8.
 In the following definitions, the <i class='arg'>this</i> argument has, 
 depending on the method, one of the the following definitions :
 <dl>
-<dt>type ( t_vstring ) , intent(inout) :: <i class='arg'>this</i><dd>
+<dt><strong>type ( t_vstring ) , intent(inout) ::</strong> <i class='arg'>this</i><dd>
 </dl>
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>this</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>this</i><dd>
 </dl>
 The &quot;intent(in)&quot; or &quot;intent(inout)&quot; declaration depends on the 
 method and is what it is expected to be (if not, it is a bug).
@@ -386,7 +386,7 @@ Creates a vstring with 0 characters and 0 length.
 <dt><a name="3"><strong>vstring_new</strong> <i class='arg'>(this,char_string)</i></a><dd>
 
 <dl>
-<dt>character(LEN=*), intent(in) :: <i class='arg'>char_string</i><dd>
+<dt><strong>character(LEN=*), intent(in) ::</strong> <i class='arg'>char_string</i><dd>
 </dl>
 The new vstring is filled with the 
 characters found in &quot;char_string&quot;.
@@ -395,7 +395,7 @@ characters found in &quot;char_string&quot;.
 <dt><a name="4"><strong>vstring_new</strong> <i class='arg'>(this,vstring)</i></a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>vstring</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>vstring</i><dd>
 </dl>
 The new vstring is filled with the 
 characters found in the dynamic string &quot;vstring&quot;.
@@ -404,7 +404,7 @@ characters found in the dynamic string &quot;vstring&quot;.
 <dt><a name="5"><strong>vstring_new</strong> <i class='arg'>(this,chararray)</i></a><dd>
 
 <dl>
-<dt>character(len=1), dimension(:), intent(in) :: <i class='arg'>chararray</i><dd>
+<dt><strong>character(len=1), dimension(:), intent(in) ::</strong> <i class='arg'>chararray</i><dd>
 </dl>
 The new vstring is filled with the 
 characters found in the array of characters &quot;chararray&quot;.
@@ -413,8 +413,8 @@ characters found in the array of characters &quot;chararray&quot;.
 <dt><a name="6"><strong>vstring_new</strong> <i class='arg'>(this, ncount ?, vstring?)</i></a><dd>
 
 <dl>
-<dt>integer, intent(in) :: <i class='arg'>ncount</i><dd>
-<dt>type ( t_vstring ) , intent(in), optional :: <i class='arg'>vstring</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>ncount</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in), optional ::</strong> <i class='arg'>vstring</i><dd>
 </dl>
 Repeat the string ncount times and concatenate the result to create the new string.
 If not provided, the default string is the blank space.
@@ -438,17 +438,21 @@ Destructor.
      same target as the one that is.&quot;
 
 <br><br>
-<dt><a name="8"><strong>vstring_exists</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="8"><strong>vstring_exists</strong> (<i class='arg'>this</i>) result ( exists )</a><dd>
 
+<dl>
+<dt><strong>logical ::</strong> <i class='arg'>exists</i><dd>
+</dl>
 Returns .true. if the string is allocated.
 
 <br><br>
-<dt><a name="9"><strong>vstring_equals </strong> <i class='arg'>(this, stringb ?, nocase,length?)</i></a><dd>
+<dt><a name="9"><strong>vstring_equals </strong> <i class='arg'>(this, stringb ?, nocase,length?)</i> result (equals)</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>stringb</i><dd>
-<dt>logical , intent (in), optional :: <i class='arg'>nocase</i><dd>
-<dt>integer , intent (in), optional :: <i class='arg'>length</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>stringb</i><dd>
+<dt><strong>logical , intent (in), optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>integer , intent (in), optional ::</strong> <i class='arg'>length</i><dd>
+<dt><strong>logical ::</strong> <i class='arg'>equals</i><dd>
 </dl>
      Perform a character-by-character comparison of strings this and string2.
      Returns true if this and stringb are identical, or .false when not.
@@ -457,12 +461,13 @@ Returns .true. if the string is allocated.
      If length is specified, then only the first length characters are used in the comparison.
 
 <br><br>
-<dt><a name="10"><strong>vstring_equals </strong> <i class='arg'>(this, string2 ?, nocase,length?)</i></a><dd>
+<dt><a name="10"><strong>vstring_equals </strong> <i class='arg'>(this, string2 ?, nocase,length?)</i> result (equals)</a><dd>
 
 <dl>
-<dt>character(len=*), intent(in) :: <i class='arg'>string2</i><dd>
-<dt>logical , intent (in), optional :: <i class='arg'>nocase</i><dd>
-<dt>integer , intent (in), optional :: <i class='arg'>length</i><dd>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>logical , intent (in), optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>integer , intent (in), optional ::</strong> <i class='arg'>length</i><dd>
+<dt><strong>logical ::</strong> <i class='arg'>equals</i><dd>
 </dl>
      Same as previous but with string2 as a character string.
 
@@ -475,8 +480,8 @@ Convert a dynamic string into another fortran data type.
 <dt><a name="12"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, length</i> <i class='arg'>, charstring</i>)</a><dd>
 
 <dl>
-<dt>integer, intent(in) :: <i class='arg'>length</i><dd>
-<dt>character ( LEN = length ) , intent(out) :: <i class='arg'>charstring</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>length</i><dd>
+<dt><strong>character ( LEN = length ) , intent(out) ::</strong> <i class='arg'>charstring</i><dd>
 </dl>
 Convert a dynamic string into a character string
 with fixed length.
@@ -488,7 +493,7 @@ contains only the first characters of the current dynamic string.
 <dt><a name="13"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, charstring</i>)</a><dd>
 
 <dl>
-<dt>character ( LEN = * ) , intent(out) :: <i class='arg'>charstring</i><dd>
+<dt><strong>character ( LEN = * ) , intent(out) ::</strong> <i class='arg'>charstring</i><dd>
 </dl>
 Convert a dynamic string into a character string
 with automatic length.
@@ -501,7 +506,7 @@ contains only the first characters of the current dynamic string.
 <dt><a name="14"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, value</i>)</a><dd>
 
 <dl>
-<dt>integer, intent(out) :: <i class='arg'>value</i><dd>
+<dt><strong>integer, intent(out) ::</strong> <i class='arg'>value</i><dd>
 </dl>
 Returns the integer stored in the current string.
 
@@ -510,7 +515,7 @@ Returns the integer stored in the current string.
 <dt><a name="15"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, value</i>)</a><dd>
 
 <dl>
-<dt>real, intent(out) :: <i class='arg'>value</i><dd>
+<dt><strong>real, intent(out) ::</strong> <i class='arg'>value</i><dd>
 </dl>
 Returns the real stored in the current string.
 
@@ -519,29 +524,34 @@ Returns the real stored in the current string.
 <dt><a name="16"><strong>vstring_cast</strong> (<i class='arg'>this</i> <i class='arg'>, value</i>)</a><dd>
 
 <dl>
-<dt>double precision, intent(out) :: <i class='arg'>value</i><dd>
+<dt><strong>double precision, intent(out) ::</strong> <i class='arg'>value</i><dd>
 </dl>
 Returns the double precision stored in the current string.
 
 
 <br><br>
-<dt><a name="17"><strong>vstring_length</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="17"><strong>vstring_length</strong> (<i class='arg'>this</i>) result ( length )</a><dd>
 
+<dl>
+<dt><strong>integer ::</strong> <i class='arg'>length</i><dd>
+</dl>
 Returns the length of the current dynamic string.
 
 <br><br>
-<dt><a name="18"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i></a><dd>
+<dt><a name="18"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i> result ( concat_string )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>string2</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>concat_string</i><dd>
 </dl>
 Returns a new dynamic string made by the concatenation of two dynamic strings.
 
 <br><br>
-<dt><a name="19"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i></a><dd>
+<dt><a name="19"><strong>vstring_concat</strong> <i class='arg'>(this,string2)</i> result ( concat_string )</a><dd>
 
 <dl>
-<dt>character(len=*) , intent(in) :: <i class='arg'>string2</i><dd>
+<dt><strong>character(len=*) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>concat_string</i><dd>
 </dl>
 Returns a new string made by the concatenation of the current dynamic string
 and the given character(len=*) string.
@@ -550,7 +560,7 @@ and the given character(len=*) string.
 <dt><a name="20"><strong>vstring_append</strong> <i class='arg'>(this,string2)</i></a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>string2</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
 </dl>
 Append the given string at the end of the current string.
 If the given string string2 is of length greater than zero,
@@ -563,18 +573,19 @@ when the concat is to be done &quot;in place&quot;.
 <dt><a name="21"><strong>vstring_append</strong> <i class='arg'>(this,string2)</i></a><dd>
 
 <dl>
-<dt>character(len=*) , intent(in) :: <i class='arg'>string2</i><dd>
+<dt><strong>character(len=*) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string2.
 
 
 <br><br>
-<dt><a name="22"><strong>vstring_map</strong> <i class='arg'>(this , map_old , map_new ?, nocase?)</i></a><dd>
+<dt><a name="22"><strong>vstring_map</strong> <i class='arg'>(this , map_old , map_new ?, nocase?)</i> result ( stringmap )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , dimension( : ), intent(in) :: <i class='arg'>map_old</i><dd>
-<dt>type ( t_vstring ) , dimension( : ), intent(in) :: <i class='arg'>map_new</i><dd>
-<dt>logical, intent(in), optional :: <i class='arg'>nocase</i><dd>
+<dt><strong>type ( t_vstring ) , dimension( : ), intent(in) ::</strong> <i class='arg'>map_old</i><dd>
+<dt><strong>type ( t_vstring ) , dimension( : ), intent(in) ::</strong> <i class='arg'>map_new</i><dd>
+<dt><strong>logical, intent(in), optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>type(t_vstring) ::</strong> <i class='arg'>stringmap</i><dd>
 </dl>
 Replaces substrings in string based on the mapping defined by the couple (map_old , map_new).
 map_old and map_new are arrays of vstrings and are of the same size so that
@@ -599,12 +610,13 @@ mask the later one. So if the previous example is reordered like this,
 it will return the string 02c322c222c.
 
 <br><br>
-<dt><a name="23"><strong>vstring_replace</strong> <i class='arg'>(this , first , last ?, newstring?)</i></a><dd>
+<dt><a name="23"><strong>vstring_replace</strong> <i class='arg'>(this , first , last ?, newstring?)</i> result ( stringreplace )</a><dd>
 
 <dl>
-<dt>integer, intent(in) :: <i class='arg'>first</i><dd>
-<dt>integer, intent(in) :: <i class='arg'>last</i><dd>
-<dt>type ( t_vstring ) , intent(in), optional :: <i class='arg'>newstring</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in), optional ::</strong> <i class='arg'>newstring</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>stringreplace</i><dd>
 </dl>
 Removes a range of consecutive characters from string, starting with the character whose
 index is first and ending with the character whose index is last. An index of 1 refers to
@@ -613,12 +625,13 @@ If newstring is specified, then it is placed in the removed character range.
 
 
 <br><br>
-<dt><a name="24"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i></a><dd>
+<dt><a name="24"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i> result ( compare )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>string2</i><dd>
-<dt>logical , intent (in), optional :: <i class='arg'>nocase</i><dd>
-<dt>integer , intent (in), optional :: <i class='arg'>length</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>logical , intent (in), optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>integer , intent (in), optional ::</strong> <i class='arg'>length</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>compare</i><dd>
 </dl>
 Perform a character-by-character comparison of strings this and string2.
 Returns -1, 0, or 1, depending on whether this is lexicographically less
@@ -628,20 +641,22 @@ The default behaviour is to take into account for case of characters.
 If length is specified, then only the first length characters are used in the comparison.
 
 <br><br>
-<dt><a name="25"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i></a><dd>
+<dt><a name="25"><strong>vstring_compare</strong> <i class='arg'>(this,string2?, nocase , length?)</i> result ( compare )</a><dd>
 
 <dl>
-<dt>character (len=*) , intent(in) :: <i class='arg'>string2</i><dd>
-<dt>logical , intent (in), optional :: <i class='arg'>nocase</i><dd>
-<dt>integer , intent (in), optional :: <i class='arg'>length</i><dd>
+<dt><strong>character (len=*) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>logical , intent (in), optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>integer , intent (in), optional ::</strong> <i class='arg'>length</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>compare</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string2.
 
 <br><br>
-<dt><a name="26"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i></a><dd>
+<dt><a name="26"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in), optional :: <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in), optional ::</strong> <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>trim_string</i><dd>
 </dl>
 Returns a new string except that any leading or trailing characters
 from the set given by chars are removed.
@@ -649,18 +664,20 @@ If chars is not specified then white space is removed (spaces, tabs,
 newlines, and carriage returns).
 
 <br><br>
-<dt><a name="27"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i></a><dd>
+<dt><a name="27"><strong>vstring_trim</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a><dd>
 
 <dl>
-<dt>character (len=*) , intent(in), optional :: <i class='arg'>chars</i><dd>
+<dt><strong>character (len=*) , intent(in), optional ::</strong> <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>trim_string</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string &quot;chars&quot;.
 
 <br><br>
-<dt><a name="28"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i></a><dd>
+<dt><a name="28"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in), optional :: <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in), optional ::</strong> <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>trim_string</i><dd>
 </dl>
 Returns a new string except that any leading characters
 from the set given by chars are removed.
@@ -668,36 +685,40 @@ If chars is not specified then white space is removed
 (spaces, tabs, newlines, and carriage returns).
 
 <br><br>
-<dt><a name="29"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i></a><dd>
+<dt><a name="29"><strong>vstring_trimleft</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a><dd>
 
 <dl>
-<dt>character (len=*) , intent(in), optional :: <i class='arg'>chars</i><dd>
+<dt><strong>character (len=*) , intent(in), optional ::</strong> <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>trim_string</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string &quot;chars&quot;.
 
 <br><br>
-<dt><a name="30"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i></a><dd>
+<dt><a name="30"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in), optional :: <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in), optional ::</strong> <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>trim_string</i><dd>
 </dl>
 Returns a value equal to string except that any trailing characters from the set given by chars are removed.
 If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).
 
 <br><br>
-<dt><a name="31"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i></a><dd>
+<dt><a name="31"><strong>vstring_trimright</strong> <i class='arg'>(this ?, chars?)</i> result ( trim_string )</a><dd>
 
 <dl>
-<dt>character (len=*) , intent(in), optional :: <i class='arg'>chars</i><dd>
+<dt><strong>character (len=*) , intent(in), optional ::</strong> <i class='arg'>chars</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>trim_string</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string &quot;chars&quot;.
 
 <br><br>
-<dt><a name="32"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i></a><dd>
+<dt><a name="32"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i> result ( firstIndex )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in)   :: <i class='arg'>string2</i><dd>
-<dt>integer, intent(in), optional :: <i class='arg'>first</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in)   ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>integer, intent(in), optional ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>firstIndex</i><dd>
 </dl>
 Search in the current string for a sequence of characters that exactly match the characters in string2.
 If found, return the index of the first character in the first such match within the current string.
@@ -706,21 +727,23 @@ If first is specified, then the search is constrained to start with the characte
 in the current string specified by the index.
 
 <br><br>
-<dt><a name="33"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i></a><dd>
+<dt><a name="33"><strong>vstring_first</strong> <i class='arg'>(this ?, string2 , first?)</i> result ( firstIndex )</a><dd>
 
 <dl>
-<dt>character(len=*) , intent(in)   :: <i class='arg'>string2</i><dd>
-<dt>integer, intent(in), optional :: <i class='arg'>first</i><dd>
+<dt><strong>character(len=*) , intent(in)   ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>integer, intent(in), optional ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>firstIndex</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string &quot;string2&quot;.
 
 
 <br><br>
-<dt><a name="34"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i></a><dd>
+<dt><a name="34"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i> result ( lastIndex )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in)   :: <i class='arg'>string2</i><dd>
-<dt>integer, intent(in), optional :: <i class='arg'>last</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in)   ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>integer, intent(in), optional ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>lastIndex</i><dd>
 </dl>
 Search in the current string for a sequence of characters that exactly match the characters in string2.
 If found, return the index of the last character in the first such match within the current string.
@@ -729,21 +752,23 @@ If last is specified, then the search is constrained to start with the character
 string specified by the index.
 
 <br><br>
-<dt><a name="35"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i></a><dd>
+<dt><a name="35"><strong>vstring_last</strong> <i class='arg'>(this ?, string2 , last?)</i> result ( lastIndex )</a><dd>
 
 <dl>
-<dt>character(len=*) , intent(in) :: <i class='arg'>string2</i><dd>
-<dt>integer, intent(in), optional :: <i class='arg'>last</i><dd>
+<dt><strong>character(len=*) , intent(in) ::</strong> <i class='arg'>string2</i><dd>
+<dt><strong>integer, intent(in), optional ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>lastIndex</i><dd>
 </dl>
 Same as previous, but with a character(len=*) string &quot;string2&quot;.
 
 
 <br><br>
-<dt><a name="36"><strong>vstring_range</strong> (<i class='arg'>this</i><i class='arg'>, first</i><i class='arg'>, last</i>)</a><dd>
+<dt><a name="36"><strong>vstring_range</strong> (<i class='arg'>this</i><i class='arg'>, first</i><i class='arg'>, last</i>) result ( string_range )</a><dd>
 
 <dl>
-<dt>integer, intent(in)         :: <i class='arg'>first</i><dd>
-<dt>integer, intent(in)         :: <i class='arg'>last</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>string_range</i><dd>
 </dl>
 Returns a range of consecutive characters from string,
 starting with the character whose index is first and ending with the character whose
@@ -755,10 +780,11 @@ If first is greater than last then an error is generated.
 
 
 <br><br>
-<dt><a name="37"><strong>vstring_index</strong> <i class='arg'>(this , charIndex )</i></a><dd>
+<dt><a name="37"><strong>vstring_index</strong> <i class='arg'>(this , charIndex )</i> result ( string_index )</a><dd>
 
 <dl>
-<dt>integer, intent(in)         :: <i class='arg'>charIndex</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>charIndex</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>string_index</i><dd>
 </dl>
 Returns the charIndex'th character of the string argument.
 A charIndex of 1 corresponds to the first character of the string.
@@ -766,11 +792,12 @@ If charIndex is less than 1 or greater than or equal to the length of the string
 then an error is generated.
 
 <br><br>
-<dt><a name="38"><strong>vstring_toupper</strong> (<i class='arg'>this</i>?, first??, last?)</a><dd>
+<dt><a name="38"><strong>vstring_toupper</strong> (<i class='arg'>this</i>?, first??, last?) result ( new_upper )</a><dd>
 
 <dl>
-<dt>integer, intent(in)         :: <i class='arg'>first</i><dd>
-<dt>integer, intent(in)         :: <i class='arg'>last</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_upper</i><dd>
 </dl>
 Returns a vstring except that all lower (or title) case letters have been
 converted to upper case. If first is specified, it refers to the first char index in the string
@@ -778,11 +805,12 @@ to start modifying. If last is specified, it refers to the char index in the str
 at (inclusive).
 
 <br><br>
-<dt><a name="39"><strong>vstring_tolower</strong> (<i class='arg'>this</i>?, first??, last?)</a><dd>
+<dt><a name="39"><strong>vstring_tolower</strong> (<i class='arg'>this</i>?, first??, last?) result ( new_lower )</a><dd>
 
 <dl>
-<dt>integer, intent(in)         :: <i class='arg'>first</i><dd>
-<dt>integer, intent(in)         :: <i class='arg'>last</i><dd>
+<dt><strong>integer, intent(in)         ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer, intent(in)         ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_lower</i><dd>
 </dl>
 Returns a vstring except that all upper (or title) case letters have been
 converted to lower case. If first is specified, it refers to the first char index in the string
@@ -791,11 +819,12 @@ at (inclusive).
 
 
 <br><br>
-<dt><a name="40"><strong>vstring_totitle</strong> (<i class='arg'>this</i>?, first??, last?)</a><dd>
+<dt><a name="40"><strong>vstring_totitle</strong> (<i class='arg'>this</i>?, first??, last?) result ( new_title )</a><dd>
 
 <dl>
-<dt>integer, intent(in)         :: <i class='arg'>first</i><dd>
-<dt>integer, intent(in)         :: <i class='arg'>last</i><dd>
+<dt><strong>integer, intent(in)         ::</strong> <i class='arg'>first</i><dd>
+<dt><strong>integer, intent(in)         ::</strong> <i class='arg'>last</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_title</i><dd>
 </dl>
 Returns a vstring except that the first character in string is converted
 to upper case, and the rest of the string is converted to lower case. If first is specified, it refers
@@ -804,26 +833,31 @@ to the char index in the string to stop at (inclusive).
 
 
 <br><br>
-<dt><a name="41"><strong>vstring_reverse</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="41"><strong>vstring_reverse</strong> (<i class='arg'>this</i>) result ( new_reverse )</a><dd>
 
+<dl>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_reverse</i><dd>
+</dl>
 Return a string that has all characters in reverse order.
 
 
 <br><br>
-<dt><a name="42"><strong>vstring_random</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="42"><strong>vstring_random</strong> (<i class='arg'>this</i>) result ( new_random )</a><dd>
 
 <dl>
-<dt>integer, intent(in) :: <i class='arg'>length</i><dd>
+<dt><strong>integer, intent(in) ::</strong> <i class='arg'>length</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_random</i><dd>
 </dl>
 Fill a string with required length and randomized characters.
 
 
 <br><br>
-<dt><a name="43"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?)</a><dd>
+<dt><a name="43"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?) result ( match )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>pattern</i><dd>
-<dt>logical , intent(in) , optional :: <i class='arg'>nocase</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>pattern</i><dd>
+<dt><strong>logical , intent(in) , optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>logical ::</strong> <i class='arg'>match</i><dd>
 </dl>
 See if <i class='arg'>pattern</i> matches string; return 1 if it does, 0 if it doesn't.
 If <i class='arg'>nocase</i> is specified and true, then the pattern attempts to match against the
@@ -863,22 +897,24 @@ provided with flibs. In the following example, &quot;match&quot; is true.
 </pre></td></tr></table></p>
 
 <br><br>
-<dt><a name="44"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?)</a><dd>
+<dt><a name="44"><strong>vstring_match</strong> (<i class='arg'>this</i> <i class='arg'>, pattern</i> ?, nocase?) result ( match )</a><dd>
 
 <dl>
-<dt>character(len=*) , intent(in) :: <i class='arg'>pattern</i><dd>
-<dt>logical , intent(in) , optional :: <i class='arg'>nocase</i><dd>
+<dt><strong>character(len=*) , intent(in) ::</strong> <i class='arg'>pattern</i><dd>
+<dt><strong>logical , intent(in) , optional ::</strong> <i class='arg'>nocase</i><dd>
+<dt><strong>logical ::</strong> <i class='arg'>match</i><dd>
 </dl>
 Same as previous, with character(len=*) as <i class='arg'>pattern</i>.
 
 
 <br><br>
-<dt><a name="45"><strong>vstring_is</strong> (<i class='arg'>this</i> <i class='arg'>, class</i> ?, strict? ?, failindex?)</a><dd>
+<dt><a name="45"><strong>vstring_is</strong> (<i class='arg'>this</i> <i class='arg'>, class</i> ?, strict? ?, failindex?) result ( isinclass )</a><dd>
 
 <dl>
-<dt>character(len=*) , intent(in) :: <i class='arg'>class</i><dd>
-<dt>logical, intent(in) , optional :: <i class='arg'>strict</i><dd>
-<dt>integer, intent(out) , optional :: <i class='arg'>failindex</i><dd>
+<dt><strong>character(len=*) , intent(in) ::</strong> <i class='arg'>class</i><dd>
+<dt><strong>logical, intent(in) , optional ::</strong> <i class='arg'>strict</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>failindex</i><dd>
+<dt><strong>logical ::</strong> <i class='arg'>isinclass</i><dd>
 </dl>
      Returns .true. if string is a valid member of the specified character class, 
      otherwise returns .false.. 
@@ -951,28 +987,38 @@ Same as previous, with character(len=*) as <i class='arg'>pattern</i>.
 <h2><a name="interface_to_standard_fortran">INTERFACE TO STANDARD FORTRAN</a></h2>
 <p>
 
+These methods or routines are simply an interface of standard fortran
+string processing routines.
+
 <dl>
 
-<dt><a name="46"><strong>vstring_iachar</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="46"><strong>vstring_iachar</strong> (<i class='arg'>this</i>) result ( new_iachar )</a><dd>
 
+<dl>
+<dt><strong>integer ::</strong> <i class='arg'>new_iachar</i><dd>
+</dl>
 Returns the code for the ASCII character in the character position of C.
 Example : If this is &quot;@&quot;, then iachar is 64.
 
 
 <br><br>
-<dt><a name="47"><strong>vstring_ichar</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="47"><strong>vstring_ichar</strong> (<i class='arg'>this</i>) result ( new_ichar )</a><dd>
 
+<dl>
+<dt><strong>integer ::</strong> <i class='arg'>new_ichar</i><dd>
+</dl>
 Returns the code for the character in the first character position of
 in the system&acirc;€™s native character set.
 This is an interface to the standard fortran.
 
 
 <br><br>
-<dt><a name="48"><strong>vstring_charindex</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?)</a><dd>
+<dt><a name="48"><strong>vstring_charindex</strong> (<i class='arg'>this</i> <i class='arg'>, substring</i> ?, back?) result ( charindex )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>substring</i><dd>
-<dt>logical, intent(in), optional :: <i class='arg'>back</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>substring</i><dd>
+<dt><strong>logical, intent(in), optional ::</strong> <i class='arg'>back</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>charindex</i><dd>
 </dl>
 Returns the position of the start of the first occurrence of string substring
 as a sub-string in the current string, counting from one. If substring is not present
@@ -982,11 +1028,12 @@ Note: this is a simple interface to the standard fortran intrinsic &quot;index&q
 
 
 <br><br>
-<dt><a name="49"><strong>vstring_scan</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?)</a><dd>
+<dt><a name="49"><strong>vstring_scan</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?) result ( charindex )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>substring</i><dd>
-<dt>logical, intent(in), optional :: <i class='arg'>back</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>substring</i><dd>
+<dt><strong>logical, intent(in), optional ::</strong> <i class='arg'>back</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>charindex</i><dd>
 </dl>
 Returns the position of a character of the current string that is in set, or zero
 if there is no such character. If the logical back is absent or present with value
@@ -997,11 +1044,12 @@ Note: this is a simple interface to the standard fortran intrinsic &quot;index&q
 
 
 <br><br>
-<dt><a name="50"><strong>vstring_verify</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?)</a><dd>
+<dt><a name="50"><strong>vstring_verify</strong> (<i class='arg'>this</i><i class='arg'>, substring</i>?, back?) result ( charindex )</a><dd>
 
 <dl>
-<dt>type ( t_vstring ) , intent(in) :: <i class='arg'>substring</i><dd>
-<dt>logical, intent(in), optional :: <i class='arg'>back</i><dd>
+<dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>substring</i><dd>
+<dt><strong>logical, intent(in), optional ::</strong> <i class='arg'>back</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>charindex</i><dd>
 </dl>
 Returns the default integer value 0 if each character in the current
 string appears in set, or the position of a character of the current string
@@ -1013,15 +1061,21 @@ Note: this is a simple interface to the standard fortran intrinsic &quot;verify&
 
 
 <br><br>
-<dt><a name="51"><strong>vstring_adjustl</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="51"><strong>vstring_adjustl</strong> (<i class='arg'>this</i>) result ( newstring )</a><dd>
 
+<dl>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>newstring</i><dd>
+</dl>
 Adjusts left to return a string of the same length by removing
 all leading blanks and inserting the same number of trailing blanks.
 Note : this is a simple interface to the standard fortran intrinsic &quot;adjustl&quot;.
 
 <br><br>
-<dt><a name="52"><strong>vstring_adjustr</strong> (<i class='arg'>this</i>)</a><dd>
+<dt><a name="52"><strong>vstring_adjustr</strong> (<i class='arg'>this</i>) result ( newstring )</a><dd>
 
+<dl>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>newstring</i><dd>
+</dl>
 Adjusts right to return a string of the same length by removing
 all trailing blanks and inserting the same number of leading blanks.
 Note: this is a simple interface to the standard fortran intrinsic &quot;adjustr&quot;.
@@ -1034,20 +1088,22 @@ Note: this is a simple interface to the standard fortran intrinsic &quot;adjustr
 
 <dl>
 
-<dt><a name="53"><strong>vstring_achar</strong> <i class='arg'>(i)</i></a><dd>
+<dt><a name="53"><strong>vstring_achar</strong> <i class='arg'>(i)</i> result ( new_achar )</a><dd>
 
 <dl>
-<dt>integer, intent (in) :: <i class='arg'>i</i><dd>
+<dt><strong>integer, intent (in) ::</strong> <i class='arg'>i</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_achar</i><dd>
 </dl>
 Returns the character located at position I in the ASCII collating sequence.
 This is an interface to the standard fortran.
 
 
 <br><br>
-<dt><a name="54"><strong>vstring_char</strong> <i class='arg'>(i)</i></a><dd>
+<dt><a name="54"><strong>vstring_char</strong> <i class='arg'>(i)</i> result ( new_achar )</a><dd>
 
 <dl>
-<dt>integer, intent (in) :: <i class='arg'>i</i><dd>
+<dt><strong>integer, intent (in) ::</strong> <i class='arg'>i</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>new_achar</i><dd>
 </dl>
 Returns the character represented by the integer I.
 This is an interface to the standard fortran.
@@ -1060,11 +1116,18 @@ Example : If i is 64, then char is &quot;@&quot;.
 
 <h2><a name="todo">TODO</a></h2>
 <p>
-Refactor the component and use datastructures/vectors.f90
-
-
-
-
+<ul>
+<li> Refactor the component and use datastructures/vectors.f90
+<br><br>
+<li> vstring_read Returns the vstring which is read on the given unit number, or on the standard input if no unit is given.
+<br><br>
+<li> vstring_write Writes the current vstring on the given unit number, or on the standard output if no unit is given.
+<br><br>
+<li> vstring_wordend Returns the index of the character just after the last one in the word containing character charIndex of string.
+<br><br>
+<li> vstring_wordstart Returns the index of the first character in the word containing character charIndex of string.
+</ul>
+  
 <h2><a name="copyright">COPYRIGHT</a></h2>
 <p>
 Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com<br>

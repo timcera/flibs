@@ -248,10 +248,10 @@ in the implementation of len = pure function value in IVF8.
 In the following definitions, the [arg this] argument has, 
 depending on the method, one of the the following definitions :
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(inout) ::" this]
+[arg_def [type "type ( t_vstring ) , intent(inout) ::"] this]
 [list_end]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" this]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] this]
 [list_end]
 The "intent(in)" or "intent(inout)" declaration depends on the 
 method and is what it is expected to be (if not, it is a bug).
@@ -267,29 +267,29 @@ Creates a vstring with 0 characters and 0 length.
 
 [call [method "vstring_new"] [arg "(this,char_string)"]]
 [list_begin arg]
-[arg_def "character(LEN=*), intent(in) ::" char_string]
+[arg_def [type "character(LEN=*), intent(in) ::"] char_string]
 [list_end]
 The new vstring is filled with the 
 characters found in "char_string".
 
 [call [method "vstring_new"] [arg "(this,vstring)"]]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" vstring]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] vstring]
 [list_end]
 The new vstring is filled with the 
 characters found in the dynamic string "vstring".
 
 [call [method "vstring_new"] [arg "(this,chararray)"]]
 [list_begin arg]
-[arg_def "character(len=1), dimension(:), intent(in) ::" chararray]
+[arg_def [type "character(len=1), dimension(:), intent(in) ::"] chararray]
 [list_end]
 The new vstring is filled with the 
 characters found in the array of characters "chararray".
 
 [call [method "vstring_new"] [arg "(this, ncount ?, vstring?)"]]
 [list_begin arg]
-[arg_def "integer, intent(in) ::" ncount]
-[arg_def "type ( t_vstring ) , intent(in), optional ::" vstring]
+[arg_def [type "integer, intent(in) ::"] ncount]
+[arg_def [type "type ( t_vstring ) , intent(in), optional ::"] vstring]
 [list_end]
 Repeat the string ncount times and concatenate the result to create the new string.
 If not provided, the default string is the blank space.
@@ -310,14 +310,18 @@ Destructor.
      additional pointers, that aren't going out of scope, with the
      same target as the one that is."
 
-[call [method "vstring_exists"] ([arg "this"])]
+[call [method "vstring_exists"] ([arg "this"]) result ( exists )]
+[list_begin arg]
+[arg_def [type "logical ::"] exists]
+[list_end]
 Returns .true. if the string is allocated.
 
-[call [method "vstring_equals "] [arg "(this, stringb ?, nocase,length?)"]]
+[call [method "vstring_equals "] [arg "(this, stringb ?, nocase,length?)"]  result (equals)]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" stringb]
-[arg_def "logical , intent (in), optional ::" nocase]
-[arg_def "integer , intent (in), optional ::" length]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] stringb]
+[arg_def [type "logical , intent (in), optional ::"] nocase]
+[arg_def [type "integer , intent (in), optional ::"] length]
+[arg_def [type "logical ::"] equals]
 [list_end]
      Perform a character-by-character comparison of strings this and string2.
      Returns true if this and stringb are identical, or .false when not.
@@ -325,11 +329,12 @@ Returns .true. if the string is allocated.
      The default behaviour is to take into account for case of characters.
      If length is specified, then only the first length characters are used in the comparison.
 
-[call [method "vstring_equals "] [arg "(this, string2 ?, nocase,length?)"]]
+[call [method "vstring_equals "] [arg "(this, string2 ?, nocase,length?)"] result (equals)]
 [list_begin arg]
-[arg_def "character(len=*), intent(in) ::" string2]
-[arg_def "logical , intent (in), optional ::" nocase]
-[arg_def "integer , intent (in), optional ::" length]
+[arg_def [type "character(len=*), intent(in) ::"] string2]
+[arg_def [type "logical , intent (in), optional ::"] nocase]
+[arg_def [type "integer , intent (in), optional ::"] length]
+[arg_def [type "logical ::"] equals]
 [list_end]
      Same as previous but with string2 as a character string.
 
@@ -338,8 +343,8 @@ Convert a dynamic string into another fortran data type.
 
 [call [method "vstring_cast"] ([arg this] [arg ", length"] [arg ", charstring"])]
 [list_begin arg]
-[arg_def "integer, intent(in) ::" length]
-[arg_def "character ( LEN = length ) , intent(out) ::" charstring]
+[arg_def [type "integer, intent(in) ::"] length]
+[arg_def [type "character ( LEN = length ) , intent(out) ::"] charstring]
 [list_end]
 Convert a dynamic string into a character string
 with fixed length.
@@ -349,7 +354,7 @@ contains only the first characters of the current dynamic string.
 
 [call [method "vstring_cast"] ([arg "this"] [arg ", charstring"])]
 [list_begin arg]
-[arg_def "character ( LEN = * ) , intent(out) ::" charstring]
+[arg_def [type "character ( LEN = * ) , intent(out) ::"] charstring]
 [list_end]
 Convert a dynamic string into a character string
 with automatic length.
@@ -360,44 +365,49 @@ contains only the first characters of the current dynamic string.
 
 [call [method "vstring_cast"] ([arg "this"] [arg ", value"])]
 [list_begin arg]
-[arg_def "integer, intent(out) ::" value]
+[arg_def [type "integer, intent(out) ::"] value]
 [list_end]
 Returns the integer stored in the current string.
 
 
 [call [method "vstring_cast"] ([arg "this"] [arg ", value"])]
 [list_begin arg]
-[arg_def "real, intent(out) ::" value]
+[arg_def [type "real, intent(out) ::"] value]
 [list_end]
 Returns the real stored in the current string.
 
 
 [call [method "vstring_cast"] ([arg "this"] [arg ", value"])]
 [list_begin arg]
-[arg_def "double precision, intent(out) ::" value]
+[arg_def [type "double precision, intent(out) ::"] value]
 [list_end]
 Returns the double precision stored in the current string.
 
 
-[call [method "vstring_length"] ([arg "this"])]
+[call [method "vstring_length"] ([arg "this"])  result ( length )]
+[list_begin arg]
+[arg_def [type "integer ::"] length]
+[list_end]
 Returns the length of the current dynamic string.
 
-[call [method "vstring_concat"] [arg "(this,string2)"]]
+[call [method "vstring_concat"] [arg "(this,string2)"] result ( concat_string )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" string2]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] string2]
+[arg_def [type "type ( t_vstring ) ::"] concat_string]
 [list_end]
 Returns a new dynamic string made by the concatenation of two dynamic strings.
 
-[call [method "vstring_concat"] [arg "(this,string2)"]]
+[call [method "vstring_concat"] [arg "(this,string2)"] result ( concat_string )]
 [list_begin arg]
-[arg_def "character(len=*) , intent(in) ::" string2]
+[arg_def [type "character(len=*) , intent(in) ::"] string2]
+[arg_def [type "type ( t_vstring ) ::"] concat_string]
 [list_end]
 Returns a new string made by the concatenation of the current dynamic string
 and the given character(len=*) string.
 
 [call [method "vstring_append"] [arg "(this,string2)"]]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" string2]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] string2]
 [list_end]
 Append the given string at the end of the current string.
 If the given string string2 is of length greater than zero,
@@ -408,16 +418,17 @@ when the concat is to be done "in place".
 
 [call [method "vstring_append"] [arg "(this,string2)"]]
 [list_begin arg]
-[arg_def "character(len=*) , intent(in) ::" string2]
+[arg_def [type "character(len=*) , intent(in) ::"] string2]
 [list_end]
 Same as previous, but with a character(len=*) string2.
 
 
-[call [method "vstring_map"] [arg "(this , map_old , map_new ?, nocase?)"]]
+[call [method "vstring_map"] [arg "(this , map_old , map_new ?, nocase?)"] result ( stringmap )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , dimension( : ), intent(in) ::" map_old]
-[arg_def "type ( t_vstring ) , dimension( : ), intent(in) ::" map_new]
-[arg_def "logical, intent(in), optional ::" nocase]
+[arg_def [type "type ( t_vstring ) , dimension( : ), intent(in) ::"] map_old]
+[arg_def [type "type ( t_vstring ) , dimension( : ), intent(in) ::"] map_new]
+[arg_def [type "logical, intent(in), optional ::"] nocase]
+[arg_def [type "type(t_vstring) ::"] stringmap]
 [list_end]
 Replaces substrings in string based on the mapping defined by the couple (map_old , map_new).
 map_old and map_new are arrays of vstrings and are of the same size so that
@@ -441,11 +452,12 @@ mask the later one. So if the previous example is reordered like this,
 }]
 it will return the string 02c322c222c.
 
-[call [method "vstring_replace"] [arg "(this , first , last ?, newstring?)"]]
+[call [method "vstring_replace"] [arg "(this , first , last ?, newstring?)"] result ( stringreplace )]
 [list_begin arg]
-[arg_def "integer, intent(in) ::" first]
-[arg_def "integer, intent(in) ::" last]
-[arg_def "type ( t_vstring ) , intent(in), optional ::" newstring]
+[arg_def [type "integer, intent(in) ::"] first]
+[arg_def [type "integer, intent(in) ::"] last]
+[arg_def [type "type ( t_vstring ) , intent(in), optional ::"] newstring]
+[arg_def [type "type ( t_vstring ) ::"] stringreplace]
 [list_end]
 Removes a range of consecutive characters from string, starting with the character whose
 index is first and ending with the character whose index is last. An index of 1 refers to
@@ -453,11 +465,12 @@ the first character of the string.
 If newstring is specified, then it is placed in the removed character range.
 
 
-[call [method "vstring_compare"] [arg "(this,string2?, nocase , length?)"]]
+[call [method "vstring_compare"] [arg "(this,string2?, nocase , length?)"] result ( compare )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" string2]
-[arg_def "logical , intent (in), optional ::" nocase]
-[arg_def "integer , intent (in), optional ::" length]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] string2]
+[arg_def [type "logical , intent (in), optional ::"] nocase]
+[arg_def [type "integer , intent (in), optional ::"] length]
+[arg_def [type "integer ::"] compare]
 [list_end]
 Perform a character-by-character comparison of strings this and string2.
 Returns -1, 0, or 1, depending on whether this is lexicographically less
@@ -466,61 +479,69 @@ If nocase is set to true, the case of the characters is not taken into account.
 The default behaviour is to take into account for case of characters.
 If length is specified, then only the first length characters are used in the comparison.
 
-[call [method "vstring_compare"] [arg "(this,string2?, nocase , length?)"]]
+[call [method "vstring_compare"] [arg "(this,string2?, nocase , length?)"] result ( compare )]
 [list_begin arg]
-[arg_def "character (len=*) , intent(in) ::" string2]
-[arg_def "logical , intent (in), optional ::" nocase]
-[arg_def "integer , intent (in), optional ::" length]
+[arg_def [type "character (len=*) , intent(in) ::"] string2]
+[arg_def [type "logical , intent (in), optional ::"] nocase]
+[arg_def [type "integer , intent (in), optional ::"] length]
+[arg_def [type "integer ::"] compare]
 [list_end]
 Same as previous, but with a character(len=*) string2.
 
-[call [method "vstring_trim"] [arg "(this ?, chars?)"]]
+[call [method "vstring_trim"] [arg "(this ?, chars?)"] result ( trim_string )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in), optional ::" chars]
+[arg_def [type "type ( t_vstring ) , intent(in), optional ::"] chars]
+[arg_def [type "type ( t_vstring ) ::"] trim_string]
 [list_end]
 Returns a new string except that any leading or trailing characters
 from the set given by chars are removed.
 If chars is not specified then white space is removed (spaces, tabs,
 newlines, and carriage returns).
 
-[call [method "vstring_trim"] [arg "(this ?, chars?)"]]
+[call [method "vstring_trim"] [arg "(this ?, chars?)"] result ( trim_string )]
 [list_begin arg]
-[arg_def "character (len=*) , intent(in), optional ::" chars]
+[arg_def [type "character (len=*) , intent(in), optional ::"] chars]
+[arg_def [type "type ( t_vstring ) ::"] trim_string]
 [list_end]
 Same as previous, but with a character(len=*) string "chars".
 
-[call [method "vstring_trimleft"] [arg "(this ?, chars?)"]]
+[call [method "vstring_trimleft"] [arg "(this ?, chars?)"] result ( trim_string )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in), optional ::" chars]
+[arg_def [type "type ( t_vstring ) , intent(in), optional ::"] chars]
+[arg_def [type "type ( t_vstring ) ::"] trim_string]
 [list_end]
 Returns a new string except that any leading characters
 from the set given by chars are removed.
 If chars is not specified then white space is removed
 (spaces, tabs, newlines, and carriage returns).
 
-[call [method "vstring_trimleft"] [arg "(this ?, chars?)"]]
+[call [method "vstring_trimleft"] [arg "(this ?, chars?)"] result ( trim_string )]
 [list_begin arg]
-[arg_def "character (len=*) , intent(in), optional ::" chars]
+[arg_def [type "character (len=*) , intent(in), optional ::"] chars]
+[arg_def [type "type ( t_vstring ) ::"] trim_string]
 [list_end]
 Same as previous, but with a character(len=*) string "chars".
 
-[call [method "vstring_trimright"] [arg "(this ?, chars?)"]]
+[call [method "vstring_trimright"] [arg "(this ?, chars?)"] result ( trim_string )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in), optional ::" chars]
+[arg_def [type "type ( t_vstring ) , intent(in), optional ::"] chars]
+[arg_def [type "type ( t_vstring ) ::"] trim_string]
 [list_end]
 Returns a value equal to string except that any trailing characters from the set given by chars are removed.
 If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).
 
-[call [method "vstring_trimright"] [arg "(this ?, chars?)"]]
+[call [method "vstring_trimright"] [arg "(this ?, chars?)"] result ( trim_string )]
 [list_begin arg]
-[arg_def "character (len=*) , intent(in), optional ::" chars]
+[arg_def [type "character (len=*) , intent(in), optional ::"] chars]
+[arg_def [type "type ( t_vstring ) ::"] trim_string]
 [list_end]
 Same as previous, but with a character(len=*) string "chars".
 
-[call [method "vstring_first"] [arg "(this ?, string2 , first?)"]]
+[call [method "vstring_first"] [arg "(this ?, string2 , first?)"] result ( firstIndex )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in)   ::" string2]
-[arg_def "integer, intent(in), optional ::" first]
+[arg_def [type "type ( t_vstring ) , intent(in)   ::"] string2]
+[arg_def [type "integer, intent(in), optional ::"] first]
+[arg_def [type "integer ::"] firstIndex]
 [list_end]
 Search in the current string for a sequence of characters that exactly match the characters in string2.
 If found, return the index of the first character in the first such match within the current string.
@@ -528,18 +549,20 @@ If not found, return 0.
 If first is specified, then the search is constrained to start with the character
 in the current string specified by the index.
 
-[call [method "vstring_first"] [arg "(this ?, string2 , first?)"]]
+[call [method "vstring_first"] [arg "(this ?, string2 , first?)"] result ( firstIndex )]
 [list_begin arg]
-[arg_def "character(len=*) , intent(in)   ::" string2]
-[arg_def "integer, intent(in), optional ::" first]
+[arg_def [type "character(len=*) , intent(in)   ::"] string2]
+[arg_def [type "integer, intent(in), optional ::"] first]
+[arg_def [type "integer ::"] firstIndex]
 [list_end]
 Same as previous, but with a character(len=*) string "string2".
 
 
-[call [method "vstring_last"] [arg "(this ?, string2 , last?)"]]
+[call [method "vstring_last"] [arg "(this ?, string2 , last?)"] result ( lastIndex )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in)   ::" string2]
-[arg_def "integer, intent(in), optional ::" last]
+[arg_def [type "type ( t_vstring ) , intent(in)   ::"] string2]
+[arg_def [type "integer, intent(in), optional ::"] last]
+[arg_def [type "integer ::"] lastIndex]
 [list_end]
 Search in the current string for a sequence of characters that exactly match the characters in string2.
 If found, return the index of the last character in the first such match within the current string.
@@ -547,18 +570,20 @@ If not found, return 0.
 If last is specified, then the search is constrained to start with the character in the current
 string specified by the index.
 
-[call [method "vstring_last"] [arg "(this ?, string2 , last?)"]]
+[call [method "vstring_last"] [arg "(this ?, string2 , last?)"] result ( lastIndex )]
 [list_begin arg]
-[arg_def "character(len=*) , intent(in) ::" string2]
-[arg_def "integer, intent(in), optional ::" last]
+[arg_def [type "character(len=*) , intent(in) ::"] string2]
+[arg_def [type "integer, intent(in), optional ::"] last]
+[arg_def [type "integer ::"] lastIndex]
 [list_end]
 Same as previous, but with a character(len=*) string "string2".
 
 
-[call [method "vstring_range"] ([arg "this"][arg ", first"][arg ", last"])]
+[call [method "vstring_range"] ([arg "this"][arg ", first"][arg ", last"]) result ( string_range )]
 [list_begin arg]
-[arg_def "integer, intent(in)         ::" first]
-[arg_def "integer, intent(in)         ::" last]
+[arg_def [type "integer, intent(in) ::"] first]
+[arg_def [type "integer, intent(in) ::"] last]
+[arg_def [type "type ( t_vstring ) ::"] string_range]
 [list_end]
 Returns a range of consecutive characters from string,
 starting with the character whose index is first and ending with the character whose
@@ -569,29 +594,32 @@ If first is greater than last then an error is generated.
 
 
 
-[call [method "vstring_index"] [arg "(this , charIndex )"]]
+[call [method "vstring_index"] [arg "(this , charIndex )"] result ( string_index )]
 [list_begin arg]
-[arg_def "integer, intent(in)         ::" charIndex]
+[arg_def [type "integer, intent(in) ::"] charIndex]
+[arg_def [type "type ( t_vstring ) ::"] string_index]
 [list_end]
 Returns the charIndex'th character of the string argument.
 A charIndex of 1 corresponds to the first character of the string.
 If charIndex is less than 1 or greater than or equal to the length of the string
 then an error is generated.
 
-[call [method "vstring_toupper"] ([arg "this"][opt ", first"][opt ", last"])]
+[call [method "vstring_toupper"] ([arg "this"][opt ", first"][opt ", last"]) result ( new_upper )]
 [list_begin arg]
-[arg_def "integer, intent(in)         ::" first]
-[arg_def "integer, intent(in)         ::" last]
+[arg_def [type "integer, intent(in) ::"] first]
+[arg_def [type "integer, intent(in) ::"] last]
+[arg_def [type "type ( t_vstring ) ::"] new_upper]
 [list_end]
 Returns a vstring except that all lower (or title) case letters have been
 converted to upper case. If first is specified, it refers to the first char index in the string
 to start modifying. If last is specified, it refers to the char index in the string to stop
 at (inclusive).
 
-[call [method "vstring_tolower"] ([arg "this"][opt ", first"][opt ", last"])]
+[call [method "vstring_tolower"] ([arg "this"][opt ", first"][opt ", last"]) result ( new_lower )]
 [list_begin arg]
-[arg_def "integer, intent(in)         ::" first]
-[arg_def "integer, intent(in)         ::" last]
+[arg_def [type "integer, intent(in)         ::"] first]
+[arg_def [type "integer, intent(in)         ::"] last]
+[arg_def [type "type ( t_vstring ) ::"] new_lower]
 [list_end]
 Returns a vstring except that all upper (or title) case letters have been
 converted to lower case. If first is specified, it refers to the first char index in the string
@@ -599,10 +627,11 @@ to start modifying. If last is specified, it refers to the char index in the str
 at (inclusive).
 
 
-[call [method "vstring_totitle"] ([arg "this"][opt ", first"][opt ", last"])]
+[call [method "vstring_totitle"] ([arg "this"][opt ", first"][opt ", last"]) result ( new_title )]
 [list_begin arg]
-[arg_def "integer, intent(in)         ::" first]
-[arg_def "integer, intent(in)         ::" last]
+[arg_def [type "integer, intent(in)         ::"] first]
+[arg_def [type "integer, intent(in)         ::"] last]
+[arg_def [type "type ( t_vstring ) ::"] new_title]
 [list_end]
 Returns a vstring except that the first character in string is converted
 to upper case, and the rest of the string is converted to lower case. If first is specified, it refers
@@ -610,21 +639,26 @@ to the first char index in the string to start modifying. If last is specified, 
 to the char index in the string to stop at (inclusive).
 
 
-[call [method "vstring_reverse"] ([arg "this"])]
+[call [method "vstring_reverse"] ([arg "this"]) result ( new_reverse )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ) ::"] new_reverse]
+[list_end]
 Return a string that has all characters in reverse order.
 
 
-[call [method "vstring_random"] ([arg "this"])]
+[call [method "vstring_random"] ([arg "this"]) result ( new_random )]
 [list_begin arg]
-[arg_def "integer, intent(in) ::" length]
+[arg_def [type "integer, intent(in) ::"] length]
+[arg_def [type "type ( t_vstring ) ::"] new_random]
 [list_end]
 Fill a string with required length and randomized characters.
 
 
-[call [method "vstring_match"] ([arg "this"] [arg ", pattern"] [opt ", nocase"])]
+[call [method "vstring_match"] ([arg "this"] [arg ", pattern"] [opt ", nocase"]) result ( match )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" pattern]
-[arg_def "logical , intent(in) , optional ::" nocase]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] pattern]
+[arg_def [type "logical , intent(in) , optional ::"] nocase]
+[arg_def [type "logical ::"] match]
 [list_end]
 See if [arg pattern] matches string; return 1 if it does, 0 if it doesn't.
 If [arg nocase] is specified and true, then the pattern attempts to match against the
@@ -659,19 +693,21 @@ provided with flibs. In the following example, "match" is true.
     call vstring_free ( string1 )
 }]
 
-[call [method "vstring_match"] ([arg "this"] [arg ", pattern"] [opt ", nocase"])]
+[call [method "vstring_match"] ([arg "this"] [arg ", pattern"] [opt ", nocase"]) result ( match )]
 [list_begin arg]
-[arg_def "character(len=*) , intent(in) ::" pattern]
-[arg_def "logical , intent(in) , optional ::" nocase]
+[arg_def [type "character(len=*) , intent(in) ::"] pattern]
+[arg_def [type "logical , intent(in) , optional ::"] nocase]
+[arg_def [type "logical ::"] match]
 [list_end]
 Same as previous, with character(len=*) as [arg pattern].
 
 
-[call [method "vstring_is"] ([arg "this"] [arg ", class"] [opt ", strict"] [opt ", failindex"])]
+[call [method "vstring_is"] ([arg "this"] [arg ", class"] [opt ", strict"] [opt ", failindex"]) result ( isinclass )]
 [list_begin arg]
-[arg_def "character(len=*) , intent(in) ::" class]
-[arg_def "logical, intent(in) , optional ::" strict]
-[arg_def "integer, intent(out) , optional ::" failindex]
+[arg_def [type "character(len=*) , intent(in) ::"] class]
+[arg_def [type "logical, intent(in) , optional ::"] strict]
+[arg_def [type "integer, intent(out) , optional ::"] failindex]
+[arg_def [type "logical ::"] isinclass]
 [list_end]
      Returns .true. if string is a valid member of the specified character class, 
      otherwise returns .false.. 
@@ -725,23 +761,33 @@ Same as previous, with character(len=*) as [arg pattern].
 
 [section "INTERFACE TO STANDARD FORTRAN"]
 
+These methods or routines are simply an interface of standard fortran
+string processing routines.
+
 [list_begin definitions]
 
-[call [method "vstring_iachar"] ([arg "this"])]
+[call [method "vstring_iachar"] ([arg "this"]) result ( new_iachar )]
+[list_begin arg]
+[arg_def [type "integer ::"] new_iachar]
+[list_end]
 Returns the code for the ASCII character in the character position of C.
 Example : If this is "@", then iachar is 64.
 
 
-[call [method "vstring_ichar"] ([arg "this"])]
+[call [method "vstring_ichar"] ([arg "this"]) result ( new_ichar )]
+[list_begin arg]
+[arg_def [type "integer ::"] new_ichar]
+[list_end]
 Returns the code for the character in the first character position of
 in the system’s native character set.
 This is an interface to the standard fortran.
 
 
-[call [method "vstring_charindex"] ([arg "this"][arg ", substring"][opt ", back"])]
+[call [method "vstring_charindex"] ([arg "this"] [arg ", substring"] [opt ", back"]) result ( charindex )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" substring]
-[arg_def "logical, intent(in), optional ::" back]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] substring]
+[arg_def [type "logical, intent(in), optional ::"] back]
+[arg_def [type "integer ::"] charindex]
 [list_end]
 Returns the position of the start of the first occurrence of string substring
 as a sub-string in the current string, counting from one. If substring is not present
@@ -750,10 +796,11 @@ return value is the start of the last occurrence rather than the first.
 Note: this is a simple interface to the standard fortran intrinsic "index".
 
 
-[call [method "vstring_scan"] ([arg "this"][arg ", substring"][opt ", back"])]
+[call [method "vstring_scan"] ([arg "this"][arg ", substring"][opt ", back"]) result ( charindex )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" substring]
-[arg_def "logical, intent(in), optional ::" back]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] substring]
+[arg_def [type "logical, intent(in), optional ::"] back]
+[arg_def [type "integer ::"] charindex]
 [list_end]
 Returns the position of a character of the current string that is in set, or zero
 if there is no such character. If the logical back is absent or present with value
@@ -763,10 +810,11 @@ Note: this is a simple interface to the standard fortran intrinsic "index".
 
 
 
-[call [method "vstring_verify"] ([arg "this"][arg ", substring"][opt ", back"])]
+[call [method "vstring_verify"] ([arg "this"][arg ", substring"][opt ", back"]) result ( charindex )]
 [list_begin arg]
-[arg_def "type ( t_vstring ) , intent(in) ::" substring]
-[arg_def "logical, intent(in), optional ::" back]
+[arg_def [type "type ( t_vstring ) , intent(in) ::"] substring]
+[arg_def [type "logical, intent(in), optional ::"] back]
+[arg_def [type "integer ::"] charindex]
 [list_end]
 Returns the default integer value 0 if each character in the current
 string appears in set, or the position of a character of the current string
@@ -777,12 +825,18 @@ Note: this is a simple interface to the standard fortran intrinsic "verify".
 
 
 
-[call [method "vstring_adjustl"] ([arg "this"])]
+[call [method "vstring_adjustl"] ([arg "this"]) result ( newstring )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ) ::"] newstring]
+[list_end]
 Adjusts left to return a string of the same length by removing
 all leading blanks and inserting the same number of trailing blanks.
 Note : this is a simple interface to the standard fortran intrinsic "adjustl".
 
-[call [method "vstring_adjustr"] ([arg "this"])]
+[call [method "vstring_adjustr"] ([arg "this"]) result ( newstring )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ) ::"] newstring]
+[list_end]
 Adjusts right to return a string of the same length by removing
 all trailing blanks and inserting the same number of leading blanks.
 Note: this is a simple interface to the standard fortran intrinsic "adjustr".
@@ -794,17 +848,19 @@ Note: this is a simple interface to the standard fortran intrinsic "adjustr".
 
 [list_begin definitions]
 
-[call [method "vstring_achar"] [arg "(i)"]]
+[call [method "vstring_achar"] [arg "(i)"] result ( new_achar )]
 [list_begin arg]
-[arg_def "integer, intent (in) ::" i]
+[arg_def [type "integer, intent (in) ::"] i]
+[arg_def [type "type ( t_vstring ) ::"] new_achar]
 [list_end]
 Returns the character located at position I in the ASCII collating sequence.
 This is an interface to the standard fortran.
 
 
-[call [method "vstring_char"] [arg "(i)"]]
+[call [method "vstring_char"] [arg "(i)"] result ( new_achar )]
 [list_begin arg]
-[arg_def "integer, intent (in) ::" i]
+[arg_def [type "integer, intent (in) ::"] i]
+[arg_def [type "type ( t_vstring ) ::"] new_achar]
 [list_end]
 Returns the character represented by the integer I.
 This is an interface to the standard fortran.
@@ -816,9 +872,12 @@ Example : If i is 64, then char is "@".
 [list_end]
 
 [section TODO]
-Refactor the component and use datastructures/vectors.f90
-
-
-
-
+[list_begin bullet]
+[bullet] Refactor the component and use datastructures/vectors.f90
+[bullet] vstring_read Returns the vstring which is read on the given unit number, or on the standard input if no unit is given.
+[bullet] vstring_write Writes the current vstring on the given unit number, or on the standard output if no unit is given.
+[bullet] vstring_wordend Returns the index of the character just after the last one in the word containing character charIndex of string.
+[bullet] vstring_wordstart Returns the index of the first character in the word containing character charIndex of string.
+[list_end]
+  
 [manpage_end]

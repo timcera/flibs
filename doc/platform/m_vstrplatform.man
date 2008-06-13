@@ -1,5 +1,5 @@
 [comment {-*- flibs -*- doctools manpage}]
-[manpage_begin flibs/platform n 1.0]
+[manpage_begin flibs/m_vstrplatform n 1.0]
 [copyright {2008 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [copyright {2008 Michael Baudin <michael.baudin@gmail.com>}]
 [moddesc flibs]
@@ -79,8 +79,8 @@ The module contains the following routines.
 
 [call [cmd "vstrplatform_system"] ([arg command] [opt ", status"])]
 [list_begin arg]
-[arg_def [type "type ( t_vstring )"] command]
-[arg_def [type "integer, intent (out), optional"] status]
+[arg_def [type "type ( t_vstring ) ::"] command]
+[arg_def [type "integer, intent (out), optional ::"] status]
 [list_end]
 
 Run an external [arg command], optionally retrieving the status of
@@ -90,7 +90,7 @@ upon return.
 
 [call [cmd "vstrplatform_osstring"]() result ( [arg currentos] )]
 [list_begin arg]
-[arg_def [type "type ( t_vstring )"] currentos]
+[arg_def [type "type ( t_vstring ) ::"] currentos]
 [list_end]
 Returns a string containing the current operating system running on the current machine,
 one of "Windows 95", "Windows NT", "MacOS", "SunOS", 
@@ -98,7 +98,7 @@ one of "Windows 95", "Windows NT", "MacOS", "SunOS",
 
 [call [cmd "vstrplatform_platformstring"]() result ( [arg currentplatform] )]
 [list_begin arg]
-[arg_def [type "type ( t_vstring )"] currentplatform]
+[arg_def [type "type ( t_vstring ) ::"] currentplatform]
 [list_end]
 Returns a string containing the current platform running on the current machine,
 one of "Windows", "Mac", "Unix".
@@ -107,24 +107,24 @@ one of "Windows", "Mac", "Unix".
 
 [call [cmd "vstrplatform_getenvvar"]([arg envvar]) result ( [arg value] )]
 [list_begin arg]
-[arg_def [type "type ( t_vstring ), intent(in)"] envvar]
-[arg_def [type "type ( t_vstring )"] value]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] envvar]
+[arg_def [type "type ( t_vstring ) ::"] value]
 [list_end]
 Returns the value of the environment variable [arg envvar].
 
 
 [call [cmd "vstrplatform_getenvvar"]([arg envvar]) result ( [arg value] )]
 [list_begin arg]
-[arg_def [type "character(len=*), intent(in)"] envvar]
-[arg_def [type "type ( t_vstring )"] value]
+[arg_def [type "character(len=*), intent(in) ::"] envvar]
+[arg_def [type "type ( t_vstring ) ::"] value]
 [list_end]
 Same as previous with [emph "character(len=*)"] [arg dirname].
 
 
 [call [cmd "vstrplatform_cd"] ( [arg dirname] [opt ", status"])]
 [list_begin arg]
-[arg_def [type "type(t_vstring), intent(in)"] dirname]
-[arg_def [type "integer, intent(out) , optional"] status]
+[arg_def [type "type(t_vstring), intent(in) ::"] dirname]
+[arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Change working directory to [arg dirname]. 
 If [arg status] is supplied, it contains 0 on success or nonzero error code
@@ -132,8 +132,8 @@ upon return
 
 [call [cmd "vstrplatform_cd"] ( [arg dirname] [opt ", status"])]
 [list_begin arg]
-[arg_def [type "character(len=*), intent(in)"] dirname]
-[arg_def [type "integer, intent(out) , optional"] status]
+[arg_def [type "character(len=*), intent(in) ::"] dirname]
+[arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Same as previous with [emph "character(len=*)"] [arg dirname].
 
@@ -141,7 +141,7 @@ Same as previous with [emph "character(len=*)"] [arg dirname].
 [call [cmd "platform_stat"] ( [arg filename] [arg ", statarray"] [opt ", status"])]
 [list_begin arg]
 [arg_def [type "type(t_vstring), intent(in) ::"] filename]
-[arg_def [type "integer, dimension (1:13) , intent(out)  ::"] filename]
+[arg_def [type "integer, dimension (1:13) , intent(out) ::"] filename]
 [arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Get status of the file [arg filename] and fills the array [arg statarray]
@@ -167,7 +167,7 @@ upon return
 [call [cmd "platform_stat"] ( [arg filename] [arg ", statarray"] [opt ", status"])]
 [list_begin arg]
 [arg_def [type "character(len=*), intent(in) ::"] filename]
-[arg_def [type "integer, dimension (1:13) , intent(out)  ::"] filename]
+[arg_def [type "integer, dimension (1:13) , intent(out) ::"] filename]
 [arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Same as previous with [emph "character(len=*)"] [arg dirname].

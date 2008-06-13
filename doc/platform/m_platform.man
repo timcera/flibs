@@ -1,5 +1,5 @@
 [comment {-*- flibs -*- doctools manpage}]
-[manpage_begin flibs/platform n 1.0]
+[manpage_begin flibs/m_platform n 1.0]
 [copyright {2008 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [copyright {2008 Michael Baudin <michael.baudin@gmail.com>}]
 [moddesc flibs]
@@ -233,8 +233,8 @@ To import the subroutines, use this module.
 
 [call [cmd "platform_system"] ([arg command] [opt ", status"])]
 [list_begin arg]
-[arg_def [type "character(len=*)"] command]
-[arg_def [type "integer, intent ( out ), optional"] status]
+[arg_def [type "character(len=*) ::"] command]
+[arg_def [type "integer, intent ( out ), optional ::"] status]
 [list_end]
 Run an external command or program, optionally retrieving the status of
 that command. Under Windows the "call system" may generate the display of a console.
@@ -245,7 +245,7 @@ The [arg command] to run is quite likely platform-dependent.
 
 [call [cmd "platform_get_os()"] result ( currentos )]
 [list_begin arg]
-[arg_def [type "integer"] currentos]
+[arg_def [type "integer ::"] currentos]
 [list_end]
 Return the type of operating system, one of:
 PLATFORM_OS_WINDOWS_95, PLATFORM_OS_WINDOWS_NT,
@@ -267,7 +267,7 @@ one of "Windows 95", "Windows NT", "MacOS", "SunOS",
 
 [call [cmd "platform_get_platform()"]  result ( currentplatform )]
 [list_begin arg]
-[arg_def [type "integer"] currentplatform]
+[arg_def [type "integer ::"] currentplatform]
 [list_end]
 Return the category of platform, one of:
 PLATFORM_PLATFORM_WINDOWS, PLATFORM_PLATFORM_MAC, PLATFORM_PLATFORM_UNIX
@@ -285,8 +285,8 @@ one of "Windows", "Mac", "Unix".
 
 [call [cmd "platform_get_environment_variable"] ( [arg envvar] [arg ", value"])]
 [list_begin arg]
-[arg_def [type "character(len=*)"] envvar]
-[arg_def [type "character(len=*)"] value]
+[arg_def [type "character(len=*) ::"] envvar]
+[arg_def [type "character(len=*) ::"] value]
 [list_end]
 Retrieve the value of the environment variable [arg envvar]. There is no indication of
 whether the variable indeed exists and it is up to the calling program
@@ -302,7 +302,7 @@ to check it.
 
 [call [cmd "platform_cd"] ( [arg dirname] [opt ", status"])]
 [list_begin arg]
-[arg_def [type "character(len=*), intent(in)"] dirname]
+[arg_def [type "character(len=*), intent(in) ::"] dirname]
 [arg_def [type "integer, intent(out) , optional ::"] status]
 [list_end]
 Change working directory to [arg dirname]. 
