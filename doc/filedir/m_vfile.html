@@ -33,54 +33,75 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#preprocessing">Preprocessing</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#example_of_compiler_settings">Example of compiler settings</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#methods">METHODS</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#static_methods">STATIC METHODS</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
 <h2><a name="synopsis">SYNOPSIS</a></h2>
 <p>
-<table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><strong>vfile_startup</strong> ()</a></td></tr>
-<tr valign=top ><td ><a href="#2"><strong>vfile_shutdown</strong> ()</a></td></tr>
-<tr valign=top ><td ><a href="#3"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a></td></tr>
-<tr valign=top ><td ><a href="#4"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a></td></tr>
-<tr valign=top ><td ><a href="#5"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a></td></tr>
-<tr valign=top ><td ><a href="#6"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a></td></tr>
-<tr valign=top ><td ><a href="#7"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a></td></tr>
-<tr valign=top ><td ><a href="#8"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a></td></tr>
-<tr valign=top ><td ><a href="#9"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a></td></tr>
-<tr valign=top ><td ><a href="#10"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a></td></tr>
-<tr valign=top ><td ><a href="#11"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
-<tr valign=top ><td ><a href="#12"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
-<tr valign=top ><td ><a href="#13"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
-<tr valign=top ><td ><a href="#14"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
-<tr valign=top ><td ><a href="#15"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>filename</i>) result ( fullname )</a></td></tr>
-<tr valign=top ><td ><a href="#16"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>, filename</i>) result ( fullname )</a></td></tr>
-<tr valign=top ><td ><a href="#17"><strong>vfile_add_extension</strong> ( <i class='arg'>filename</i> <i class='arg'>, extension</i> ) result ( newname )</a></td></tr>
-<tr valign=top ><td ><a href="#18"><strong>vfile_separator</strong> ( ) result ( separator )</a></td></tr>
-<tr valign=top ><td ><a href="#19"><strong>vfile_pwd</strong> ( <i class='arg'>pwd</i> ?, status? )</a></td></tr>
-<tr valign=top ><td ><a href="#20"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a></td></tr>
-<tr valign=top ><td ><a href="#21"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a></td></tr>
-<tr valign=top ><td ><a href="#22"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a></td></tr>
-<tr valign=top ><td ><a href="#23"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a></td></tr>
-<tr valign=top ><td ><a href="#24"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a></td></tr>
-<tr valign=top ><td ><a href="#25"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a></td></tr>
-<tr valign=top ><td ><a href="#26"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a></td></tr>
-<tr valign=top ><td ><a href="#27"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a></td></tr>
-<tr valign=top ><td ><a href="#28"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a></td></tr>
-<tr valign=top ><td ><a href="#29"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a></td></tr>
-<tr valign=top ><td ><a href="#30"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a></td></tr>
-<tr valign=top ><td ><a href="#31"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a></td></tr>
-<tr valign=top ><td ><a href="#32"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a></td></tr>
-<tr valign=top ><td ><a href="#33"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a></td></tr>
-<tr valign=top ><td ><a href="#34"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a></td></tr>
-<tr valign=top ><td ><a href="#35"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a></td></tr>
-<tr valign=top ><td ><a href="#36"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a></td></tr>
-<tr valign=top ><td ><a href="#37"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a></td></tr>
-<tr valign=top ><td ><a href="#38"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a></td></tr>
-<tr valign=top ><td ><a href="#39"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a></td></tr>
-<tr valign=top ><td ><a href="#40"><strong>vfile_find</strong> ( ?basedir? ) result ( listOfFiles )</a></td></tr>
-<tr valign=top ><td ><a href="#41"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> ) result ( listOfFiles )</a></td></tr>
-<tr valign=top ><td ><a href="#42"><strong>vfile_find</strong> ( ?basedir? <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a></td></tr>
-<tr valign=top ><td ><a href="#43"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a></td></tr>
-<tr valign=top ><td ><a href="#44"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a></td></tr>
-<tr valign=top ><td ><a href="#45"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a></td></tr>
+<table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a></td></tr>
+<tr valign=top ><td ><a href="#2"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a></td></tr>
+<tr valign=top ><td ><a href="#3"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a></td></tr>
+<tr valign=top ><td ><a href="#4"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a></td></tr>
+<tr valign=top ><td ><a href="#5"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a></td></tr>
+<tr valign=top ><td ><a href="#6"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a></td></tr>
+<tr valign=top ><td ><a href="#7"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a></td></tr>
+<tr valign=top ><td ><a href="#8"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a></td></tr>
+<tr valign=top ><td ><a href="#9"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
+<tr valign=top ><td ><a href="#10"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
+<tr valign=top ><td ><a href="#11"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
+<tr valign=top ><td ><a href="#12"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a></td></tr>
+<tr valign=top ><td ><a href="#13"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>filename</i>) result ( fullname )</a></td></tr>
+<tr valign=top ><td ><a href="#14"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>, filename</i>) result ( fullname )</a></td></tr>
+<tr valign=top ><td ><a href="#15"><strong>vfile_add_extension</strong> ( <i class='arg'>filename</i> <i class='arg'>, extension</i> ) result ( newname )</a></td></tr>
+<tr valign=top ><td ><a href="#16"><strong>vfile_separator</strong> ( ) result ( separator )</a></td></tr>
+<tr valign=top ><td ><a href="#17"><strong>vfile_pwd</strong> ( <i class='arg'>pwd</i> ?, status? )</a></td></tr>
+<tr valign=top ><td ><a href="#18"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a></td></tr>
+<tr valign=top ><td ><a href="#19"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a></td></tr>
+<tr valign=top ><td ><a href="#20"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a></td></tr>
+<tr valign=top ><td ><a href="#21"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a></td></tr>
+<tr valign=top ><td ><a href="#22"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a></td></tr>
+<tr valign=top ><td ><a href="#23"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a></td></tr>
+<tr valign=top ><td ><a href="#24"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a></td></tr>
+<tr valign=top ><td ><a href="#25"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a></td></tr>
+<tr valign=top ><td ><a href="#26"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a></td></tr>
+<tr valign=top ><td ><a href="#27"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a></td></tr>
+<tr valign=top ><td ><a href="#28"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a></td></tr>
+<tr valign=top ><td ><a href="#29"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a></td></tr>
+<tr valign=top ><td ><a href="#30"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a></td></tr>
+<tr valign=top ><td ><a href="#31"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a></td></tr>
+<tr valign=top ><td ><a href="#32"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a></td></tr>
+<tr valign=top ><td ><a href="#33"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a></td></tr>
+<tr valign=top ><td ><a href="#34"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a></td></tr>
+<tr valign=top ><td ><a href="#35"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a></td></tr>
+<tr valign=top ><td ><a href="#36"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a></td></tr>
+<tr valign=top ><td ><a href="#37"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a></td></tr>
+<tr valign=top ><td ><a href="#38"><strong>vfile_find</strong> ( ?basedir? ) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#39"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> ) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#40"><strong>vfile_find</strong> ( ?basedir? <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#41"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#42"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#43"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#44"><strong>vfile_listfiles</strong> ( ?directory? ?, filetypes? ?, pattern? ?, tails?) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#45"><strong>vfile_listfiles</strong> ( <i class='arg'>directory</i> ?, filetypes? ?, pattern? ?, tails?) result ( listOfFiles )</a></td></tr>
+<tr valign=top ><td ><a href="#46"><strong>vfile_type</strong> ( <i class='arg'>filename</i> ?, status?) result ( filetype )</a></td></tr>
+<tr valign=top ><td ><a href="#47"><strong>vfile_type</strong> ( <i class='arg'>filename</i> ?, status?) result ( filetype )</a></td></tr>
+<tr valign=top ><td ><a href="#48"><strong>vfile_split</strong> ( <i class='arg'>filename</i>) result ( listOfComponents )</a></td></tr>
+<tr valign=top ><td ><a href="#49"><strong>vfile_split</strong> ( <i class='arg'>filename</i>) result ( listOfComponents )</a></td></tr>
+<tr valign=top ><td ><a href="#50"><strong>vfile_touch</strong> ( <i class='arg'>filename</i> ?, status?)</a></td></tr>
+<tr valign=top ><td ><a href="#51"><strong>vfile_touch</strong> ( <i class='arg'>filename</i> ?, status?)</a></td></tr>
+<tr valign=top ><td ><a href="#52"><strong>vfile_pathtype</strong> ( <i class='arg'>filename</i>) result ( pathtype )</a></td></tr>
+<tr valign=top ><td ><a href="#53"><strong>vfile_pathtype</strong> ( <i class='arg'>filename</i>) result ( pathtype )</a></td></tr>
+<tr valign=top ><td ><a href="#54"><strong>vfile_nativename</strong> ( <i class='arg'>filename</i>) result ( nativename )</a></td></tr>
+<tr valign=top ><td ><a href="#55"><strong>vfile_nativename</strong> ( <i class='arg'>filename</i>) result ( nativename )</a></td></tr>
+<tr valign=top ><td ><a href="#56"><strong>vfile_mkdir</strong> ( <i class='arg'>filename</i> ?, status?)</a></td></tr>
+<tr valign=top ><td ><a href="#57"><strong>vfile_mkdir</strong> ( <i class='arg'>filename</i> ?, status?)</a></td></tr>
+<tr valign=top ><td ><a href="#58"><strong>vfile_open</strong> ( <i class='arg'>filename</i> ?, fileunit? ?, iostat? ?, status? ?, access? ?, form? ?, recl? ?, blank? ?, position? ?, action? ?, delim? ?, pad?) result ( fileunit_real )</a></td></tr>
+<tr valign=top ><td ><a href="#59"><strong>vfile_open</strong> ( <i class='arg'>filename</i> ?, fileunit? ?, iostat? ?, status? ?, access? ?, form? ?, recl? ?, blank? ?, position? ?, action? ?, delim? ?, pad?) result ( fileunit_real )</a></td></tr>
+<tr valign=top ><td ><a href="#60"><strong>vfile_startup</strong> ()</a></td></tr>
+<tr valign=top ><td ><a href="#61"><strong>vfile_shutdown</strong> ()</a></td></tr>
+<tr valign=top ><td ><a href="#62"><strong>vfile_set_stoponerror</strong> ( <i class='arg'>stoponerror</i> )</a></td></tr>
+<tr valign=top ><td ><a href="#63"><strong>vfile_tempdir</strong> () result ( tempdir )</a></td></tr>
+<tr valign=top ><td ><a href="#64"><strong>vfile_tempfile</strong> result ( tempfile )</a></td></tr>
+<tr valign=top ><td ><a href="#65"><strong>vfile_volumes</strong> result ( listofvolumes )</a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -382,19 +403,8 @@ Compiler : <em>gfortran</em>
 
 <dl>
 
-<dt><a name="1"><strong>vfile_startup</strong> ()</a><dd>
 
-Initialize module internal state.
-This routine must be called once before calling any method of the module.
-
-<br><br>
-<dt><a name="2"><strong>vfile_shutdown</strong> ()</a><dd>
-
-Shutdown module internal state.
-
-
-<br><br>
-<dt><a name="3"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a><dd>
+<dt><a name="1"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ) , intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -406,7 +416,7 @@ if no &quot;.&quot; is present in <i class='arg'>filename</i>.
 Example : if filename is &quot;declaration.txt&quot;, the file root name is &quot;declaration&quot;.
 
 <br><br>
-<dt><a name="4"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a><dd>
+<dt><a name="2"><strong>vfile_rootname</strong> ( <i class='arg'>filename</i>) result ( rootname )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -416,7 +426,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="5"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a><dd>
+<dt><a name="3"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -427,7 +437,7 @@ Returns the extension (if any), that is the part of the name
 present. Example : if filename is &quot;declaration.txt&quot;, the file extension is &quot;.txt&quot;.
 
 <br><br>
-<dt><a name="6"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a><dd>
+<dt><a name="4"><strong>vfile_extension</strong> ( <i class='arg'>filename</i>) result ( extension )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -436,7 +446,7 @@ present. Example : if filename is &quot;declaration.txt&quot;, the file extensio
 Same as previous but with <i class='arg'>filename</i> as a character string.
 
 <br><br>
-<dt><a name="7"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a><dd>
+<dt><a name="5"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -448,7 +458,7 @@ Example : if filename is &quot;dir1/declaration.txt&quot;, the file tail is &quo
 
 
 <br><br>
-<dt><a name="8"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a><dd>
+<dt><a name="6"><strong>vfile_tail</strong> ( <i class='arg'>filename</i>) result ( filetail )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -458,7 +468,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="9"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a><dd>
+<dt><a name="7"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -471,7 +481,7 @@ is &quot;dir1&quot;.
 
 
 <br><br>
-<dt><a name="10"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a><dd>
+<dt><a name="8"><strong>vfile_dirname</strong> ( <i class='arg'>filename</i>) result ( dirname )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -481,7 +491,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="11"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
+<dt><a name="9"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -492,7 +502,7 @@ or 0 if there is no separator in the given file name.
 
 
 <br><br>
-<dt><a name="12"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
+<dt><a name="10"><strong>vfile_first_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -503,7 +513,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="13"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
+<dt><a name="11"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -514,7 +524,7 @@ or 0 if there is no separator in the given file name.
 
 
 <br><br>
-<dt><a name="14"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
+<dt><a name="12"><strong>vfile_last_separator_index</strong> ( <i class='arg'>filename</i>) result ( sepindex )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -525,7 +535,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="15"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>filename</i>) result ( fullname )</a><dd>
+<dt><a name="13"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>filename</i>) result ( fullname )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>dirname</i><dd>
@@ -542,7 +552,7 @@ and joining will proceed from the current argument.
 
 
 <br><br>
-<dt><a name="16"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>, filename</i>) result ( fullname )</a><dd>
+<dt><a name="14"><strong>vfile_join</strong> ( <i class='arg'>dirname</i> <i class='arg'>, filename</i>) result ( fullname )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>dirname</i><dd>
@@ -554,7 +564,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="17"><strong>vfile_add_extension</strong> ( <i class='arg'>filename</i> <i class='arg'>, extension</i> ) result ( newname )</a><dd>
+<dt><a name="15"><strong>vfile_add_extension</strong> ( <i class='arg'>filename</i> <i class='arg'>, extension</i> ) result ( newname )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -569,7 +579,7 @@ extension while &quot;txt&quot; is not.
 
 
 <br><br>
-<dt><a name="18"><strong>vfile_separator</strong> ( ) result ( separator )</a><dd>
+<dt><a name="16"><strong>vfile_separator</strong> ( ) result ( separator )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>separator</i><dd>
@@ -586,7 +596,7 @@ The separator depends on the platform :
 </ul>
 
 
-<dt><a name="19"><strong>vfile_pwd</strong> ( <i class='arg'>pwd</i> ?, status? )</a><dd>
+<dt><a name="17"><strong>vfile_pwd</strong> ( <i class='arg'>pwd</i> ?, status? )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>pwd</i><dd>
@@ -598,7 +608,7 @@ The separator used here is the platform-independent &quot;/&quot;.
 
 
 <br><br>
-<dt><a name="20"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a><dd>
+<dt><a name="18"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -608,7 +618,7 @@ Returns .true. if file name exists, .false. otherwise.
 
 
 <br><br>
-<dt><a name="21"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a><dd>
+<dt><a name="19"><strong>vfile_exists</strong> ( <i class='arg'>filename</i> ) result ( exists )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -618,7 +628,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="22"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a><dd>
+<dt><a name="20"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -632,7 +642,7 @@ upon return.
 
 
 <br><br>
-<dt><a name="23"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a><dd>
+<dt><a name="21"><strong>vfile_rename</strong> ( <i class='arg'>filename</i> <i class='arg'>, newfn</i> ?, status? )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -644,7 +654,7 @@ Same as previous but with <i class='arg'>newfn</i> as a character string.
 
 
 <br><br>
-<dt><a name="24"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a><dd>
+<dt><a name="22"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -695,7 +705,7 @@ blank spaces are appended at the end of the string.
 
 
 
-<dt><a name="25"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a><dd>
+<dt><a name="23"><strong>vfile_copy</strong> ( <i class='arg'>filename</i> <i class='arg'>, targetfn</i> ?, status? ?, mode? ?, force? ?, trimline? )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -710,7 +720,7 @@ Same as previous but with <i class='arg'>targetfn</i> as a character string.
 
 
 <br><br>
-<dt><a name="26"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a><dd>
+<dt><a name="24"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -727,7 +737,7 @@ upon return.
 
 
 <br><br>
-<dt><a name="27"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a><dd>
+<dt><a name="25"><strong>vfile_delete</strong> ( <i class='arg'>filename</i> ?, force? ?, status? )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -739,7 +749,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="28"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a><dd>
+<dt><a name="26"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -748,7 +758,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 Returns .true. if file name is a directory, .false. otherwise.
 
 <br><br>
-<dt><a name="29"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a><dd>
+<dt><a name="27"><strong>vfile_isdirectory</strong> ( <i class='arg'>filename</i>) result ( isdirectory )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -759,7 +769,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="30"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a><dd>
+<dt><a name="28"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -768,7 +778,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 Returns .true. if file name is a file, .false. otherwise.
 
 <br><br>
-<dt><a name="31"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a><dd>
+<dt><a name="29"><strong>vfile_isfile</strong> ( <i class='arg'>filename</i>) result ( isfile )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -778,7 +788,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="32"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a><dd>
+<dt><a name="30"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -792,7 +802,7 @@ If <i class='arg'>status</i> is supplied, it contains 0 on success or nonzero er
 upon return.
 
 <br><br>
-<dt><a name="33"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a><dd>
+<dt><a name="31"><strong>vfile_size</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_size )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -804,7 +814,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="34"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a><dd>
+<dt><a name="32"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -817,7 +827,7 @@ upon return.
 
 
 <br><br>
-<dt><a name="35"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a><dd>
+<dt><a name="33"><strong>vfile_atime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_atime )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -828,7 +838,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="36"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a><dd>
+<dt><a name="34"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -841,7 +851,7 @@ upon return.
 
 
 <br><br>
-<dt><a name="37"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a><dd>
+<dt><a name="35"><strong>vfile_mtime</strong> ( <i class='arg'>filename</i> ?, status?) result ( vfile_mtime )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -852,7 +862,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="38"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a><dd>
+<dt><a name="36"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -869,7 +879,7 @@ On Windows it also means we want the long form with that form's
 case-dependence (which gives us a unique, case-dependent path).
 
 <br><br>
-<dt><a name="39"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a><dd>
+<dt><a name="37"><strong>vfile_normalize</strong> ( <i class='arg'>filename</i> ) result ( vfile_normalize )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
@@ -880,7 +890,7 @@ Same as previous but with <i class='arg'>filename</i> as a character string.
 
 
 <br><br>
-<dt><a name="40"><strong>vfile_find</strong> ( ?basedir? ) result ( listOfFiles )</a><dd>
+<dt><a name="38"><strong>vfile_find</strong> ( ?basedir? ) result ( listOfFiles )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in), optional ::</strong> <i class='arg'>basedir</i><dd>
@@ -895,7 +905,7 @@ If <i class='arg'>basedir</i> is provided, this is the name of the base director
 If <i class='arg'>basedir</i> is not provided, the current directory is used by default.
 
 <br><br>
-<dt><a name="41"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> ) result ( listOfFiles )</a><dd>
+<dt><a name="39"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> ) result ( listOfFiles )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>basedir</i><dd>
@@ -905,7 +915,7 @@ Same as previous but with <i class='arg'>basedir</i> as a character string.
 
 
 <br><br>
-<dt><a name="42"><strong>vfile_find</strong> ( ?basedir? <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a><dd>
+<dt><a name="40"><strong>vfile_find</strong> ( ?basedir? <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in), optional ::</strong> <i class='arg'>basedir</i><dd>
@@ -934,7 +944,7 @@ that indicates if the current file should be included in the list of interesting
 
 
 <br><br>
-<dt><a name="43"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a><dd>
+<dt><a name="41"><strong>vfile_find</strong> ( <i class='arg'>basedir</i> <i class='arg'>, filtercmd</i> ) result ( listOfFiles )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>basedir</i><dd>
@@ -953,7 +963,7 @@ Same as previous but with <i class='arg'>basedir</i> as a character string.
 
 
 <br><br>
-<dt><a name="44"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a><dd>
+<dt><a name="42"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a><dd>
 
 <dl>
 <dt><strong>type ( t_vstring ), intent(in), optional ::</strong> <i class='arg'>basedir</i><dd>
@@ -971,7 +981,7 @@ available in vfile_findbypattern.
 
 
 <br><br>
-<dt><a name="45"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a><dd>
+<dt><a name="43"><strong>vfile_findbypattern</strong> ( ?basedir? <i class='arg'>, pattern</i> ) result ( listOfFiles )</a><dd>
 
 <dl>
 <dt><strong>character(len=*), intent(in), optional ::</strong> <i class='arg'>basedir</i><dd>
@@ -979,6 +989,386 @@ available in vfile_findbypattern.
 <dt><strong>type ( t_vstringlist ) ::</strong> <i class='arg'>listOfFiles</i><dd>
 </dl>
 Same as previous but with <i class='arg'>basedir</i> and <i class='arg'>pattern</i> as a character string.
+
+
+
+
+<br><br>
+<dt><a name="44"><strong>vfile_listfiles</strong> ( ?directory? ?, filetypes? ?, pattern? ?, tails?) result ( listOfFiles )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in), optional ::</strong> <i class='arg'>basedir</i><dd>
+<dt><strong>type ( t_vstringlist ), intent(in), optional ::</strong> <i class='arg'>pattern</i><dd>
+<dt><strong>type ( t_vstring ), intent(in), optional ::</strong> <i class='arg'>pattern</i><dd>
+<dt><strong>logical, intent(in), optional ::</strong> <i class='arg'>tails</i><dd>
+<dt><strong>type ( t_vstringlist ) ::</strong> <i class='arg'>listOfFiles</i><dd>
+</dl>
+Returns a list of files in one directory.
+Only the file tails are in the list.
+If <i class='arg'>directory</i> is provided, the directory into which the list is to be computed.
+If <i class='arg'>directory</i> is not provided, the current directory is used and only the file names are file tails.
+If <i class='arg'>directory</i> is provided, the computed files names are relative and begin with the given 
+directory (following the template directory/filetail).
+If <i class='arg'>filetypes</i> is provided, only list files or directories which match filetypes,
+with d (directory), f (plain file).
+If <i class='arg'>filetypes</i> is not provided, the filetypes &quot;d&quot; , &quot;f&quot; list is used.
+If <i class='arg'>pattern</i> is provided, only list files which match the given pattern.
+If <i class='arg'>pattern</i> is not provided, the &quot;*&quot; pattern is used.
+The vstring_match command is used to compare the file against the pattern so that
+all the pattern types available in vstring_match are available in vfile_listfiles.
+If <i class='arg'>tails</i> is provided and true, only return the part of each file found 
+which follows the last directory named in directory.
+Thus the statement
+<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+listoffiles = vfile_listfile ( tails = .true. , directory = directory , pattern = &quot;*&quot; )
+</pre></td></tr></table></p>
+is equivalent to
+<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+call vfile_pwd ( cwd )
+call vstrplatform_cd ( directory )
+listoffiles = vfile_listfile ( tails = .true. , pattern = &quot;*&quot; )
+call vstrplatform_cd ( cwd )
+</pre></td></tr></table></p>
+If <i class='arg'>tails</i> is provided and false, or not provided, the files are left as specified by the
+directory argument.
+
+<br><br>
+<dt><a name="45"><strong>vfile_listfiles</strong> ( <i class='arg'>directory</i> ?, filetypes? ?, pattern? ?, tails?) result ( listOfFiles )</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>basedir</i><dd>
+<dt><strong>type ( t_vstringlist ), intent(in), optional ::</strong> <i class='arg'>pattern</i><dd>
+<dt><strong>character(len=*), intent(in), optional ::</strong> <i class='arg'>pattern</i><dd>
+<dt><strong>logical, intent(in), optional ::</strong> <i class='arg'>tails</i><dd>
+<dt><strong>type ( t_vstringlist ) ::</strong> <i class='arg'>listOfFiles</i><dd>
+</dl>
+Same as previous but with <i class='arg'>directory</i> and <i class='arg'>pattern</i> as a character string.
+
+
+
+<br><br>
+<dt><a name="46"><strong>vfile_type</strong> ( <i class='arg'>filename</i> ?, status?) result ( filetype )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer , intent(out), optional ::</strong> <i class='arg'>status</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>filetype</i><dd>
+</dl>
+Returns a string giving the type of file name, which will be one of &quot;file&quot; or &quot;directory&quot;.
+If <i class='arg'>status</i> is provided and the file type could be computed,
+the status is set to 0.
+If <i class='arg'>status</i> is provided and the file type could not be computed,
+the status is set to VFILE_ERROR_UNKNOWN_FILE_TYPE.
+If <i class='arg'>status</i> is not provided and the file type could not be computed,
+an error is generated.
+
+
+
+<br><br>
+<dt><a name="47"><strong>vfile_type</strong> ( <i class='arg'>filename</i> ?, status?) result ( filetype )</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer , intent(out), optional ::</strong> <i class='arg'>status</i><dd>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>filetype</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+
+
+
+<br><br>
+<dt><a name="48"><strong>vfile_split</strong> ( <i class='arg'>filename</i>) result ( listOfComponents )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>type ( t_vstringlist ) ::</strong> <i class='arg'>listOfComponents</i><dd>
+</dl>
+Returns a list of strings where elements are the path components in name.
+
+
+<br><br>
+<dt><a name="49"><strong>vfile_split</strong> ( <i class='arg'>filename</i>) result ( listOfComponents )</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>type ( t_vstringlist ) ::</strong> <i class='arg'>listOfComponents</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+
+<br><br>
+<dt><a name="50"><strong>vfile_touch</strong> ( <i class='arg'>filename</i> ?, status?)</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
+</dl>
+Implementation of touch. Alter the atime and mtime of the specified files. 
+If <i class='arg'>status</i> is supplied, it contains 0 on success or nonzero error code
+upon return.
+If <i class='arg'>status</i> is not provided and the process could not be done,
+an error is generated.
+
+
+<br><br>
+<dt><a name="51"><strong>vfile_touch</strong> ( <i class='arg'>filename</i> ?, status?)</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+
+
+<br><br>
+<dt><a name="52"><strong>vfile_pathtype</strong> ( <i class='arg'>filename</i>) result ( pathtype )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>pathtype</i><dd>
+</dl>
+Returns one of VFILE_PATHTYPE_ABSOLUTE, VFILE_PATHTYPE_RELATIVE, VFILE_PATHTYPE_VOLUMERELATIVE. 
+If <i class='arg'>filename</i> refers to a specific file on a specific volume, the path
+type will be absolute. If <i class='arg'>filename</i> refers to a file relative to the current
+working directory, then the path type will be relative. If name refers to
+a file relative to the current working directory on a specified volume, or to
+a specific file on the current working volume, then the path type is volumerelative.
+<br><br>
+Examples :
+<br><br>
+<ul>
+<li> &quot;.&quot; is relative on all platforms
+<br><br>
+<li> &quot;..&quot; is relative on all platforms
+<br><br>
+<li> &quot;/&quot; is absolute on Linux/Unix
+<br><br>
+<li> &quot;C:/&quot; is absolute on Windows (if the C:/ exists)
+<br><br>
+<li> &quot;/&quot; is volumerelative on windows and refers to the current volume (for example C:/)
+<br><br>
+<li> &quot;toto.txt&quot; is relative on all platforms
+<br><br>
+<li> &quot;./toto.txt&quot; is relative on all platforms
+</ul>
+
+
+<dt><a name="53"><strong>vfile_pathtype</strong> ( <i class='arg'>filename</i>) result ( pathtype )</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>pathtype</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+
+
+<br><br>
+<dt><a name="54"><strong>vfile_nativename</strong> ( <i class='arg'>filename</i>) result ( nativename )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>( t_vstring ) ::</strong> <i class='arg'>nativename</i><dd>
+</dl>
+Returns the platform-specific name of the file. 
+filename is useful if the filename is needed to pass to a platform-specific
+call, such as the execution of a system command under Windows or
+AppleScript on the Macintosh.
+
+
+<br><br>
+<dt><a name="55"><strong>vfile_nativename</strong> ( <i class='arg'>filename</i>) result ( nativename )</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>( t_vstring ) ::</strong> <i class='arg'>nativename</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+
+<br><br>
+<dt><a name="56"><strong>vfile_mkdir</strong> ( <i class='arg'>filename</i> ?, status?)</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
+</dl>
+Create a directory.
+If <i class='arg'>status</i> is supplied, it contains 0 on success or nonzero error code
+upon return.
+If <i class='arg'>status</i> is not provided and the process could not be done,
+an error is generated.
+
+
+<br><br>
+<dt><a name="57"><strong>vfile_mkdir</strong> ( <i class='arg'>filename</i> ?, status?)</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>status</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+
+
+
+<br><br>
+<dt><a name="58"><strong>vfile_open</strong> ( <i class='arg'>filename</i> ?, fileunit? ?, iostat? ?, status? ?, access? ?, form? ?, recl? ?, blank? ?, position? ?, action? ?, delim? ?, pad?) result ( fileunit_real )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>fileunit</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>action</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>status</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>access</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>form</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>blank</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>position</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>delim</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>pad</i><dd>
+<dt><strong>integer , intent(in) , optional ::</strong> <i class='arg'>recl</i><dd>
+<dt><strong>integer , intent(out) , optional ::</strong> <i class='arg'>iostat</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>fileunit_real</i><dd>
+</dl>
+Open a file and returns the unit associated with the opened file.
+The command is based on fortran intrinsic &quot;open&quot;.
+If the optional argument fileunit is provided, it is used to
+open the file.
+If not provided, a file unit is automatically computed
+on the base of currently free logical units.
+<br><br>
+Note: 
+<br><br>
+All the options of the intrinsic &quot;open&quot; are provided
+with the same behaviour and default values, with some exceptions.
+<br><br>
+<ul>
+<li> The file name is mandatory in vfile_open,
+even if the &quot;file=&quot; specifier is not mandatory in fortran &quot;open&quot;.
+This behaviour allows the fortran to manage a status=&quot;scratch&quot;
+specifier, which provides a way to manage for temporary
+files internally. Instead, the m_vfile component provides the
+vfile_tempfile service.
+<br><br>
+<li> The &quot;err=&quot; option with an error label as argument is not
+provided. The client code may use the iostat option instead.
+</ul>
+
+
+
+
+<dt><a name="59"><strong>vfile_open</strong> ( <i class='arg'>filename</i> ?, fileunit? ?, iostat? ?, status? ?, access? ?, form? ?, recl? ?, blank? ?, position? ?, action? ?, delim? ?, pad?) result ( fileunit_real )</a><dd>
+
+<dl>
+<dt><strong>character(len=*), intent(in) ::</strong> <i class='arg'>filename</i><dd>
+<dt><strong>integer, intent(out) , optional ::</strong> <i class='arg'>fileunit</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>action</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>status</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>access</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>form</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>blank</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>position</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>delim</i><dd>
+<dt><strong>character(len=*) , intent(in) , optional ::</strong> <i class='arg'>pad</i><dd>
+<dt><strong>integer , intent(in) , optional ::</strong> <i class='arg'>recl</i><dd>
+<dt><strong>integer , intent(out) , optional ::</strong> <i class='arg'>iostat</i><dd>
+<dt><strong>integer ::</strong> <i class='arg'>fileunit_real</i><dd>
+</dl>
+Same as previous but with <i class='arg'>filename</i> as a character string.
+
+</dl>
+
+<h2><a name="static_methods">STATIC METHODS</a></h2>
+<p>
+
+<dl>
+
+
+<dt><a name="60"><strong>vfile_startup</strong> ()</a><dd>
+
+Initialize module internal state.
+This routine must be called once before calling any method of the module.
+
+<br><br>
+<dt><a name="61"><strong>vfile_shutdown</strong> ()</a><dd>
+
+Shutdown module internal state.
+
+
+<br><br>
+<dt><a name="62"><strong>vfile_set_stoponerror</strong> ( <i class='arg'>stoponerror</i> )</a><dd>
+
+<dl>
+<dt><strong>logical , intent(in) ::</strong> <i class='arg'>stoponerror</i><dd>
+</dl>
+Configure the behaviour of the component whenever an
+error is met.
+If <i class='arg'>stoponerror</i> is true, then the execution stops if an error is encountered.
+If <i class='arg'>stoponerror</i> is false, then the execution continues if an error is encountered.
+In both cases, a message is displayed on standard output.
+
+<br><br>
+<dt><a name="63"><strong>vfile_tempdir</strong> () result ( tempdir )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>tempdir</i><dd>
+</dl>
+Returns the temporary directory for the current platform.
+The command returns the path of a directory where the caller can
+place temporary files, such as &quot;/tmp&quot; on Unix systems.
+The algorithm we use to find the correct directory is as follows:
+<br><br>
+<ol>
+<li> The directory named in the TMPDIR environment variable.
+<br><br>
+<li> The directory named in the TEMP environment variable.
+<br><br>
+<li> The directory named in the TMP environment variable.
+<br><br>
+<li> A platform specific location:
+    <br><br>
+<ul>
+    <li> Windows
+    &quot;C:\TEMP&quot;, &quot;C:\TMP&quot;, &quot;\TEMP&quot;, and &quot;\TMP&quot; are tried in that order.
+    (classic) Macintosh
+    The TRASH_FOLDER environment variable is used. filename is most likely not correct.
+    <br><br>
+<li> Unix
+    The directories &quot;/tmp&quot;, &quot;/var/tmp&quot;, and &quot;/usr/tmp&quot; are tried in that order.
+    </ul>
+</ol>
+
+
+
+<dt><a name="64"><strong>vfile_tempfile</strong> result ( tempfile )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstring ) ::</strong> <i class='arg'>tempfile</i><dd>
+</dl>
+Returns the name of a temporary file name suitable for writing to. 
+The <i class='arg'>tempfile</i> name is unique, and the file will be writable and
+contained in the appropriate system specific temp directory.
+
+
+<br><br>
+<dt><a name="65"><strong>vfile_volumes</strong> result ( listofvolumes )</a><dd>
+
+<dl>
+<dt><strong>type ( t_vstringlist ) ::</strong> <i class='arg'>listofvolumes</i><dd>
+</dl>
+Returns the absolute paths to the volumes mounted on the 
+system, as a proper string list.
+On UNIX, the command will always return &quot;/&quot;, since all filesystems are
+locally mounted.
+On Windows, it will return a list of the available
+local drives (e.g. {a:/ c:/}).
+<br><br>
+Note:
+<br><br>
+With Intel Fortran, the portability routines provide the &quot;GETDRIVESQQ&quot; function,
+which returns the list of current drive as a 26 letters string.
 
 
 </dl>

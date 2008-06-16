@@ -283,13 +283,6 @@ Compiler : [emph "gfortran"]
 
 [list_begin definitions]
 
-[call [method "vfile_startup"] ()]
-Initialize module internal state.
-This routine must be called once before calling any method of the module.
-
-[call [method "vfile_shutdown"] ()]
-Shutdown module internal state.
-
 
 [call [method "vfile_rootname"] ( [arg filename]) result ( rootname )]
 [list_begin arg]
@@ -784,6 +777,330 @@ available in vfile_findbypattern.
 [arg_def [type "type ( t_vstringlist ) ::"] listOfFiles]
 [list_end]
 Same as previous but with [arg basedir] and [arg pattern] as a character string.
+
+
+
+
+[call [method "vfile_listfiles"] ( [opt directory] [opt ", filetypes"] [opt ", pattern"]  [opt ", tails"]) result ( listOfFiles )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in), optional ::"] basedir]
+[arg_def [type "type ( t_vstringlist ), intent(in), optional ::"] pattern]
+[arg_def [type "type ( t_vstring ), intent(in), optional ::"] pattern]
+[arg_def [type "logical, intent(in), optional ::"] tails]
+[arg_def [type "type ( t_vstringlist ) ::"] listOfFiles]
+[list_end]
+Returns a list of files in one directory.
+Only the file tails are in the list.
+If [arg directory] is provided, the directory into which the list is to be computed.
+If [arg directory] is not provided, the current directory is used and only the file names are file tails.
+If [arg directory] is provided, the computed files names are relative and begin with the given 
+directory (following the template directory/filetail).
+If [arg filetypes] is provided, only list files or directories which match filetypes,
+with d (directory), f (plain file).
+If [arg filetypes] is not provided, the filetypes "d" , "f" list is used.
+If [arg pattern] is provided, only list files which match the given pattern.
+If [arg pattern] is not provided, the "*" pattern is used.
+The vstring_match command is used to compare the file against the pattern so that
+all the pattern types available in vstring_match are available in vfile_listfiles.
+If [arg tails] is provided and true, only return the part of each file found 
+which follows the last directory named in directory.
+Thus the statement
+[example {
+listoffiles = vfile_listfile ( tails = .true. , directory = directory , pattern = "*" )
+}]
+is equivalent to
+[example {
+call vfile_pwd ( cwd )
+call vstrplatform_cd ( directory )
+listoffiles = vfile_listfile ( tails = .true. , pattern = "*" )
+call vstrplatform_cd ( cwd )
+}]
+If [arg tails] is provided and false, or not provided, the files are left as specified by the
+directory argument.
+
+[call [method "vfile_listfiles"] ( [arg directory] [opt ", filetypes"] [opt ", pattern"]  [opt ", tails"]) result ( listOfFiles )]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] basedir]
+[arg_def [type "type ( t_vstringlist ), intent(in), optional ::"] pattern]
+[arg_def [type "character(len=*), intent(in), optional ::"] pattern]
+[arg_def [type "logical, intent(in), optional ::"] tails]
+[arg_def [type "type ( t_vstringlist ) ::"] listOfFiles]
+[list_end]
+Same as previous but with [arg directory] and [arg pattern] as a character string.
+
+
+
+[call [method "vfile_type"] ( [arg filename] [opt ", status"]) result ( filetype )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "integer , intent(out), optional ::"] status]
+[arg_def [type "type ( t_vstring ) ::"] filetype]
+[list_end]
+Returns a string giving the type of file name, which will be one of "file" or "directory".
+If [arg status] is provided and the file type could be computed,
+the status is set to 0.
+If [arg status] is provided and the file type could not be computed,
+the status is set to VFILE_ERROR_UNKNOWN_FILE_TYPE.
+If [arg status] is not provided and the file type could not be computed,
+an error is generated.
+
+
+
+[call [method "vfile_type"] ( [arg filename] [opt ", status"]) result ( filetype )]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "integer , intent(out), optional ::"] status]
+[arg_def [type "type ( t_vstring ) ::"] filetype]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+
+
+
+[call [method "vfile_split"] ( [arg filename]) result ( listOfComponents )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "type ( t_vstringlist ) ::"] listOfComponents]
+[list_end]
+Returns a list of strings where elements are the path components in name.
+
+
+[call [method "vfile_split"] ( [arg filename]) result ( listOfComponents )]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "type ( t_vstringlist ) ::"] listOfComponents]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+
+[call [method "vfile_touch"] ( [arg filename] [opt ", status"])]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] status]
+[list_end]
+Implementation of touch. Alter the atime and mtime of the specified files. 
+If [arg status] is supplied, it contains 0 on success or nonzero error code
+upon return.
+If [arg status] is not provided and the process could not be done,
+an error is generated.
+
+
+[call [method "vfile_touch"] ( [arg filename] [opt ", status"])]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] status]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+
+
+[call [method "vfile_pathtype"] ( [arg filename]) result ( pathtype )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "integer ::"] pathtype]
+[list_end]
+Returns one of VFILE_PATHTYPE_ABSOLUTE, VFILE_PATHTYPE_RELATIVE, VFILE_PATHTYPE_VOLUMERELATIVE. 
+If [arg filename] refers to a specific file on a specific volume, the path
+type will be absolute. If [arg filename] refers to a file relative to the current
+working directory, then the path type will be relative. If name refers to
+a file relative to the current working directory on a specified volume, or to
+a specific file on the current working volume, then the path type is volumerelative.
+[para]
+Examples :
+[list_begin bullet]
+[bullet] "." is relative on all platforms
+[bullet] ".." is relative on all platforms
+[bullet] "/" is absolute on Linux/Unix
+[bullet] "C:/" is absolute on Windows (if the C:/ exists)
+[bullet] "/" is volumerelative on windows and refers to the current volume (for example C:/)
+[bullet] "toto.txt" is relative on all platforms
+[bullet] "./toto.txt" is relative on all platforms
+[list_end]
+
+
+[call [method "vfile_pathtype"] ( [arg filename]) result ( pathtype )]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "integer ::"] pathtype]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+
+
+[call [method "vfile_nativename"] ( [arg filename]) result ( nativename )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "( t_vstring ) ::"] nativename]
+[list_end]
+Returns the platform-specific name of the file. 
+filename is useful if the filename is needed to pass to a platform-specific
+call, such as the execution of a system command under Windows or
+AppleScript on the Macintosh.
+
+
+[call [method "vfile_nativename"] ( [arg filename]) result ( nativename )]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "( t_vstring ) ::"] nativename]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+
+[call [method "vfile_mkdir"] ( [arg filename] [opt ", status"])]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] status]
+[list_end]
+Create a directory.
+If [arg status] is supplied, it contains 0 on success or nonzero error code
+upon return.
+If [arg status] is not provided and the process could not be done,
+an error is generated.
+
+
+[call [method "vfile_mkdir"] ( [arg filename] [opt ", status"])]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] status]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+
+
+
+[call [method "vfile_open"] ( [arg filename] [opt ", fileunit"] [opt ", iostat"] [opt ", status"] [opt ", access"] [opt ", form"] [opt ", recl"] [opt ", blank"] [opt ", position"] [opt ", action"] [opt ", delim"] [opt ", pad"]) result ( fileunit_real )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ), intent(in) ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] fileunit]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] action]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] status]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] access]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] form]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] blank]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] position]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] delim]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] pad]
+[arg_def [type "integer , intent(in) , optional ::"] recl]
+[arg_def [type "integer , intent(out) , optional ::"] iostat]
+[arg_def [type "integer ::"] fileunit_real]
+[list_end]
+Open a file and returns the unit associated with the opened file.
+The command is based on fortran intrinsic "open".
+If the optional argument fileunit is provided, it is used to
+open the file.
+If not provided, a file unit is automatically computed
+on the base of currently free logical units.
+[para]
+Note: 
+[para]
+All the options of the intrinsic "open" are provided
+with the same behaviour and default values, with some exceptions.
+[list_begin bullet]
+[bullet] The file name is mandatory in vfile_open,
+even if the "file=" specifier is not mandatory in fortran "open".
+This behaviour allows the fortran to manage a status="scratch"
+specifier, which provides a way to manage for temporary
+files internally. Instead, the m_vfile component provides the
+vfile_tempfile service.
+[bullet] The "err=" option with an error label as argument is not
+provided. The client code may use the iostat option instead.
+[list_end]
+
+
+
+
+[call [method "vfile_open"] ( [arg filename] [opt ", fileunit"] [opt ", iostat"] [opt ", status"] [opt ", access"] [opt ", form"] [opt ", recl"] [opt ", blank"] [opt ", position"] [opt ", action"] [opt ", delim"] [opt ", pad"]) result ( fileunit_real )]
+[list_begin arg]
+[arg_def [type "character(len=*), intent(in) ::"] filename]
+[arg_def [type "integer, intent(out) , optional ::"] fileunit]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] action]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] status]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] access]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] form]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] blank]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] position]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] delim]
+[arg_def [type "character(len=*) , intent(in) , optional ::"] pad]
+[arg_def [type "integer , intent(in) , optional ::"] recl]
+[arg_def [type "integer , intent(out) , optional ::"] iostat]
+[arg_def [type "integer ::"] fileunit_real]
+[list_end]
+Same as previous but with [arg filename] as a character string.
+
+[list_end]
+
+[section "STATIC METHODS"]
+
+[list_begin definitions]
+
+
+[call [method "vfile_startup"] ()]
+Initialize module internal state.
+This routine must be called once before calling any method of the module.
+
+[call [method "vfile_shutdown"] ()]
+Shutdown module internal state.
+
+
+[call [method "vfile_set_stoponerror"] ( [arg stoponerror] )]
+[list_begin arg]
+[arg_def [type "logical , intent(in) ::"] stoponerror]
+[list_end]
+Configure the behaviour of the component whenever an
+error is met.
+If [arg stoponerror] is true, then the execution stops if an error is encountered.
+If [arg stoponerror] is false, then the execution continues if an error is encountered.
+In both cases, a message is displayed on standard output.
+
+[call [method "vfile_tempdir"] () result ( tempdir )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ) ::"] tempdir]
+[list_end]
+Returns the temporary directory for the current platform.
+The command returns the path of a directory where the caller can
+place temporary files, such as "/tmp" on Unix systems.
+The algorithm we use to find the correct directory is as follows:
+[list_begin enumerated]
+[enum] The directory named in the TMPDIR environment variable.
+[enum] The directory named in the TEMP environment variable.
+[enum] The directory named in the TMP environment variable.
+[enum] A platform specific location:
+    [list_begin bullet]
+    [bullet] Windows
+    "C:\TEMP", "C:\TMP", "\TEMP", and "\TMP" are tried in that order.
+    (classic) Macintosh
+    The TRASH_FOLDER environment variable is used. filename is most likely not correct.
+    [bullet] Unix
+    The directories "/tmp", "/var/tmp", and "/usr/tmp" are tried in that order.
+    [list_end]
+[list_end]
+
+
+
+[call [method "vfile_tempfile"]  result ( tempfile )]
+[list_begin arg]
+[arg_def [type "type ( t_vstring ) ::"] tempfile]
+[list_end]
+Returns the name of a temporary file name suitable for writing to. 
+The [arg tempfile] name is unique, and the file will be writable and
+contained in the appropriate system specific temp directory.
+
+
+[call [method "vfile_volumes"]  result ( listofvolumes )]
+[list_begin arg]
+[arg_def [type "type ( t_vstringlist ) ::"] listofvolumes]
+[list_end]
+Returns the absolute paths to the volumes mounted on the 
+system, as a proper string list.
+On UNIX, the command will always return "/", since all filesystems are
+locally mounted.
+On Windows, it will return a list of the available
+local drives (e.g. {a:/ c:/}).
+[para]
+Note:
+[para]
+With Intel Fortran, the portability routines provide the "GETDRIVESQQ" function,
+which returns the list of current drive as a 26 letters string.
 
 
 [list_end]
