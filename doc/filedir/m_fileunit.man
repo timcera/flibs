@@ -1,0 +1,64 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin flibs/m_fileunit n 1.0]
+[copyright {2008 Michael Baudin michael.baudin@gmail.com}]
+[moddesc flibs]
+[titledesc {Manage file units}]
+
+[description]
+
+The component [strong m_fileunit] provides services to manage fortran file units.
+
+[section OVERVIEW]
+
+The function fileunit_getfreeunit returns an integer representing
+a fortran unit which is available for opening a file.
+The typical use of this function is to manage the files dynamically,
+without any database of file units in the library/software.
+In the following example, one opens a file with a dynamical
+file unit.
+
+[example {
+    integer :: fileunit
+    fileunit = fileunit_getfreeunit ()
+    open ( unit = fileunit , file = "data.txt" )
+    [lb]etc...[rb]
+}]
+
+If several files are to be opened, the "fileunit_getfreeunit"
+method has to be inserted between the "open" statements.
+This is because two consecutive calls to "fileunit_getfreeunit"
+will return the same integer, as expected : if a unit is available
+the first time, it will also be available the second time.
+In the following example, several files are opened and connected
+to several files.
+
+[example {
+    integer :: fileunit1
+    integer :: fileunit2
+    fileunit1 = fileunit_getfreeunit ()
+    open ( unit = fileunit1 , file = "data.txt" )
+    fileunit2 = fileunit_getfreeunit ()
+    open ( unit = fileunit2 , file = "data2.txt" )
+    [lb]etc...[rb]
+}]
+
+In a large fortran software, it may be difficult to see if some
+bug has been introduced in the file management, especially
+when the software is the composition of several libraries.
+The subroutines fileunit_getallopen , fileunit_closeallopen ,
+fileunit_report , fileunit_displayopen allow to manage for
+the units currently used in the software.
+The fileunit_getallopen returns an array of integers which
+contains all the currently opened units. The fileunit_closeallopen
+subroutine close all currently opened units. The fileunit_report
+displays a full report about a given unit number by using the
+"inquire" fortran intrinsic statement.
+
+[section TODO]
+[list_begin bullet]
+[bullet] allow to "lock" a collection of logical units, so that an
+ external library which may use constant units can be linked.
+[bullet] allow to "unlock" one unit, or all units at once.
+[list_end]
+
+[manpage_end]

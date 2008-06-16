@@ -1,0 +1,91 @@
+
+<html><head>
+<title>flibs/m_fileunit - flibs </title>
+</head>
+<! -- Generated from file 'filedir/m_fileunit.man' by tcllib/doctools with format 'html'
+   -->
+<! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com
+   -->
+<! -- CVS: $Id$ flibs/m_fileunit.n
+   -->
+
+<body>
+<h1> flibs/m_fileunit(n) 1.0  &quot;flibs&quot;</h1>
+<h2><a name="name">NAME</a></h2>
+<p>
+<p> flibs/m_fileunit - Manage file units
+
+
+
+
+<h2><a name="table_of_contents">TABLE OF CONTENTS</a></h2>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#table_of_contents">TABLE OF CONTENTS</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#description">DESCRIPTION</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#overview">OVERVIEW</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#todo">TODO</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
+<h2><a name="description">DESCRIPTION</a></h2>
+<p>
+
+The component <em>m_fileunit</em> provides services to manage fortran file units.
+
+<h2><a name="overview">OVERVIEW</a></h2>
+<p>
+
+The function fileunit_getfreeunit returns an integer representing
+a fortran unit which is available for opening a file.
+The typical use of this function is to manage the files dynamically,
+without any database of file units in the library/software.
+In the following example, one opens a file with a dynamical
+file unit.
+
+<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+    integer :: fileunit
+    fileunit = fileunit_getfreeunit ()
+    open ( unit = fileunit , file = &quot;data.txt&quot; )
+    [lb]etc...[rb]
+</pre></td></tr></table></p>
+
+If several files are to be opened, the &quot;fileunit_getfreeunit&quot;
+method has to be inserted between the &quot;open&quot; statements.
+This is because two consecutive calls to &quot;fileunit_getfreeunit&quot;
+will return the same integer, as expected : if a unit is available
+the first time, it will also be available the second time.
+In the following example, several files are opened and connected
+to several files.
+
+<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+    integer :: fileunit1
+    integer :: fileunit2
+    fileunit1 = fileunit_getfreeunit ()
+    open ( unit = fileunit1 , file = &quot;data.txt&quot; )
+    fileunit2 = fileunit_getfreeunit ()
+    open ( unit = fileunit2 , file = &quot;data2.txt&quot; )
+    [lb]etc...[rb]
+</pre></td></tr></table></p>
+
+In a large fortran software, it may be difficult to see if some
+bug has been introduced in the file management, especially
+when the software is the composition of several libraries.
+The subroutines fileunit_getallopen , fileunit_closeallopen ,
+fileunit_report , fileunit_displayopen allow to manage for
+the units currently used in the software.
+The fileunit_getallopen returns an array of integers which
+contains all the currently opened units. The fileunit_closeallopen
+subroutine close all currently opened units. The fileunit_report
+displays a full report about a given unit number by using the
+&quot;inquire&quot; fortran intrinsic statement.
+
+<h2><a name="todo">TODO</a></h2>
+<p>
+<ul>
+<li> allow to &quot;lock&quot; a collection of logical units, so that an
+ external library which may use constant units can be linked.
+<br><br>
+<li> allow to &quot;unlock&quot; one unit, or all units at once.
+</ul>
+
+<h2><a name="copyright">COPYRIGHT</a></h2>
+<p>
+Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com<br>
+</body></html>
