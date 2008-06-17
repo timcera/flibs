@@ -2,6 +2,9 @@
 ! m_fileunit.f90 --
 !
 !   The component provides services to manage fortran file units.
+!
+! Overview
+!
 !   The function fileunit_getfreeunit returns an integer representing
 !   a fortran unit which is available for opening a file.
 !   The typical use of this function is to manage the files dynamically,
@@ -41,6 +44,11 @@
 !   subroutine close all currently opened units. The fileunit_report
 !   displays a full report about a given unit number by using the 
 !   "inquire" fortran intrinsic statement.
+!
+! TODO:
+! - allow to "lock" a collection of logical units, so that an 
+! external library which may use constant units can be linked.
+! - allow to "unlock" one unit, or all units at once.
 !
 ! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
@@ -110,10 +118,10 @@ contains
   end subroutine fileunit_getallopen
   !
   ! fileunit_displayopen --
-  !   Displays on unit "unitnumber" the full list of opened units and their associated 
+  !   Writes on unit "unitnumber" the full list of opened units and their associated 
   !   filenames.
   ! Input :
-  !   reportunitnumber : the unit number on which the report is displayed
+  !   reportunitnumber : the unit number on which the report is written
   !
   subroutine fileunit_displayopen ( reportunitnumber )
     implicit none
@@ -131,7 +139,8 @@ contains
   end subroutine fileunit_displayopen
   !
   ! fileunit_report --
-  !   Displays a full report on unit "unitnumber" for unit #iunit.
+  !   Compute report about logical unit iunit and write it on
+  !   unit unitnumber.
   ! Note :
   !   All possible features of the "inquire" intrinsic are used.
   !
@@ -243,7 +252,9 @@ contains
   end subroutine fileunit_closeallopen
   !
   ! fileunit_getfreeunit --
-  !   Returns a free fortran unit.
+  !   Returns a free fortran unit as an integer between 1 and FILEUNIT_MAX_UNIT_NUMBER, 
+  !   representing a free FORTRAN logical unit.
+  !   If no free unit can be found, generates an error.
   ! Arguments:
   !   no argument
   ! Note :
@@ -251,30 +262,26 @@ contains
   !   is not currently associated with an I/O device.  A free FORTRAN unit
   !   number is needed in order to open a file with the OPEN command.
   !
-  !   If IUNIT = 0, then no free FORTRAN unit could be found, although
-  !   all 99 units were checked (except for units 5, 6 and 9, which
-  !   are commonly reserved for console I/O).
-  !
-  !   Otherwise, IUNIT is an integer between 1 and FILEUNIT_MAX_UNIT_NUMBER, representing a
-  !   free FORTRAN unit.  Note that GET_UNIT assumes that units 5 and 6
+  !   Note that fileunit_getfreeunit assumes that units 5 and 6
   !   are special, and will never return those values.
   !
   !  Original Author : John Burkardt
   !
-  integer function fileunit_getfreeunit ( )
+  function fileunit_getfreeunit ( ) result ( freeunit )
+    integer :: freeunit
     integer :: iunit
     integer :: ios
     logical :: lopen
     logical :: unit_found
     iunit = 0
     unit_found = .false.
-    fileunit_getfreeunit = 0
+    freeunit = 0
     do iunit = 1, FILEUNIT_MAX_UNIT_NUMBER
        if ( iunit /= 5 .and. iunit /= 6 .and. iunit /= 9 ) then
           inquire ( UNIT = iunit, opened = lopen, iostat = ios )
           if ( ios == 0 ) then
              if ( .not. lopen ) then
-                fileunit_getfreeunit = iunit
+                freeunit = iunit
                 unit_found = .true.
                 exit
              end if

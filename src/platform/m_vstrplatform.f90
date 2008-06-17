@@ -1,31 +1,42 @@
 !
 ! m_vstrplatform.f90 --
-!     This module provides low-level services to access to the system and
-!     manages dynamic string.
+!   The m_vstrplatform module provides several routines, 
+!   which take dynamic strings arguments, to interact
+!   with the operating system.
 !
+!  OVERVIEW
+!    The goal of this module is to provide system access with 
+!    commands which take dynamic strings as arguments.
+!    It is based on m_platform, which takes character-based arguments.
+!
+!    In the following example, extracted from the m_vfile module 
+!    included in flibs, one sets the current working directory
+!    by using vstrplatform_cd on a dynamic string variable.
+!    
+!        type ( t_vstring ) :: dirname
+!        integer :: status
+!        call vstrplatform_cd ( dirname , status )
+!
+!    This is a sketch of available routines :
 !     vstrplatform_system                       Executes an external command on the system
 !     vstrplatform_get_environment_variable     Get to one environment variable
 !     vstrplatform_cd                           Change the system current directory
 !     vstrplatform_stat                         Get status of a file
 !
 !   Dynamic or static buffer
-!   The internal algorithms provided by m_vstrings are based on 
+!
+!   The internal algorithms provided by m_vstrplatform are based on 
 !   basic fortran character strings. In several situations, the 
 !   dynamic vstring has to be converted into a basic fortran character
 !   buffer string, which size has to be given explicitely in the source 
-!   code, with the len = <something> statement (in the 
-!   character ( len = <something>) ). Two solutions are provided, 
-!   and the user can define the pre-processing macro 
-!   _VFILE_STATIC_BUFFER to configure that :
-!   - the first solution is to set the size of the buffer statically,
-!     to a constant integer value VSTRING_BUFFER_SIZE.
-!   - the second solution is to compute the size 
-!     of the buffer dynamicaly, with the fortran 90 len = vstring_length(this)
-!     statement,
-!   If the _VFILE_STATIC_BUFFER is defined, then character strings of 
-!   constant size are used as buffers.
-!   If the _VFILE_STATIC_BUFFER is not defined (which is the default), 
-!   then character strings of dynamic size are used as buffers.
+!   code, with the "len = <something>" statement (in the 
+!   character ( len = <something>) ). 
+!   If the _VSTRPLATFORM_STATIC_BUFFER macro is defined, then character strings of 
+!   constant size VSTRPLATFORM_MAXIMUM_ENVVAR_LENGTH are used as buffers.
+!   If the _VSTRPLATFORM_STATIC_BUFFER macro is not defined (which is the default), 
+!   then character strings of dynamic size are used as buffers 
+!   with the fortran 90 "len = vstring_length(this)" statement.
+!
 !   The second solution is more efficient, because the strings are not 
 !   oversized or undersized, depending on the real number of characters
 !   in the dynamic string. But the feature may not be provided 
@@ -33,8 +44,8 @@
 !   length character string have been experienced with Intel Fortran 8.
 !
 !   Preprocessing
-!   The following preprocessing macro must be considered :
-!   _VFILE_STATIC_BUFFER : see  the section "Dynamic or static buffer"
+!   The following preprocessing macro may be defined :
+!   _VSTRPLATFORM_STATIC_BUFFER : see  the section "Dynamic or static buffer"
 !
 ! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
 ! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
@@ -66,7 +77,8 @@ module m_vstrplatform
        vstring_free , &
        vstring_cast , &
        vstring_length , &
-       vstring_trim
+       vstring_trim, &
+       vstring_append
   implicit none
   private
   !
@@ -126,7 +138,10 @@ contains
   end subroutine vstrplatform_system
   !
   ! vstrplatform_osstring --
-  !   Returns a string containing the current operating system running on the current machine
+  !   Returns a string containing the current operating system running 
+  !   on the current machine, one of "Windows 95", "Windows NT", "MacOS", "SunOS", 
+  !   "Linux" or "Unix".
+  !
   ! Arguments:
   !   currentos, output : the current operating system string
   function vstrplatform_osstring ( ) result ( currentos )
@@ -155,7 +170,8 @@ contains
   end function vstrplatform_osstring
   !
   ! vstrplatform_platformstring --
-  !   Returns a string containing the current platform running on the current machine
+  !   Returns a string containing the current platform running on the current machine,
+  !   one of "Windows", "Mac", "Unix".
   ! Arguments:
   !   currentplatform, output : the current platform string
   function vstrplatform_platformstring (  ) result ( currentplatform )
@@ -178,7 +194,7 @@ contains
   end function vstrplatform_platformstring
   !
   ! vstrplatform_getenvvar_vstring --
-  !   Returns the operating system running on the current machine
+  !   Returns the value of the environment variable envvar.
   ! Arguments:
   !   envvar : the name of the environment variable to get
   function vstrplatform_getenvvar_vstring ( envvar ) result ( value )
@@ -200,7 +216,7 @@ contains
   end function vstrplatform_getenvvar_vstring
   !
   ! vstrplatform_getenvvar_charstring --
-  !   Returns the operating system running on the current machine
+  !   Returns the value of the environment variable envvar.
   ! Arguments:
   !   envvar : the name of the environment variable to get
   function vstrplatform_getenvvar_charstring ( envvar ) result ( value )
@@ -222,13 +238,24 @@ contains
   subroutine vstrplatform_cd_vstring ( dirname , status )
     type(t_vstring), intent(in) :: dirname
     integer, intent(out) , optional :: status
+    integer :: local_status
+    type ( t_vstring ) :: message
 #ifdef _VSTRPLATFORM_STATIC_BUFFER
     character ( len = VSTRPLATFORM_BUFFER_SIZE ) :: dirname_charstring
 #else
     character(len=vstring_length(dirname)) :: dirname_charstring
 #endif
     call vstring_cast ( dirname , dirname_charstring )
-    call platform_cd ( dirname_charstring , status )
+
+    call platform_cd ( dirname_charstring , local_status )
+
+    if ( present ( status ) ) then
+       status = local_status
+    elseif ( status/=0 ) then
+       call vstring_new ( message , "Error while changing directory in vstrplatform_cd_vstring." )
+       call vstrplatform_error ( message )
+       call vstring_free ( message )
+    endif
   end subroutine vstrplatform_cd_vstring
   !
   ! vstrplatform_cd_charstring --
@@ -269,13 +296,24 @@ contains
     type(t_vstring), intent(in)             :: filename
     integer, dimension (1:13) , intent(out)  :: statarray
     integer, intent(out) , optional :: status
+    integer :: local_status
+    type ( t_vstring ) :: message
 #ifdef _VSTRPLATFORM_STATIC_BUFFER
     character ( len = VSTRPLATFORM_BUFFER_SIZE ) :: filename_charstring
 #else
     character(len=vstring_length(filename)) :: filename_charstring
 #endif
     call vstring_cast ( filename , filename_charstring )
-    call platform_stat ( filename_charstring , statarray , status )
+    call platform_stat ( filename_charstring , statarray , local_status )
+    if ( present ( status ) ) then
+       status = local_status
+    elseif ( status/=0 ) then
+       call vstring_new ( message , "Error while computing stat for file ")
+       call vstring_append ( message , filename )
+       call vstring_append ( message , " in vstrplatform_stat." )
+       call vstrplatform_error ( message )
+       call vstring_free ( message )
+    endif
   end subroutine vstrplatform_stat
   !
   ! vstrplatform_error --
