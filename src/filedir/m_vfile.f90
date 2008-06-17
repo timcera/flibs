@@ -1,7 +1,7 @@
 !
 ! m_vfile.f90 --
 !
-!   Manipulate file and directory names.
+!   Process files and directories.
 !   This component is based on a dynamic strings so that the 
 !   file or directory name may be defined with no limit in the 
 !   number of characters.
@@ -95,10 +95,39 @@
 !   the platform-specific separator and returns the concatenated
 !   file name.
 !
+!   In the following example, extracted from the unit tests included in flibs,
+!   the file "declaration.txt" is first normalized, so that the normalized 
+!   dynamic string may have the value
+!   "/home/bill/flibs/tests/filedir/declaration.txt" under Windows 
+!   or "C:/workbench/flibs/tests/filedir/declaration.txt" under Linux.
+!   Then the file name is split into a list of strings, for example "home",
+!   "bill", "flibs", "tests", "filedir", "declaration.txt".
+!   The number of strings in the list is then computed with the method 
+!   vstrlist_length.
+!
+!     use m_vstring
+!     use m_vstringlist
+!     use m_vfile
+!     type ( t_vstring ) :: normalized
+!     type ( t_vstringlist ) :: listOfFiles
+!     integer :: numberOfStrings
+!     normalized = vfile_normalize ( "declaration.txt" )
+!     listOfFiles = vfile_split ( normalized )
+!     numberOfStrings = vstrlist_length ( listOfFiles )
+!
 !   One particularly useful command when dealing with files is 
 !   vfile_findbypattern. The command takes a string as an input
 !   file pattern. It then computes the list of all files which
-!   match that pattern.
+!   match that pattern in the given directory and, recursively,
+!   in all sub-directories. The string matching system is based on 
+!   the vstring_match method of the m_vstring module.
+!
+!   In the following example, extracted again from the unit tests
+!   of flibs, one computes the list of files in the directory "testfindbypattern"
+!   matching the pattern "*dec*.txt".
+!
+!     type ( t_vstringlist ) :: listOfFiles
+!     listOfFiles = vfile_findbypattern ( "testfindbypattern" , pattern = "*dec*.txt" )
 !
 ! Error management
 !
@@ -133,8 +162,16 @@
 !   RENAME provided :
 !   - function : Intel Fortran, g95
 !   - subroutine : gfortran
-!   Choose your RENAME version between one of these :
-!   _VFILE_RENAME_FUNCTION , _VFILE_RENAME_SUBROUTINE
+!   To inform the m_vfile module of the particular STAT extension, 
+!   one of the following pre-processing macro must be defined :
+!   _VFILE_RENAME_FUNCTION 
+!   _VFILE_RENAME_SUBROUTINE
+!
+!   The same situation happens with the GETCWD fortran extension. 
+!   To inform the m_vfile module of the particular GETCWD extension,
+!   one of the following pre-processing macro must be defined :
+!   _VFILE_GETCWD_FUNCTION
+!   _VFILE_GETCWD_SUBROUTINE
 !
 !   Dynamic or static buffer
 !   The internal algorithms provided by m_vstrings are based on 
@@ -165,6 +202,7 @@
 !   _VFILE_RENAME_FUNCTION or _VFILE_RENAME_SUBROUTINE : see the section "File rename fortran extension"
 !   _VFILE_GETCWD_FUNCTION or _VFILE_GETCWD_SUBROUTINE
 !
+! Example of compiler settings
 !   This is an abstract of all macros for several compilers.
 !
 !   Compiler : Intel Fortran V8.0
@@ -474,6 +512,31 @@ module m_vfile
      module procedure vfile_nativename_charstring
   end interface vfile_nativename
   !
+  ! vfile_open --
+  !   Generic method  to open a file and get a fresh logical unit.
+  !
+  interface vfile_open
+     module procedure vfile_open_vstring
+     module procedure vfile_open_charstring
+  end interface vfile_open
+  !
+  ! vfile_mkdir --
+  !   Generic method  to create a directory.
+  !
+  interface vfile_mkdir
+     module procedure vfile_mkdir_vstring
+     module procedure vfile_mkdir_charstring
+  end interface vfile_mkdir
+  !
+  ! vfile_touch --
+  !   Generic method  to touch a file
+  !
+  interface vfile_touch
+     module procedure vfile_touch_vstring
+     module procedure vfile_touch_charstring
+  end interface vfile_touch
+
+  !
   ! Static attributes
   !
   !
@@ -540,101 +603,6 @@ module m_vfile
   type ( t_vstring ), save :: vfile_findbypattern_pattern
 contains
   !
-  ! vfile_startup --
-  !   Initialize module internal state.
-  ! Arguments:
-  !   no argument
-  !
-  subroutine vfile_startup ( )
-    integer :: platform
-    type ( t_vstring ) :: message
-    type ( t_vstring ) :: platform_string
-
-    if (.NOT.vfile_static_initialized) then
-       !
-       ! 0. Get the current platform
-       !
-       platform = platform_get_platform ()
-       platform_string = vstring_format ( platform )
-       !
-       ! 1. Initialize the platform-specific separator
-       !
-       ! Setup the separator depending on the platform
-       select case ( platform )
-       case ( PLATFORM_PLATFORM_WINDOWS )
-          VFILE_PLATFORM_SEPARATOR = VFILE_PLATFORM_SEPARATOR_WINDOWS
-       case ( PLATFORM_PLATFORM_UNIX )
-          VFILE_PLATFORM_SEPARATOR = VFILE_PLATFORM_SEPARATOR_UNIX
-       case ( PLATFORM_PLATFORM_MAC )
-          VFILE_PLATFORM_SEPARATOR = VFILE_PLATFORM_SEPARATOR_MAC
-       case default
-          call vstring_new ( message )
-          call vstring_append ( message , "Unknown separator for platform :" )
-          call vstring_append ( message , platform_string )
-          call vstring_append ( message , " in vfile_startup" )
-          call vfile_error ( message = message )
-          call vstring_free ( message )
-          call vstring_free ( platform_string )
-          return
-       end select
-       !
-       ! 2. Initialize the platform-specific commands
-       !
-       select case ( platform )
-       case ( PLATFORM_PLATFORM_WINDOWS )
-          ! See http://en.wikipedia.org/wiki/List_of_DOS_commands
-          call vstring_new ( command_ls , "dir /b" )
-          call vstring_new ( command_copy , "copy" )
-          call vstring_new ( command_mkdir , "mkdir" )
-          call vstring_new ( command_redirect , ">" )
-          call vstring_new ( command_suppress_msg , "2>nul" )
-          call vstring_new ( command_touch , "" )
-          call vstring_new ( command_rmdir , "rd" )
-          call vstring_new ( command_rmdir_force , "rmdir /s /q" )
-       case ( PLATFORM_PLATFORM_UNIX )
-          ! See http://en.wikipedia.org/wiki/List_of_Unix_programs
-          call vstring_new ( command_ls , "ls" )
-          call vstring_new ( command_copy , "cp" )
-          call vstring_new ( command_mkdir , "md" )
-          call vstring_new ( command_redirect , ">" )
-          call vstring_new ( command_suppress_msg , "2>/dev/null" )
-          call vstring_new ( command_touch , "touch" )
-          call vstring_new ( command_rmdir , "rm" )
-          call vstring_new ( command_rmdir_force , "rm -r -f" )
-       case default
-          call vstring_new ( message )
-          call vstring_append ( message , "Unknown commands for platform :" )
-          call vstring_append ( message , platform_string )
-          call vstring_append ( message , " in vfile_startup" )
-          call vfile_error ( message = message )
-          call vstring_free ( message )
-          call vstring_free ( platform_string )
-          return
-       end select
-       !
-       ! Update the static flag
-       !
-       vfile_static_initialized = .true.
-       !
-       ! Clean-up
-       !
-       call vstring_free ( platform_string )
-    endif
-  end subroutine vfile_startup
-  !
-  ! vfile_shutdown --
-  !   Shutdown module internal state.
-  subroutine vfile_shutdown ( )
-    call vstring_free ( command_ls )
-    call vstring_free ( command_copy )
-    call vstring_free ( command_mkdir )
-    call vstring_free ( command_redirect )
-    call vstring_free ( command_suppress_msg )
-    call vstring_free ( command_touch )
-    call vstring_free ( command_rmdir )
-    call vstring_free ( command_rmdir_force )
-  end subroutine vfile_shutdown
-  !
   ! vfile_rootname_vstring --
   !   Return the name without the extension (if any)
   ! Result:
@@ -642,6 +610,8 @@ contains
   !   if no "." is present
   ! Arguments:
   !   filename   Name of the file to be examined, with type t_vstring
+  ! Example : 
+  !   if filename is "declaration.txt", the file root name is "declaration".
   !
   function vfile_rootname_vstring ( filename ) result ( rootname )
     type ( t_vstring ) , intent(in) :: filename
@@ -802,6 +772,9 @@ contains
   !   The part of the name _before_ the last directory separator
   ! Arguments:
   !   filename   Name of the file to be examined, with type t_vstring
+  ! Example : 
+  !  if filename is "dir1/declaration.txt", the directory name
+  !  is "dir1".
   !
   function vfile_dirname_vstring ( filename ) result ( dirname )
     type ( t_vstring ) , intent(in) :: filename
@@ -833,7 +806,7 @@ contains
 #undef _TEMPLATE_ROUTINE_VALUE
   !
   ! vfile_first_separator_index_vstring --
-  !   Returns the index of the last separator in the given filename
+  !   Returns the index of the first separator in the given filename
   !   or 0 if there is no separator in the given file name.
   ! Arguments:
   !   filename   Name of the file to be examined, with type t_vstring
@@ -859,7 +832,7 @@ contains
   end function vfile_first_separator_index_vstring
   !
   ! vfile_first_separator_index_charstring --
-  !   Returns the index of the last separator in the given filename
+  !   Returns the index of the first separator in the given filename
   !   or 0 if there is no separator in the given file name.
   ! Arguments:
   !   filename   Name of the file to be examined, with type character(len=*)
@@ -921,9 +894,7 @@ contains
   !   Unix and Windows, and : for Macintosh.
   !   If a particular name is relative, then it will be joined to the previous 
   !   file name argument. Otherwise, any earlier arguments will be discarded, 
-  !   and joining will proceed from the current argument. For example,
-  !     vfile_join ( a , b , /foo , bar )
-  !   returns /foo/bar.
+  !   and joining will proceed from the current argument. 
   ! Arguments:
   !   dirname Name of the directory
   !   filename   Name of the file to join at the end of the directory, with type t_vstring
@@ -1035,10 +1006,10 @@ contains
   !   - "\" on Windows systems,
   !   - ":" on Macintosh.
   !
-  function vfile_separator ( )
-    type ( t_vstring ) :: vfile_separator
-    call vstring_new ( vfile_separator )
-    call vstring_append ( vfile_separator , VFILE_PLATFORM_SEPARATOR )
+  function vfile_separator ( ) result ( separator )
+    type ( t_vstring ) :: separator
+    call vstring_new ( separator )
+    call vstring_append ( separator , VFILE_PLATFORM_SEPARATOR )
   end function vfile_separator
   !
   ! vfile_canonicalseparator --
@@ -1347,7 +1318,11 @@ contains
   !     If supplied and equals to "ascii", then the copy is made using standard
   !     fortran.
   !   force, optional : if supplied and true, if the target file allready exists, delete it before
-  !     making the copy. filename option is available only in "system" mode.
+  !     making the copy. "force" option is available only in "ascii" mode.
+  !   trimline, optional : if supplied and true, or not supplied, the lines of 
+  !     the file copy are trimmed.
+  !     If supplied and false, the number of columns in the file copy are all 
+  !     of maximum possible length.
   ! Caution !
   !   1. The maximum number of columns in the source filename is 1000.
   !   2. After execution, the target file is not an exact copy of the source file.
@@ -1613,12 +1588,12 @@ contains
   end subroutine vfile_copy_ascii
   !
   ! vfile_delete_vstring --
-  !   Removes the file or directory specified by each pathname argument. 
+  !   Removes the file or directory "filename". 
   !   Non-empty directories will be removed only if the force option is specified.
   ! Arguments:
   !   filename   Name of the file to be examined
-  !   force, optional : if supplied and true, forces to delete the file, even if it is empty.
-  !     If not supplied or supplied and false, the file is not deleted if it is empty.
+  !   force, optional : if supplied and true, forces to delete the directory, even if it is empty.
+  !     If not supplied or supplied and false, the directory is not deleted if it is empty.
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
   !     upon return
   !
@@ -1780,14 +1755,22 @@ contains
   !
   function vfile_size_vstring ( filename , status ) result ( vfile_size )
     type ( t_vstring ), intent(in) :: filename
-    integer, dimension (1:13) :: statarray
     integer, intent(out) , optional :: status
     integer :: vfile_size
+    integer, dimension (1:13) :: statarray
     integer  :: local_status
+    type ( t_vstring ) :: message
     call vstrplatform_stat ( filename , statarray , local_status )
     vfile_size = statarray (8)
     if (present ( status )) then
        status = local_status
+    elseif ( local_status /=0 ) then
+       call vstring_new ( message )
+       call vstring_append ( message , "Unable to compute size of file :" )
+       call vstring_append ( message , filename )
+       call vstring_append ( message , " in vfile_size_vstring" )
+       call vfile_error ( filename , message )
+       call vstring_free ( message )
     endif
   end function vfile_size_vstring
   !
@@ -1811,14 +1794,22 @@ contains
   !
   function vfile_atime_vstring ( filename , status ) result ( vfile_atime )
     type ( t_vstring ), intent(in) :: filename
-    integer, dimension (1:13) :: statarray
     integer, intent(out) , optional :: status
     integer :: vfile_atime
+    integer, dimension (1:13) :: statarray
     integer  :: local_status
+    type ( t_vstring ) :: message
     call vstrplatform_stat ( filename , statarray , local_status )
     vfile_atime = statarray (9)
     if (present ( status )) then
        status = local_status
+    elseif ( local_status /=0 ) then
+       call vstring_new ( message )
+       call vstring_append ( message , "Unable to compute atime of file :" )
+       call vstring_append ( message , filename )
+       call vstring_append ( message , " in vfile_atime_vstring" )
+       call vfile_error ( filename , message )
+       call vstring_free ( message )
     endif
   end function vfile_atime_vstring
   !
@@ -1847,10 +1838,18 @@ contains
     integer, intent(out) , optional :: status
     integer :: vfile_mtime
     integer  :: local_status
+    type ( t_vstring ) :: message
     call vstrplatform_stat ( filename , statarray , local_status )
     vfile_mtime = statarray (10)
     if (present ( status )) then
        status = local_status
+    elseif ( local_status /=0 ) then
+       call vstring_new ( message )
+       call vstring_append ( message , "Unable to compute mtime of file :" )
+       call vstring_append ( message , filename )
+       call vstring_append ( message , " in vfile_mtime_vstring" )
+       call vfile_error ( filename , message )
+       call vstring_free ( message )
     endif
   end function vfile_mtime_vstring
   !
@@ -2033,13 +2032,9 @@ contains
   !   basedir directory.
   !
   ! Arguments:
-  !   basedir         If provided, this is the name of the base directory into which the search is done.
+  !   basedir         
+  !     If provided, this is the name of the base directory into which the search is done.
   !     If not provided, the current directory is used by default.
-  !   TODO : filtercmd   The filtercmd, if provided, is interpreted as a command prefix and 
-  !     one argument is passed to it, the name of the file or directory find is currently 
-  !     looking at. Note that this name is not fully qualified. It has to be joined it with 
-  !     the result of pwd to get an absolute filename. The result of filtercmd is a boolean value 
-  !     that indicates if the current file should be included in the list of interesting files.
   !
   recursive function vfile_find_vstring ( basedir ) result ( listOfFiles )
     type ( t_vstring ), intent(in), optional :: basedir
@@ -2183,7 +2178,10 @@ contains
   ! Arguments:
   !   basedir         If provided, this is the name of the base directory into which the search is done.
   !     If not provided, the current directory is used by default.
-  !   pattern         Pattern for the file names (like: *.f90), with type t_vstring
+  !   pattern         Pattern for the file names (like: *.f90), with type t_vstring.
+  !     The method used for string matching 
+  !     is vstring_match, so that all features available is vstring_match are 
+  !     available in vfile_findbypattern.
   !
   function vfile_findbypattern_vstring ( basedir , pattern ) result ( listOfFiles )
     type ( t_vstring ), intent(in), optional :: basedir
@@ -2262,22 +2260,7 @@ contains
   !   pattern, optional     If provided, only list files which match the given pattern.
   !     If not provided, the "*" pattern is used.
   !     The vstring_match command is used to compare the file against the pattern so that 
-  !     all the pattern types available in vstring_match are available in vfile_listfiles :
-  !     *
-  !       Matches any sequence of characters in string, including a null string.
-  !     ?
-  !       Matches any single character in string.
-  !     [chars]
-  !       Matches any character in the set given by chars. 
-  !       If a sequence of the form x-y appears in chars, then any character 
-  !       between x and y, inclusive, will match. 
-  !       When used with -nocase, the characters of the range are converted to lower case first. 
-  !       Whereas {[A-z]} matches '_' when matching case-sensitively ('_' falls between the 'Z' 
-  !       and 'a'), with -nocase this is considered like {[A-Za-z]} (and probably what was 
-  !       meant in the first place).
-  !     \x
-  !       Matches the single character x. 
-  !       This provides a way of avoiding the special interpretation of the characters *?[]\ in pattern.
+  !     all the pattern types available in vstring_match are available in vfile_listfiles.
   !   tails, optional : If provided and true, only return the part of each file found 
   !     which follows the last directory named in directory. 
   !     Thus the statement
@@ -2527,7 +2510,7 @@ contains
   end function vfile_listfiles_charstring
   !
   ! vfile_type_vstring --
-  !   Returns a string giving the type of file name, which will be one of file, directory.
+  !   Returns a string giving the type of file name, which will be one of "file" or "directory".
   ! Arguments:
   !   status, optional : If status is provided and the file type could be computed,
   !     the status is set to 0.
@@ -2536,6 +2519,7 @@ contains
   !     If the status is not provided and the file type could not be computed,
   !     an error is generated.
   ! TODO : characterSpecial, blockSpecial, fifo, link, or socket.
+  ! TODO : return an integer instead of a unnecessary complex string.
   !
   function vfile_type_vstring ( filename , status ) result ( filetype )
     type ( t_vstring ), intent(in) :: filename
@@ -2579,7 +2563,7 @@ contains
   end function vfile_type_vstring
   !
   ! vfile_type_charstring --
-  !   Returns a string giving the type of file name, which will be one of file, directory,
+  !   Returns a string giving the type of file name, which will be one of "file", "directory",
   !   or unknown if no type cannot be computed.
   !
   function vfile_type_charstring ( filename , status ) result ( filetype )
@@ -2593,7 +2577,7 @@ contains
   end function vfile_type_charstring
   !
   ! vfile_split_vstring --
-  !   Computes an array whose elements are the path components in name.
+  !   Returns a list of strings where elements are the path components in name.
   ! Arguments:
   !   listOfComponents   The list of strings, with type t_vstring
   ! TODO : Path separators will be discarded unless they are needed ensure that an element is unambiguously relative.
@@ -2627,13 +2611,15 @@ contains
     call vstring_free ( filename_vstring )
   end function vfile_split_charstring
   !
-  ! vfile_touch --
+  ! vfile_touch_vstring --
   !   Implementation of touch. Alter the atime and mtime of the specified files. 
   ! Arguments:
-  !   status, optional : if supplied, it contains 0 on success or nonzero error code
+  !   status, optional : if provided, it contains 0 on success or nonzero error code
   !     upon return
+  !     If status is not provided and the process could not be done,
+  !     an error is generated.
   !
-  subroutine vfile_touch ( filename , status )
+  subroutine vfile_touch_vstring ( filename , status )
     type ( t_vstring ), intent(in) :: filename
     integer, intent(out) , optional :: status
     integer :: local_status
@@ -2733,7 +2719,20 @@ contains
          endif
       endif
     end subroutine vfile_touch_windows
-  end subroutine vfile_touch
+  end subroutine vfile_touch_vstring
+  !
+  ! vfile_touch_charstring --
+  !   Same as previous with a character(len=*) filename
+  !
+  subroutine vfile_touch_charstring ( filename , status )
+    character(len=*), intent(in) :: filename
+    integer, intent(out) , optional :: status
+    ! Local variables
+    type ( t_vstring ) :: filename_vstring
+    call vstring_new ( filename_vstring , filename )
+    call vfile_touch_vstring ( filename_vstring , status )
+    call vstring_free ( filename_vstring )
+  end subroutine vfile_touch_charstring
   !
   ! vfile_pathtype_vstring --
   !   Returns one of VFILE_PATHTYPE_ABSOLUTE, VFILE_PATHTYPE_RELATIVE, VFILE_PATHTYPE_VOLUMERELATIVE. 
@@ -2851,13 +2850,16 @@ contains
 #undef _TEMPLATE_ROUTINE_NAME_VSTRING
 #undef _TEMPLATE_ROUTINE_VALUE
   !
-  ! vfile_mkdir --
+  ! vfile_mkdir_vstring --
+  !   Create a directory.
   !   
   ! Arguments:
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
   !     upon return
+  !     If status is not provided and the process could not be done,
+  !     an error is generated.
   !
-  subroutine vfile_mkdir ( filename , status )
+  subroutine vfile_mkdir_vstring ( filename , status )
     type ( t_vstring ), intent(in) :: filename
     integer, intent(out) , optional :: status
     integer :: local_status
@@ -2895,9 +2897,22 @@ contains
        call vfile_error ( message )
        call vstring_free ( message )
     endif
-  end subroutine vfile_mkdir
+  end subroutine vfile_mkdir_vstring
   !
-  ! vfile_open --
+  ! vfile_mkdir_charstring --
+  !   Same as previous with a character(len=*) filename
+  !
+  subroutine vfile_mkdir_charstring ( filename , status )
+    character(len=*), intent(in) :: filename
+    integer, intent(out) , optional :: status
+    ! Local variables
+    type ( t_vstring ) :: filename_vstring
+    call vstring_new ( filename_vstring , filename )
+    call vfile_mkdir_vstring ( filename_vstring , status )
+    call vstring_free ( filename_vstring )
+  end subroutine vfile_mkdir_charstring
+  !
+  ! vfile_open_vstring --
   !   Open a file and returns the unit associated with the opened file.
   !   The command is based on fortran intrinsic "open".
   !   If the optional argument fileunit is provided, it is used to 
@@ -2915,7 +2930,7 @@ contains
   !   * The "err=" option with an error label as argument is not 
   !   provided. The client code may use the iostat option instead.
   !
-  function vfile_open ( filename , fileunit , iostat , status , &
+  function vfile_open_vstring ( filename , fileunit , iostat , status , &
        access , form , recl , blank , position , action , delim , &
        pad ) result ( fileunit_real )
     type ( t_vstring ) , intent(in) :: filename
@@ -2930,12 +2945,12 @@ contains
     character(len=*) , intent(in) , optional :: pad
     integer , intent(in) , optional :: recl
     integer , intent(out) , optional :: iostat
+    integer :: fileunit_real
 #ifdef _VFILE_STATIC_BUFFER
     character ( len = VFILE_BUFFER_SIZE ) :: filename_charstring
 #else
     character ( len = vstring_length(filename)) :: filename_charstring
 #endif
-    integer :: fileunit_real
     integer , parameter :: char_length_max = 20
     character(len=char_length_max) :: action_real
     character(len=char_length_max)  :: status_real
@@ -3109,7 +3124,36 @@ contains
        call vstring_free ( message )
        return
     endif
-  end function vfile_open
+  end function vfile_open_vstring
+  !
+  ! vfile_open_charstring --
+  !   Same as previous with a character(len=*) filename
+  !
+  function vfile_open_charstring ( filename , fileunit , iostat , status , &
+       access , form , recl , blank , position , action , delim , &
+       pad ) result ( fileunit_real )
+    character(len=*), intent(in) :: filename
+    integer , intent(in) , optional :: fileunit
+    character(len=*) , intent(in) , optional :: action
+    character(len=*) , intent(in) , optional :: status
+    character(len=*) , intent(in) , optional :: access
+    character(len=*) , intent(in) , optional :: form
+    character(len=*) , intent(in) , optional :: blank
+    character(len=*) , intent(in) , optional :: position
+    character(len=*) , intent(in) , optional :: delim
+    character(len=*) , intent(in) , optional :: pad
+    integer , intent(in) , optional :: recl
+    integer , intent(out) , optional :: iostat
+    integer :: fileunit_real
+    ! Local variables
+    type ( t_vstring ) :: filename_vstring
+    call vstring_new ( filename_vstring , filename )
+    fileunit_real = vfile_open_vstring ( filename_vstring , fileunit , iostat , status , &
+         access , form , recl , blank , position , action , delim , &
+         pad )
+    call vstring_free ( filename_vstring )
+
+  end function vfile_open_charstring
   !**************************************************************
   !
   ! Static methods.
@@ -3374,10 +3418,9 @@ contains
   end function vfile_tempdir
   !
   ! vfile_tempfile --
-  !   The command generates a temporary file name suitable for writing to, and the 
-  !   associated file. The file name will be unique, and the file will be writable and 
-  !   contained in the appropriate system specific temp directory. The name of the file 
-  !   will be returned as the result of the command.
+  !   Returns the name of a temporary file name suitable for writing to.
+  !   The tempfile name is unique, and the file will be writable and
+  !   contained in the appropriate system specific temp directory.
   ! Arguments:
   !   tempfile   Name of the temporary file
   !
@@ -3553,5 +3596,101 @@ contains
       call vstrlist_append ( listofvolumes , VFILE_PLATFORM_SEPARATOR_UNIX )
     end function vfile_volumes_unix
   end function vfile_volumes
+  !
+  ! vfile_startup --
+  !   Initialize module internal state.
+  !   This routine must be called once before calling any method of the module.
+  ! Arguments:
+  !   no argument
+  !
+  subroutine vfile_startup ( )
+    integer :: platform
+    type ( t_vstring ) :: message
+    type ( t_vstring ) :: platform_string
+
+    if (.NOT.vfile_static_initialized) then
+       !
+       ! 0. Get the current platform
+       !
+       platform = platform_get_platform ()
+       platform_string = vstring_format ( platform )
+       !
+       ! 1. Initialize the platform-specific separator
+       !
+       ! Setup the separator depending on the platform
+       select case ( platform )
+       case ( PLATFORM_PLATFORM_WINDOWS )
+          VFILE_PLATFORM_SEPARATOR = VFILE_PLATFORM_SEPARATOR_WINDOWS
+       case ( PLATFORM_PLATFORM_UNIX )
+          VFILE_PLATFORM_SEPARATOR = VFILE_PLATFORM_SEPARATOR_UNIX
+       case ( PLATFORM_PLATFORM_MAC )
+          VFILE_PLATFORM_SEPARATOR = VFILE_PLATFORM_SEPARATOR_MAC
+       case default
+          call vstring_new ( message )
+          call vstring_append ( message , "Unknown separator for platform :" )
+          call vstring_append ( message , platform_string )
+          call vstring_append ( message , " in vfile_startup" )
+          call vfile_error ( message = message )
+          call vstring_free ( message )
+          call vstring_free ( platform_string )
+          return
+       end select
+       !
+       ! 2. Initialize the platform-specific commands
+       !
+       select case ( platform )
+       case ( PLATFORM_PLATFORM_WINDOWS )
+          ! See http://en.wikipedia.org/wiki/List_of_DOS_commands
+          call vstring_new ( command_ls , "dir /b" )
+          call vstring_new ( command_copy , "copy" )
+          call vstring_new ( command_mkdir , "mkdir" )
+          call vstring_new ( command_redirect , ">" )
+          call vstring_new ( command_suppress_msg , "2>nul" )
+          call vstring_new ( command_touch , "" )
+          call vstring_new ( command_rmdir , "rd" )
+          call vstring_new ( command_rmdir_force , "rmdir /s /q" )
+       case ( PLATFORM_PLATFORM_UNIX )
+          ! See http://en.wikipedia.org/wiki/List_of_Unix_programs
+          call vstring_new ( command_ls , "ls" )
+          call vstring_new ( command_copy , "cp" )
+          call vstring_new ( command_mkdir , "md" )
+          call vstring_new ( command_redirect , ">" )
+          call vstring_new ( command_suppress_msg , "2>/dev/null" )
+          call vstring_new ( command_touch , "touch" )
+          call vstring_new ( command_rmdir , "rm" )
+          call vstring_new ( command_rmdir_force , "rm -r -f" )
+       case default
+          call vstring_new ( message )
+          call vstring_append ( message , "Unknown commands for platform :" )
+          call vstring_append ( message , platform_string )
+          call vstring_append ( message , " in vfile_startup" )
+          call vfile_error ( message = message )
+          call vstring_free ( message )
+          call vstring_free ( platform_string )
+          return
+       end select
+       !
+       ! Update the static flag
+       !
+       vfile_static_initialized = .true.
+       !
+       ! Clean-up
+       !
+       call vstring_free ( platform_string )
+    endif
+  end subroutine vfile_startup
+  !
+  ! vfile_shutdown --
+  !   Shutdown module internal state.
+  subroutine vfile_shutdown ( )
+    call vstring_free ( command_ls )
+    call vstring_free ( command_copy )
+    call vstring_free ( command_mkdir )
+    call vstring_free ( command_redirect )
+    call vstring_free ( command_suppress_msg )
+    call vstring_free ( command_touch )
+    call vstring_free ( command_rmdir )
+    call vstring_free ( command_rmdir_force )
+  end subroutine vfile_shutdown
 end module m_vfile
 
