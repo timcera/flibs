@@ -25,6 +25,7 @@ EXE_TEST_PLATFORM = $(bindir)/test_m_platform.exe
 EXE_TEST_VSTRING = $(bindir)/test_m_vstring.exe
 EXE_TEST_VSTRINGLIST = $(bindir)/test_m_vstringlist.exe
 EXE_TEST_VFILE = $(bindir)/test_m_vfile.exe
+EXE_TEST_LOGGER = $(bindir)/test_m_logger.exe
 #
 # List of the archive files
 #
@@ -40,7 +41,8 @@ $(EXE_TEST_FILSYS) \
 $(EXE_TEST_PLATFORM) \
 $(EXE_TEST_VSTRING) \
 $(EXE_TEST_VSTRINGLIST) \
-$(EXE_TEST_VFILE)
+$(EXE_TEST_VFILE) \
+$(EXE_TEST_LOGGER)
 
 $(libdir): 
 	$(MKDIR) -p $(libdir)
@@ -84,6 +86,11 @@ $(EXE_TEST_VSTRINGLIST): $(libdir)/test_m_vstringlist.o $(objects)
 $(EXE_TEST_VFILE): $(libdir)/test_m_vfile.o $(objects)
 	$(ECHO) "Linking : $(shell basename $@)"
 	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
+
+$(EXE_TEST_LOGGER): $(libdir)/test_m_logger.o $(objects)
+	$(ECHO) "Linking : $(shell basename $@)"
+	$(LINK) $(LOPTS) -o $@ $< $(archive_flibs)
+
 #
 # Deletes all generated files
 #
@@ -137,6 +144,9 @@ $(libdir)/%.o : $(srcdir)/platform/%.f90
 	$(FC) $(F90OPTS) -c $< -o $@
 	$(AR) cr $(archive_flibs) $@
 
+$(libdir)/%.o : $(srcdir)/reporting/%.f90
+	$(FC) $(F90OPTS) -c $< -o $@
+	$(AR) cr $(archive_flibs) $@
 #
 # Rules for tests
 #
@@ -162,6 +172,9 @@ $(libdir)/%.o : $(testdir)/strings/%.f90
 	$(FC) $(F90OPTS) -c $< -o $@
 
 $(libdir)/%.o : $(testdir)/platform/%.f90
+	$(FC) $(F90OPTS) -c $< -o $@
+
+$(libdir)/%.o : $(testdir)/reporting/%.f90
 	$(FC) $(F90OPTS) -c $< -o $@
 
 include Makefile-flibs-dependencies
