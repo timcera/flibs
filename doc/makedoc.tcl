@@ -43,7 +43,7 @@ proc computefilename {filename newextension} {
 #   Process all man files in the current directory.
 #
 proc processall {} {
-    set manfiles [glob "*.man"]
+    set manfiles [glob "*/*.man"]
     foreach filename $manfiles {
         set isuptodate [isuptodate $filename]
         if {$isuptodate==0} then {
