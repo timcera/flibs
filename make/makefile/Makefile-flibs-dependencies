@@ -86,4 +86,5 @@ $(libdir)/test_vstring.o:$(libdir)/m_vstring.o
 $(libdir)/test_vstringlist.o:$(libdir)/m_vstringlist.o \
 $(libdir)/m_vstring.o
 
+$(libdir)/m_assert.o:$(libdir)/m_exception.o
 
