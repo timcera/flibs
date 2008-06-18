@@ -8,7 +8,8 @@ $(objects_5)\
 $(objects_6)\
 $(objects_7)\
 $(objects_8)\
-$(objects_9)
+$(objects_9)\
+$(objects_10)
 # Objects from /src/computing
 objects_1 = \
 $(libdir)/automdiff.o \
@@ -50,4 +51,10 @@ $(libdir)/textstr.o
 objects_9 = \
 $(libdir)/m_platform.o \
 $(libdir)/m_vstrplatform.o
+# Objects from /src/reporting
+objects_10 = \
+$(libdir)/m_assert.o \
+$(libdir)/m_exception.o \
+$(libdir)/m_logger.o \
+$(libdir)/m_throwable.o
 
