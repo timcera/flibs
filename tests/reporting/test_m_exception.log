@@ -9,15 +9,16 @@
   -> Test #           9 PASS
   -> Test #          10 PASS
   -> Test #          11 PASS
+  -> Test #          12 PASS
   Failure.
   Message: This is my message
-  -> Test #          12 PASS
   -> Test #          13 PASS
   -> Test #          14 PASS
   -> Test #          15 PASS
   -> Test #          16 PASS
+  -> Test #          17 PASS
  Test suite completed
  **********************
  End of tests.
-  Total number of success tests :           16
+  Total number of success tests :           17
   Total number of failing tests :            0
