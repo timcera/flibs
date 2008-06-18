@@ -1,5 +1,6 @@
 !
 ! m_exception --
+!
 !   Provides services to generate different levels of exceptions
 !   and display the message of the exception.
 !   Five levels of exceptions can be generated, from the lowest 
@@ -7,20 +8,101 @@
 !   - information, warning : just print a message and continue
 !   - error, fatal_error and failure : prints a message and stop the execution
 !
+! OVERVIEW
+!
+!   Simple use-case
+!
+!   Suppose that one would like to compute the square root of one 
+!   real value. The "compute_sqrt" function takes one positive real argument,
+!   and if the argument is negative, one cannot compute the square root so 
+!   that one would generate an error. In the following example, extracted from the 
+!   unit tests included in the project, one uses the static method "exception_raiseError" 
+!   to display a user-friendly message and stop the execution of the program
+! 
+!    function compute_sqrt ( value ) result ( root )
+!      use m_exception
+!      implicit none
+!      real, intent(in) :: value
+!      real :: root
+!      if ( value < 0. ) then
+!        call exception_raiseError ( "Value is negative in compute_sqrt" )
+!      else 
+!        root = sqrt ( value )
+!      endif
+!   end function compute_sqrt
+!
+!   real :: root
+!   root = compute_sqrt ( -1. )
+! 
+!   In the previous example, the standard output is written so that the 
+!   following message appears on screen :
+!
+!   Error.
+!   Message: Value is negative in compute_sqrt
+!
+!   Controlling the execution
+! 
 !   The client code can control the behaviour of the component each time 
-!   an exception is raised :
-!   - the default behaviour is to stop the execution. This can be modified
-!     by calling "exception_setstoponerror" in order to continue the execution,
-!     even if exceptions are raised.
-!   - the default behaviour is to display messages onto the standard output
-!     each time an exception is raised.
-!     This can be modified in two ways :
-!     * the first solution is to disable the writing of the messages 
-!       with "exception_logactive"
-!     * the second solution is to connect the component to an existing unit
-!       with "exception_setlogunit", so that the messages are written
-!       on the given unit number. This allows for example to write on an existing 
-!       log file.
+!   an exception is raised.
+!   The default behaviour is to stop the execution. This can be modified
+!   by calling "exception_setstoponerror" in order to continue the execution,
+!   even if error, fatal error or failure exceptions are raised.
+!
+!   In the following example, the static method "exception_setstoponerror" is 
+!   called so that an error does not interrupt the execution.
+!
+!   call exception_setstoponerror ( .false. )
+!   call exception_raiseError ( "There is an error, but the execution will continue." )
+!
+! Controlling output
+!
+!   The default behaviour is to write messages onto the standard output
+!   each time an exception is raised.
+!   This can be modified in two ways :
+!   * the first possibility is to disable the writing of the messages 
+!     with "exception_logactive". This feature might be useful in the case
+!     where a component has known bugs but generates lots of unwanted
+!     exceptions messages.
+!   * the second possibility is to connect the component to an existing unit
+!     with "exception_setlogunit", so that the messages are written
+!     on the given logical unit number. 
+!     This allows for example to write on an existing log file, may be the log 
+!     file manage by the m_logger component included in the project.
+!
+!   In the following example, the client code first disables all output,
+!   set "stoponerror" to false and generates an error which is not displayed
+!   and does not interrupt the execution.
+!
+!   call exception_setstoponerror ( .false. )
+!   call exception_logactive ( .false. )
+!   call exception_raiseError ( "This message will not be displayed and the execution will continue." )
+!   call exception_logactive ( .true. )
+!   call exception_raiseError ( "This message WILL be displayed and the execution will continue." )
+!
+!   In the following example, the client code connects the m_exception component to 
+!   an existing unit so that the exception messages are written onto a client log file.
+!
+!     log_fileunit = 12
+!     call exception_setstoponerror ( .false. )
+!     open ( log_fileunit , FILE= "log_file.log" )
+!     call exception_setlogunit ( log_fileunit )
+!     call exception_raiseError ( "This message will be written in log_file.log and the execution will continue." )
+!     call exception_setlogunit ( 0 )
+!     call exception_raiseError ( "This message will be written on standard output and the execution will continue." )
+!     close ( log_fileunit )
+!
+!   In the following example, the client code connects the m_exception component to 
+!   the logfile manage by m_logger. This way, the exception messages are collected in the 
+!   unique log file of the client code.
+!
+!     call log_startup ( "log_file.log" , append=.true. )
+!     call log_cget ( "logfileunit" , log_fileunit )
+!     call exception_setstoponerror ( .false. )
+!     call exception_setlogunit ( log_fileunit )
+!     call exception_raiseError ( "This message will be written in log_file.log and the execution will continue." )
+!     call log_shutdown ()
+!
+! Pseudo-catch
 !
 !   The client code can use a pseudo-catch system which provides
 !   a simple way to manage exceptions which are raised at a lower 
@@ -33,7 +115,7 @@
 !       use m_exception, only : exception_raiseFatalError
 !       implicit none
 !       [...]
-!       call exception_raiseFatalError ( "callback2" , "Wrong blabla !" )
+!       call exception_raiseFatalError ( "Wrong blabla in yoursubroutine" )
 !       [...]
 !     end subroutine yoursubroutine
 !   When calling the subroutine "yoursubroutine", one may wonder if exceptions
@@ -58,6 +140,10 @@
 !     case default
 !        write(6,*) "No problem, continue."
 !     end select
+!
+! TODO
+!   - design a more powerful exception management system, which manages exceptions
+!   through the call stack
 !
 ! Copyright (c) 2008 Michael Baudin
 !
@@ -96,7 +182,7 @@ module m_exception
   !
   ! Set to true to stop the execution after a stoping error.
   !
-  integer :: exception_stoponerror = .true.
+  logical :: exception_stoponerror = .true.
   !
   ! Counters for the different levels of errors
   !
@@ -260,6 +346,12 @@ contains
   !   excepcounters ( 1:EXCEPTION_SIZE) : array of integers
   !     excepcounters ( iexcept ) is the total number of exceptions
   !     of type #iexcept generated since the begining of the execution.
+  !     The possible values for iexcept are the following.
+  !     - counter ( EXCEPTION_INFORMATION ) : total number of information exceptions raised
+  !     - counter ( EXCEPTION_WARNING ) : total number of warning exceptions raised
+  !     - counter ( EXCEPTION_ERROR ) : total number of error exceptions raised
+  !     - counter ( EXCEPTION_FATAL_ERROR ) : total number of fatal error exceptions raised
+  !     - counter ( EXCEPTION_FAILURE ) : total number of failure exceptions raised
   !
   subroutine exception_getcounter ( counter )
     integer, dimension(1:EXCEPTION_SIZE), intent(out) :: counter
@@ -299,7 +391,7 @@ contains
   !   unitnumber : the unit number
   ! Note :
   !   A unitnumber equals to 6 is generally the standard output, 
-  !   but this is not standard fortran.
+  !   but this may depend on the fortran compiler.
   !
   subroutine exception_setlogunit ( unitnumber )
     integer, intent(in) :: unitnumber
@@ -318,8 +410,9 @@ contains
   ! Arguments :
   !   
   !
-  integer function exception_getlogunit ( )
-    exception_getlogunit = exception_log_unit
+  function exception_getlogunit ( ) result ( logunit )
+    integer :: logunit
+    logunit = exception_log_unit
   end function exception_getlogunit
   !
   ! exception_logactive --
@@ -339,8 +432,9 @@ contains
   !   Returns .true. if the current exception messages are written,
   !   either on standard output or into a log file.
   !
-  logical function exception_islogactive ( )
-    exception_islogactive = exception_log_active
+  function exception_islogactive ( ) result ( islogactive )
+    logical :: islogactive
+    islogactive = exception_log_active
   end function exception_islogactive
   !
   ! exception_catch --
