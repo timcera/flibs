@@ -3445,7 +3445,7 @@ int mhflag;                 /* True if generating makeheaders output */
   if( mhflag ){ fprintf(out,"#endif\n"); lineno++; }
   fprintf(out,"type YYMINORTYPE\n"); lineno++;
   fprintf(out,"    integer YYERRSYMDT ! TODO!\n",name); lineno++;
-  fprintf(out,"    integer yy0;\n",name); lineno++;
+  fprintf(out,"    type(ParseTOKENTYPE) :: yy0;\n",name); lineno++;
   for(i=0; i<arraysize; i++){
     if( types[i]==0 ) continue;
     fprintf(out,"    %s yy%d;\n",types[i],i+1); lineno++;
@@ -3568,6 +3568,8 @@ int mhflag;     /* Output in makeheaders format if true */
   if( lemp->wildcard ){
     fprintf(out,"integer, parameter :: YYWILDCARD = %d\n",
        lemp->wildcard->index); lineno++;
+  }else{
+    fprintf(out,"integer, parameter :: YYWILDCARD = -1\n"); lineno++;
   }
   print_stack_union(out,lemp,&lineno,mhflag);
   fprintf(out, "!#ifndef YYSTACKDEPTH\n"); lineno++;
@@ -3586,17 +3588,17 @@ int mhflag;     /* Output in makeheaders format if true */
     i = strlen(lemp->arg);
     while( i>=1 && isspace(lemp->arg[i-1]) ) i--;
     while( i>=1 && (isalnum(lemp->arg[i-1]) || lemp->arg[i-1]=='_') ) i--;
-    fprintf(out,"#define %sARG_SDECL %s;\n",name,lemp->arg);  lineno++;
-    fprintf(out,"#define %sARG_PDECL ,%s\n",name,lemp->arg);  lineno++;
-    fprintf(out,"#define %sARG_FETCH %s = yypParser->%s\n",
+    fprintf(out,"!#define %sARG_SDECL %s;\n",name,lemp->arg);  lineno++;
+    fprintf(out,"!#define %sARG_PDECL ,%s\n",name,lemp->arg);  lineno++;
+    fprintf(out,"!#define %sARG_FETCH %s = yypParser->%s\n",
                  name,lemp->arg,&lemp->arg[i]);  lineno++;
-    fprintf(out,"#define %sARG_STORE yypParser->%s = %s\n",
+    fprintf(out,"!#define %sARG_STORE yypParser->%s = %s\n",
                  name,&lemp->arg[i],&lemp->arg[i]);  lineno++;
   }else{
-    fprintf(out,"#define %sARG_SDECL\n",name);  lineno++;
-    fprintf(out,"#define %sARG_PDECL\n",name);  lineno++;
-    fprintf(out,"#define %sARG_FETCH\n",name); lineno++;
-    fprintf(out,"#define %sARG_STORE\n",name); lineno++;
+    fprintf(out,"!#define %sARG_SDECL\n",name);  lineno++;
+    fprintf(out,"!#define %sARG_PDECL\n",name);  lineno++;
+    fprintf(out,"!#define %sARG_FETCH\n",name); lineno++;
+    fprintf(out,"!#define %sARG_STORE\n",name); lineno++;
   }
   if( mhflag ){
     fprintf(out,"#endif\n"); lineno++;
@@ -3688,9 +3690,9 @@ int mhflag;     /* Output in makeheaders format if true */
     if( i<n-1) {
       fprintf(out, "%d,", action);
     }else{
-      fprintf(out, "%d/)", action);
+      fprintf(out, "%d/)\n", action);
     }
-    if( j==24 || i==n-1 ){
+    if( j==24 && i != n-1 ){
       fprintf(out, "&\n"); lineno++;
       j = 0;
     }else{
@@ -3707,9 +3709,9 @@ int mhflag;     /* Output in makeheaders format if true */
     if( i<n-1) {
       fprintf(out, "%d,", la);
     }else{
-      fprintf(out, "%d/)", la);
+      fprintf(out, "%d/)\n", la);
     }
-    if( j==24 || i==n-1 ){
+    if( j==24 && i!=n-1 ){
       fprintf(out, "&\n"); lineno++;
       j = 0;
     }else{
@@ -3723,7 +3725,7 @@ int mhflag;     /* Output in makeheaders format if true */
   n = lemp->nstate;
   while( n>0 && lemp->sorted[n-1]->iTknOfst==NO_OFFSET ) n--;
   fprintf(out, "integer, parameter :: YY_SHIFT_MAX = %d\n", n-1); lineno++;
-  fprintf(out, "integer, dimension(0:%d) :: yy_shift_ofst[] = (/&\n", n-1); lineno++;
+  fprintf(out, "integer, dimension(0:%d) :: yy_shift_ofst = (/&\n", n-1); lineno++;
   for(i=j=0; i<n; i++){
     int ofst;
     stp = lemp->sorted[i];
@@ -3732,9 +3734,9 @@ int mhflag;     /* Output in makeheaders format if true */
     if( i<n-1) {
       fprintf(out, "%d,", ofst);
     }else{
-      fprintf(out, "%d/)", ofst);
+      fprintf(out, "%d/)\n", ofst);
     }
-    if( j==24 || i==n-1 ){
+    if( j==24 && i!=n-1 ){
       fprintf(out, "&\n"); lineno++;
       j = 0;
     }else{
@@ -3757,9 +3759,9 @@ int mhflag;     /* Output in makeheaders format if true */
     if( i<n-1) {
       fprintf(out, "%d,", ofst);
     }else{
-      fprintf(out, "%d/)", ofst);
+      fprintf(out, "%d/)\n", ofst);
     }
-    if( j==24 || i==n-1 ){
+    if( j==24 && i!=n-1 ){
       fprintf(out, "&\n"); lineno++;
       j = 0;
     }else{
@@ -3776,9 +3778,9 @@ int mhflag;     /* Output in makeheaders format if true */
     if( i<n-1) {
       fprintf(out, "%d,", stp->iDflt);
     }else{
-      fprintf(out, "%d/)", stp->iDflt);
+      fprintf(out, "%d/)\n", stp->iDflt);
     }
-    if( j==9 || i==n-1 ){
+    if( j==24 && i!=n-1 ){
       fprintf(out, "&\n"); lineno++;
       j = 0;
     }else{
@@ -3904,7 +3906,7 @@ int mhflag;     /* Output in makeheaders format if true */
   n=0;
   for(rp=lemp->rule; rp; rp=rp->next){ n++; }
   fprintf(out,"     allocate( yyRuleInfo(0:%d) )\n",n-1); lineno++;
-  for(rp=lemp->rule; rp; rp=rp->next){
+  for(i=0,rp=lemp->rule; rp; i++,rp=rp->next){
     fprintf(out,"     yyRuleInfo(%d) = yyRuleInfoType(%d, %d)\n",i,rp->lhs->index,rp->nrhs); lineno++;
   }
   tplt_xfer(lemp->name,in,out,&lineno);

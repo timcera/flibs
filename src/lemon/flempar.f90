@@ -11,8 +11,6 @@
 module Parse_mod
 
 %%
-implicit none
-integer :: count
 
 private
 public :: Parse
@@ -142,9 +140,9 @@ end type
 type(yyRuleInfoType), dimension(:), allocatable :: yyruleinfo
 
 !
-! (AM,TODO) Setting NDEBUG to .false. should make the parser
+! (AM,TODO) Setting NDEBUG to .true. should make the parser
 ! faster but there is some bug that makes it fail - see yy_reduce
-logical, parameter :: NDEBUG = .true.
+logical, parameter :: NDEBUG = .false.
 
 integer, parameter :: YY_SZ_ACTTAB = size(yy_action)
 
@@ -187,7 +185,7 @@ type yyParser
     private
     integer :: yyidx                     ! Index of top element in stack
     integer :: yyerrcnt                  ! Shifts left before out of the error
-    ParseARG_SDECL                       ! A place to hold %extra_argument
+!   ParseARG_SDECL                       ! A place to hold %extra_argument
     integer yystksz                      ! Current side of the stack
     type(yyStackEntry), dimension(:), pointer :: yystack ! The parser's stack
 endtype
@@ -514,7 +512,7 @@ subroutine yyStackOverflow( yypParser, yypMinor )
 
     integer           :: dummy
 
-    ParseARG_FETCH
+!   ParseARG_FETCH
    yypParser%yyidx = yypParser%yyidx - 1
 
    if ( yyTraceFILE >= 0 ) then
@@ -528,7 +526,7 @@ subroutine yyStackOverflow( yypParser, yypMinor )
    ! stack every overflows !
 %%
 
-    ParseARG_STORE  ! Suppress warning about unused %extra_argument var
+!   ParseARG_STORE  ! Suppress warning about unused %extra_argument var
 end subroutine
 
 !
@@ -604,7 +602,7 @@ subroutine yy_reduce( yypParser, yyruleno )
     type(yyStackEntry), pointer :: yymsp2
     integer                     :: yysize   ! Amount to pop the stack
 
-    ParseARG_FETCH
+!   ParseARG_FETCH
 
     write(*,*) 'AM: yy_reduce', yyruleno
 
@@ -696,7 +694,7 @@ subroutine yy_parse_failed( yypParser )
 
     integer        :: dummy
 
-    ParseARG_FETCH
+!   ParseARG_FETCH
 
     if ( yyTraceFILE >= 0 ) then
         write( yyTraceFILE, "(A,'Fail!')" ) trim(yyTracePrompt)
@@ -708,7 +706,7 @@ subroutine yy_parse_failed( yypParser )
     ! Here code is inserted which will be executed whenever the
     ! parser fails !
 %%
-    ParseARG_STORE  ! Suppress warning about unused %extra_argument variable !
+!   ParseARG_STORE  ! Suppress warning about unused %extra_argument variable !
 end subroutine
 
 !
@@ -720,13 +718,13 @@ subroutine yy_syntax_error( yypParser, yymajor, yyminor )
     type(YYMINORTYPE) :: yyminor             ! The minor type of the error token
 
 
-    ParseARG_FETCH
+!   ParseARG_FETCH
 !!>>>
 !#define TOKEN (yyminor.yy0)
 !!<<<
 %%
 
-    ParseARG_STORE  ! Suppress warning about unused %extra_argument variable
+!   ParseARG_STORE  ! Suppress warning about unused %extra_argument variable
 end subroutine
 
 !
@@ -737,7 +735,7 @@ subroutine yy_accept( yypParser )
 
     integer        :: dummy
 
-    ParseARG_FETCH
+!   ParseARG_FETCH
 
     if ( yyTraceFILE >= 0 ) then
         write( yyTraceFILE, "(A,'Accept!')" ) trim(yyTracePrompt)
@@ -750,7 +748,7 @@ subroutine yy_accept( yypParser )
     ! parser accepts
 %%
 
-    ParseARG_STORE  ! Suppress warning about unused %extra_argument variable
+!   ParseARG_STORE  ! Suppress warning about unused %extra_argument variable
 end subroutine
 
 ! The main parser program.
@@ -777,7 +775,7 @@ subroutine Parse( yypParser, yymajor, yyminor, extra_arg )
     integer                :: yymajor               ! The major token code number
     type(ParseTOKENTYPE)   :: yyminor               ! The value for the token
     integer, optional      :: extra_arg
-    ParseARG_PDECL               ! Optional %extra_argument parameter
+!   ParseARG_PDECL               ! Optional %extra_argument parameter
 
     type(YYMINORTYPE)      :: yyminorunion
 
@@ -809,7 +807,7 @@ subroutine Parse( yypParser, yymajor, yyminor, extra_arg )
     yyminorunion%yy0 = yyminor
     yyendofinput = (yymajor==0)
 
-    ParseARG_STORE;
+!   ParseARG_STORE
 
     if ( yyTraceFILE >= 0 ) then
         write( yyTraceFILE, "(A,'Input ',A)" ) trim(yyTracePrompt), trim(yyTokenName(yymajor))
