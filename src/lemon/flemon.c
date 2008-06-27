@@ -3264,7 +3264,7 @@ PRIVATE void translate_code(struct lemon *lemp, struct rule *rp){
             if( cp!=rp->code && cp[-1]=='@' ){
               /* If the argument is of the form @X then substituted
               ** the token number of X, not the value of X */
-              append_str("yypParser%%yystack(yypParser%%yyidx+(%d))%%major",-1,i-rp->nrhs+1,0);
+              append_str("yypParser%%yystack(1+yypParser%%yyidx+(%d))%%major",-1,i-rp->nrhs+1,0);
             }else{
               struct symbol *sp = rp->rhs[i];
               int dtnum;
@@ -3273,7 +3273,7 @@ PRIVATE void translate_code(struct lemon *lemp, struct rule *rp){
               }else{
                 dtnum = sp->dtnum;
               }
-              append_str("yypParser%%yystack(yypParser%%yyidx+(%d))%minor%yy%d",0,i-rp->nrhs+1, dtnum);
+              append_str("yypParser%%yystack(1+yypParser%%yyidx+(%d))%minor%yy%d",0,i-rp->nrhs+1, dtnum);
             }
             cp = xp;
             used[i] = 1;
@@ -3304,7 +3304,7 @@ PRIVATE void translate_code(struct lemon *lemp, struct rule *rp){
       lemp->errorcnt++;
     }else if( rp->rhsalias[i]==0 ){
       if( has_destructor(rp->rhs[i],lemp) ){
-         append_str("yy_destructor(%d,yypParser%%yystack(yyp%%Parser%%yyidx+(%d)).minor);\n", 0,
+         append_str("yy_destructor(%d,yypParser%%yystack(1+yyp%%Parser%%yyidx+(%d)).minor);\n", 0,
            rp->rhs[i]->index,i-rp->nrhs+1);
       }else{
         /* No destructor defined for this term */

@@ -1,0 +1,15 @@
+FLEMON:
+-------
+
+Adaptation of the lemon parser by D. Richard Hipp for Fortran.
+Generates a Fortran-encoded parser for LALR(1) grammars, much
+like Yacc and Bison.
+
+Current limitations and remarks:
+- You can not convenient use the extra argument
+  (Macros involved are not expanded)
+  You can use %include instead to make a "global" variable
+  to hold the state.
+- You need to use %include to _use_ a module with the type definitions
+  for the token data (type(parsetokentype)) or put the definition
+  in the %include statement. Do not forget to make it public!

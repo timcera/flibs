@@ -591,12 +591,12 @@ end subroutine
 ! follow the reduce.
 !
 subroutine yy_reduce( yypParser, yyruleno )
-    type(yyParser)    :: yypParser          ! The parser
-    integer           :: yyruleno           ! Number of the rule by which to reduce
+    type(yyParser), target :: yypParser          ! The parser
+    integer                :: yyruleno           ! Number of the rule by which to reduce
 
-    integer           :: yygoto             ! The next state
-    integer           :: yyact              ! The next action
-    type(YYMINORTYPE) :: yygotominor        ! The LHS of the rule reduced
+    integer                :: yygoto             ! The next state
+    integer                :: yyact              ! The next action
+    type(YYMINORTYPE)      :: yygotominor        ! The LHS of the rule reduced
 
     type(yyStackEntry), pointer :: yymsp    ! The top of the parser's stack
     type(yyStackEntry), pointer :: yymsp2
@@ -800,8 +800,8 @@ subroutine Parse( yypParser, yymajor, yyminor, extra_arg )
 
         yypParser%yyidx = 0
         yypParser%yyerrcnt = -1
-        yypParser%yystack(0)%stateno = 0
-        yypParser%yystack(0)%major = 0
+        yypParser%yystack(1)%stateno = 0
+        yypParser%yystack(1)%major = 0
     endif
 
     yyminorunion%yy0 = yyminor
