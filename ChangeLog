@@ -1,3 +1,7 @@
+2008-07-04 arjenmarkus@sourceforge.net
+   * src/tools: added a new program (editcode): specific preprocessing tasks
+   * tests/tools: small test for the preprocessing program
+
 2008-05-04 arjenmarkus@sourceforge.net
    * index.html: added the vstring and vstringlist modules, as well as finite_state and messages
    * finite_state: updated the test program, wrote the documentation

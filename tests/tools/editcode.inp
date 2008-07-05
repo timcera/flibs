@@ -1,0 +1,16 @@
+INPUT-DIRECTORY   in
+OUTPUT-DIRECTORY  out
+ADD-CODE-START    "write(*,*) 'In __ROUTINE__ (__MODULE__)'"
+ADD-CODE-END      "write(*,*) 'Leaving __ROUTINE__'"
+ADD-CODE-STATEMENT "write(*,*) 'At __LINE__'"
+ADD-USE            "use X"
+REPLACE-TYPE       "real"  real(dp)
+REPLACE-STRING     X Y
+ENABLE-IMPLICIT-NONE  yes
+!
+! Does this cause an error?
+ENABLE-PRECONDITIONS
+
+ENABLE-PRECONDITIONS yes
+
+FILE              example.f90
