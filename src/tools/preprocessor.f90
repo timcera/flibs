@@ -835,6 +835,7 @@ subroutine preprocess_file( preprocessor, filename )
     use_added      = .false.
     start_added    = .false.
     in_try         = 0
+    in_decl        = .true.   ! To avoid comments at the start
 
     eof            = .false.
     do while ( .not. eof )
@@ -880,6 +881,7 @@ subroutine preprocess_file( preprocessor, filename )
                         write(luout,*) 'implicit none'
                     endif
                     in_contains = .true.
+                    in_decl     = .true.
 
                 case ( 'subroutine' )
                     in_routine = .true.
@@ -1040,6 +1042,8 @@ subroutine preprocess_file( preprocessor, filename )
 
         if ( .not. in_decl ) then
             if ( associated(preprocessor%code_statement) ) then
+                written = .true.
+                call write_statement( luout, line, .true. )
                 call write_statement( luout, preprocessor%code_statement, .true. )
             endif
         endif
