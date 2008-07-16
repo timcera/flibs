@@ -251,7 +251,7 @@ contains
 
     if ( present ( status ) ) then
        status = local_status
-    elseif ( status/=0 ) then
+    elseif ( local_status /=0 ) then
        call vstring_new ( message , "Error while changing directory in vstrplatform_cd_vstring." )
        call vstrplatform_error ( message )
        call vstring_free ( message )
@@ -307,7 +307,7 @@ contains
     call platform_stat ( filename_charstring , statarray , local_status )
     if ( present ( status ) ) then
        status = local_status
-    elseif ( status/=0 ) then
+    elseif ( local_status /=0 ) then
        call vstring_new ( message , "Error while computing stat for file ")
        call vstring_append ( message , filename )
        call vstring_append ( message , " in vstrplatform_stat." )
