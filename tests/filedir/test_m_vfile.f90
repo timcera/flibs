@@ -205,6 +205,19 @@ contains
     call log_shutdown ()
   end subroutine test_m_vfile_all
   !
+  ! Check invariants of the program
+  !
+  subroutine test_checkinvariants ()
+    !
+    ! Check that the number of opened units is OK
+    !
+    call check_fileunitsnb ()
+    !
+    ! Check that there are no memory leaks.
+    !
+    call string_reference_check ()
+  end subroutine test_checkinvariants
+  !
   ! Test the directory processing : pwd, cd, isdirectory, isfile, 
   ! filetype, mkdir
   !
@@ -222,6 +235,11 @@ contains
     type ( t_vstring) :: ftail
     logical :: isfile
     type ( t_vstring) :: filetype
+    logical :: fileexists
+    !
+    ! Check the invariants of the program
+    !
+    call test_checkinvariants ()
     !
     ! test #1 : current working directory
     !
@@ -235,13 +253,9 @@ contains
     call vstring_free ( cwd )
     call vstring_free ( ftail )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
     !
     ! Test #23 : change directory
     !
@@ -259,13 +273,9 @@ contains
     call assertVstring_charstring ( dirtail , "filedir" , "Error in platform_cd (2)")
     call vstring_free ( dirtail )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test vfile_isdirectory
     !
@@ -288,6 +298,10 @@ contains
     isdir = vfile_isdirectory ( "fooYepYepYep!" )
     call assert ( .NOT.isdir , "Error in vfile_isdirectory (2)")
     !
+    ! Check the invariants of the program
+    !
+    call test_checkinvariants ()
+    !
     ! Test vfile_isfile
     !
     call logmsg ( "vfile_isfile" )
@@ -302,6 +316,22 @@ contains
     !
     isfile = vfile_isfile ( "yayayaHEPHEP" )
     call assert ( .NOT.isfile , "Error in vfile_isfile")
+    !
+    ! Check the invariants of the program
+    !
+    call test_checkinvariants ()
+    !
+    ! Test vfile_exists with a directory argument.
+    !
+    call logmsg ( "Test : file exists with directory" )
+    call vfile_pwd (cwd1)
+    fileexists = vfile_exists ( cwd1 )
+    call assert ( fileexists , "Error in vfile_exists (1)")
+    call vstring_free ( cwd1 )
+    !
+    ! Check the invariants of the program
+    !
+    call test_checkinvariants ()
     !
     ! Test vfile_type
     !
@@ -318,21 +348,9 @@ contains
     filetype = vfile_type ( "yayayaHEPHEP" , status )
     call assert ( status /= 0 , "Error in vfile_type")
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #27 : create / delete a directory
     !
@@ -348,13 +366,9 @@ contains
     call vstring_free ( tmpdir )
     call vstring_free ( dirname1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #28 : create / delete a non empty directory without / with the force option
     !
@@ -376,13 +390,9 @@ contains
     call vstring_free ( dirname1 )
     call vstring_free ( tempfile )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #29 : create a directory which allready exists
     !
@@ -396,13 +406,9 @@ contains
     call vstring_free ( tmpdir )
     call vstring_free ( dirname1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
   end subroutine test_pwd_cd_mkdir
   !
   ! Test  vfile_dirname, tail, extension, join etc...
@@ -472,13 +478,9 @@ contains
     call assertVstring_charstring ( fext , "" , "Error in file extension (2).")
     call vstring_free ( fext )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #13 : file tail, without dirname
     !
@@ -537,13 +539,9 @@ contains
        call vstring_free ( ftail )
     endif
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
     !
     ! Test #15 : add extension
     !
@@ -554,13 +552,9 @@ contains
     call vstring_free ( source_file1 )
     call vstring_free ( fullfilename )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #16 : add extension to a file with allready one dot at the end
     !
@@ -571,9 +565,9 @@ contains
     call vstring_free ( source_file1 )
     call vstring_free ( fullfilename )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
   end subroutine test_file_dirname
   !
   ! Test temporary files, directory
@@ -584,6 +578,10 @@ contains
   type ( t_vstring ) :: tempfile2
   type ( t_vstring ) :: tmpdir
     !
+    ! Check the invariants of the program
+    !
+    call test_checkinvariants ()
+    !
     ! Test #18 : get temporary directory
     !
     call logmsg ( "Test #18 : temporary directory" )
@@ -592,13 +590,9 @@ contains
     call logmsg_string ( tmpdir )
     call vstring_free ( tmpdir )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #21 : compute a temporary file name
     !
@@ -618,13 +612,9 @@ contains
     call vstring_free ( tempfile )
     call vstring_free ( tempfile2 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
   end subroutine test_file_tempfiledir
   !
   ! Test the copy/delete
@@ -643,13 +633,9 @@ contains
     type ( t_vstring ) :: target_file
     type ( t_vstring ) :: tempfile
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #3
     !
@@ -664,13 +650,9 @@ contains
     call assert ( .NOT.fexist , "File copy exists (6)")
     call vstring_free ( source_file1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #3.2 with errors
     !
@@ -682,13 +664,9 @@ contains
     call assert ( .NOT.fexist , "File copy exists (6)")
     call vstring_free ( source_file1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #4
     !
@@ -703,13 +681,9 @@ contains
     call assert ( .NOT.fexist , "File copy exists (6)")
     call vstring_free ( source_file1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #5
     ! Prove that one can copy several times the same file with vfile_copy,
@@ -733,13 +707,9 @@ contains
     call assert ( .NOT.fexist , "File copy exists (6)")
     call vstring_free ( source_file1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Copy with an error because target allready exist.
     !
@@ -752,13 +722,9 @@ contains
     call assert ( fexist , "File copy exists (6)")
     call vstring_free ( source_file1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #10
     ! Try to force a copy.
@@ -773,13 +739,9 @@ contains
     call vfile_delete ( "declaration_copy.txt" )
     call vstring_free ( source_file1 )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #8
     !
@@ -796,13 +758,9 @@ contains
     call vstring_free ( source_file1 )
     call vstring_free ( target_file )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #22 : touch
     !
@@ -819,13 +777,9 @@ contains
     call vfile_delete ( tempfile )
     call vstring_free ( tempfile )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #9
     !
@@ -837,13 +791,9 @@ contains
     call logmsg ( msg )
     call assert ( atime>=0 , "Error while getting acces time (9).")
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
   end subroutine test_file_copy
   !
   ! Test vfile_normalize, native name, path type, volumes
@@ -865,13 +815,9 @@ contains
     integer :: volumefound
     integer :: nbvolumes
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Get list of volumes
     ! Note:
@@ -923,13 +869,9 @@ contains
     endif
     call vstring_free ( tempfile )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test #17 : normalize
     !
@@ -1042,13 +984,9 @@ contains
     endif
     call vstring_free ( tempfile )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
   end subroutine test_vfile_normalize
   !
   ! Test find by pattern
@@ -1067,18 +1005,15 @@ contains
     logical :: testfiltercmd_vstring
     call logmsg ( "Entering test_vfile_findbypattern..." )
     !
-    ! Check that the number of opened units is OK
+    ! Check the invariants of the program
     !
-    call check_fileunitsnb ()
-    !
-    ! Check that there are no memory leaks.
-    !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! Test : split a file name
     !
-#ifndef _VSTRING_ALLOCATABLE
-    ! This test does not pass with allocatable strings and intel fortran 8
+#ifndef _IVF8
+    ! This test does not pass with allocatable strings and intel fortran 8 (
+    ! The test pass with with allocatable strings and Intel Fortran 10
     call logmsg ( "Split a file name" )
     normalized = vfile_normalize ( "declaration.txt" )
     listOfFiles = vfile_split ( normalized )
@@ -1092,8 +1027,9 @@ contains
     !
     ! Test : split a file name with a mix of \ and /
     !
-#ifndef _VSTRING_ALLOCATABLE
+#ifndef _IVF8
     ! This test does not pass with allocatable strings and intel fortran 8
+    ! The test pass with with allocatable strings and Intel Fortran 10
     call logmsg ( "Test : split a file name with a mix of \ and /" )
     call vstring_new ( normalized , "titi/toto\declaration.txt" )
     listOfFiles = vfile_split ( normalized )
@@ -1106,13 +1042,9 @@ contains
     call vstring_free ( normalized )
 #endif
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
     !
     ! List files in current directory
     !
@@ -1127,13 +1059,9 @@ contains
     call vstrlist_free ( listOfFiles )
     call vstrplatform_cd ( ".." )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
     !
     ! List files in given directory
     !
@@ -1146,13 +1074,9 @@ contains
     call vstrlist_free ( expectedlist )
     call vstrlist_free ( listOfFiles )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
     !
     ! List files in given directory, but only files
     !
@@ -1168,9 +1092,9 @@ contains
     call vstrlist_free ( listOfFiles )
     call vstrlist_free ( filetypes )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! List files in given directory, but only directories
     !
@@ -1186,9 +1110,9 @@ contains
     call vstrlist_free ( listOfFiles )
     call vstrlist_free ( filetypes )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! List files in given directory, with complex string matching
     !
@@ -1200,9 +1124,11 @@ contains
     call vstrlist_free ( filetypes )
     call vstrlist_free ( listOfFiles )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
+    !
+    ! List files in given directory, with complex string matching
     !
     call logmsg ( "List files" )
     call vstrlist_new ( filetypes )
@@ -1217,9 +1143,9 @@ contains
     call vstrlist_free ( filetypes )
     call vstrlist_free ( listOfFiles )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     ! List files in given directory, with tails option
     !
@@ -1232,13 +1158,9 @@ contains
     call vstrlist_free ( expectedlist )
     call vstrlist_free ( listOfFiles )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
     !
     ! Test find files
     !
@@ -1255,9 +1177,9 @@ contains
     call vstrlist_free ( expectedlist )
     call vstrlist_free ( listOfFiles )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     listOfFiles = vfile_find ( "testls4" )
     call logmsg ( "Found:" )
@@ -1284,9 +1206,9 @@ contains
     call vstrlist_free ( listOfFiles )
     call vstrlist_free ( expectedlist )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
     !
     listOfFiles = vfile_find ( "testls4" , testfiltercmd_vstring )
     call logmsg ( "Found:" )
@@ -1308,10 +1230,12 @@ contains
     call vstrlist_free ( listOfFiles )
     call vstrlist_free ( expectedlist )
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
 #ifndef _IVF8
+    ! This test does not pass with allocatable strings and intel fortran 8
+    ! The test pass with with allocatable strings and Intel Fortran 10
     !
     call logmsg ( "Find without filter" )
     listOfFiles = vfile_find ( "testfind" )
@@ -1319,7 +1243,6 @@ contains
     computedstring = vstrlist_join ( listOfFiles )
     call logmsg_string ( computedstring )
     call vstring_free ( computedstring )
-    call vstrlist_new ( expectedlist )
     expectedlength = 63
     computedlength = vstrlist_length ( listOfFiles )
     call assert ( expectedlength == computedlength , "Error in vfile_join : the lists do not have the same length.")
@@ -1392,11 +1315,13 @@ contains
     call vstrlist_free ( expectedlist )
 #endif
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
+    call test_checkinvariants ()
     ! TODO : test with g95
 #ifndef _IVF8
+    ! This test does not pass with allocatable strings and intel fortran 8
+    ! The test pass with with allocatable strings and Intel Fortran 10
     !
     call logmsg ( "Find files by pattern (1)" )
     listOfFiles = vfile_findbypattern ( "testfindbypattern" , pattern = "*dec*.txt" )
@@ -1427,13 +1352,9 @@ contains
     call vstrplatform_cd ( ".." )
 #endif
     !
-    ! Check that there are no memory leaks.
+    ! Check the invariants of the program
     !
-    call string_reference_check ()
-    !
-    ! Check that the number of opened units is OK
-    !
-    call check_fileunitsnb ()
+    call test_checkinvariants ()
   end subroutine test_vfile_findbypattern
   !
   ! Check that the content of the expected list of the one of the computed list,
