@@ -1275,12 +1275,10 @@ contains
     do icharacter = 1 , length
        current_char = vstring_index ( this , icharacter )
        searched_index = vstring_first ( chars_real , current_char )
+       call vstring_free ( current_char )
        if ( searched_index == VSTRING_INDEX_UNKNOWN ) then
           first = icharacter
           first_found = .true.
-       endif
-       call vstring_free ( current_char )
-       if ( first_found ) then
           exit
        endif
     enddo
@@ -1349,12 +1347,10 @@ contains
     do icharacter = length , 1 , -1
        current_char = vstring_index ( this , icharacter )
        searched_index = vstring_last ( chars_real , current_char )
-       if ( searched_index == 0 ) then
+       call vstring_free ( current_char )
+       if ( searched_index == VSTRING_INDEX_UNKNOWN ) then
           last = icharacter
           last_found = .true.
-       endif
-       call vstring_free ( current_char )
-       if ( last_found ) then
           exit
        endif
     enddo
@@ -1393,16 +1389,16 @@ contains
   !   If first is specified, then the search is constrained to start with the character 
   !   in the current string specified by the index.
   !
-  function vstring_first_vstring ( this , string2 , first ) result ( firstIndex )
+  function vstring_first_vstring ( this , string2 , first ) result ( foundIndex )
     type ( t_vstring ) , intent(in)   :: this
     type ( t_vstring ) , intent(in)   :: string2
     integer, intent(in), optional :: first
-    integer                       :: firstIndex
+    integer                       :: foundIndex
     integer :: startIndex
     integer :: icharacter
     integer :: length
     integer :: length_searched
-    integer :: endIndex
+    integer :: rangeEndIndex
     type(t_vstring)   :: substring
     logical :: equals
     integer :: status
@@ -1422,41 +1418,40 @@ contains
     endif
     length = vstring_length ( this )
     length_searched = vstring_length ( string2 )
-    firstIndex = VSTRING_INDEX_UNKNOWN
-    do icharacter = startIndex , length
-       !
-       ! The length of the string to search for is 0, which never matches.
-       !
-       if ( length_searched == 0 ) then
-          exit
-       endif
-       endIndex = icharacter + length_searched - 1
-       ! The number of characters to search for is greater than the number
-       ! of characters which are left to compare.
-       if ( endIndex > length ) then
-          exit
-       endif
-       substring = vstring_range ( this , icharacter , endIndex )
-       equals = vstring_equals ( substring , string2 )
-       call vstring_free ( substring )
-       if ( equals ) then
-          firstIndex = icharacter
-          exit
-       endif
-    enddo
+    foundIndex = VSTRING_INDEX_UNKNOWN
+    !
+    ! The length of the string to search for is 0, which never matches.
+    !
+    if ( length_searched /= 0 ) then
+       do icharacter = startIndex , length
+          rangeEndIndex = icharacter + length_searched - 1
+          ! The number of characters to search for is greater than the number
+          ! of characters which are left to compare.
+          if ( rangeEndIndex > length ) then
+             exit
+          endif
+          substring = vstring_range ( this , icharacter , rangeEndIndex )
+          equals = vstring_equals ( substring , string2 )
+          call vstring_free ( substring )
+          if ( equals ) then
+             foundIndex = icharacter
+             exit
+          endif
+       enddo
+    endif
   end function vstring_first_vstring
   !
   ! vstring_first_charstring --
   !   Interface to vstring_first_vstring to manage character strings
   !
-  function vstring_first_charstring ( this , string2 , first ) result ( firstIndex )
+  function vstring_first_charstring ( this , string2 , first ) result ( foundIndex )
     type ( t_vstring ) , intent(in)   :: this
     character(len=*), intent(in)   :: string2
     integer, intent(in), optional :: first
-    integer                       :: firstIndex
+    integer                       :: foundIndex
     type(t_vstring) :: vstring2
     call vstring_new ( vstring2 , string2 )
-    firstIndex = vstring_first_vstring ( this , vstring2 , first )
+    foundIndex = vstring_first_vstring ( this , vstring2 , first )
     call vstring_free ( vstring2 )
   end function vstring_first_charstring
   !
@@ -1467,15 +1462,16 @@ contains
   !   If last is specified, then the search is constrained to start with the character in the current 
   !   string specified by the index.
   !
-  function vstring_last_vstring ( this , string2 , last ) result ( lastIndex )
+  function vstring_last_vstring ( this , string2 , last ) result ( foundIndex )
     type ( t_vstring ) , intent(in)   :: this
     type ( t_vstring ) , intent(in)   :: string2
-    integer, intent(in), optional :: last
-    integer :: lastIndex
+    integer, intent(in), optional     :: last
+    integer                           :: foundIndex
+    integer :: endIndex
     integer :: icharacter
     integer :: length
     integer :: length_searched
-    integer :: endIndex
+    integer :: rangeEndIndex
     type(t_vstring)   :: substring
     logical :: equals
     integer :: status
@@ -1490,46 +1486,45 @@ contains
     length = vstring_length ( this )
     if (present( last )) then
        call vstring_check_index ( this , last )
-       lastIndex = last
+       endIndex = last
     else
-       lastIndex = length
+       endIndex = length
     endif
     length_searched = vstring_length ( string2 )
-    lastIndex = VSTRING_INDEX_UNKNOWN
-    do icharacter = lastIndex , 1 , -1
-       !
-       ! The length of the string to search for is 0, which never matches.
-       !
-       if ( length_searched == 0 ) then
-          exit
-       endif
-       endIndex = icharacter + length_searched - 1
-       ! The number of characters to search for is greater than the number
-       ! of characters which are left to compare.
-       if ( endIndex > length ) then
-          exit
-       endif
-       substring = vstring_range ( this , icharacter , endIndex )
-       equals = vstring_equals ( substring , string2 )
-       call vstring_free ( substring )
-       if ( equals ) then
-          lastIndex = icharacter
-          exit
-       endif
-    enddo
+    foundIndex = VSTRING_INDEX_UNKNOWN
+    !
+    ! The length of the string to search for is 0, which never matches.
+    !
+    if ( length_searched /= 0 ) then
+       do icharacter = endIndex , 1 , -1
+          rangeEndIndex = icharacter + length_searched - 1
+          ! The number of characters to search for is greater than the number
+          ! of characters which are left to compare.
+          if ( rangeEndIndex > length ) then
+             exit
+          endif
+          substring = vstring_range ( this , icharacter , rangeEndIndex )
+          equals = vstring_equals ( substring , string2 )
+          call vstring_free ( substring )
+          if ( equals ) then
+             foundIndex = icharacter
+             exit
+          endif
+       enddo
+    endif
   end function vstring_last_vstring
   !
   ! vstring_last_charstring --
   !   Interface to vstring_last_vstring to manage character strings
   !
-  function vstring_last_charstring ( this , string2 , first ) result ( lastIndex )
+  function vstring_last_charstring ( this , string2 , first ) result ( foundIndex )
     type ( t_vstring ) , intent(in)   :: this
     character(len=*), intent(in)   :: string2
     integer, intent(in), optional :: first
-    integer                       :: lastIndex
+    integer                       :: foundIndex
     type(t_vstring) :: vstring2
     call vstring_new ( vstring2 , string2 )
-    lastIndex = vstring_last_vstring ( this , vstring2 , first )
+    foundIndex = vstring_last_vstring ( this , vstring2 , first )
     call vstring_free ( vstring2 )
   end function vstring_last_charstring
   !
