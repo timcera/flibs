@@ -78,13 +78,15 @@ contains
     !
     call test_m_vstring_case ()
     !
-    ! Test string trim, left, right, both
-    !
-    call test_m_vstring_trim ()
-    !
     ! Test vstring_first , vstring_last
     !
     call test_m_vstring_firstlast ()
+    !
+    ! Test string trim, left, right, both.
+    ! Note:
+    ! Test vstring_trim after vstring_first, because vstring_trim calls vstring_first.
+    !
+    call test_m_vstring_trim ()
     !
     ! Test interfaces to standard fortran
     !
@@ -1437,64 +1439,6 @@ contains
     !
     call string_reference_check ()
     !
-    ! test #21.1
-    !
-    call logmsg ( "Test #21.1 : trim with no arguments" )
-    call vstring_new ( string1 , "  my string   " )
-    string2 = vstring_trim ( string1 )
-    call vstring_new ( string3 , "my string" )
-    call assertVstring_vstring ( string2 , string3 , "Wrong trim left. (1)" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    call vstring_free ( string3 )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    ! test #21.2
-    !
-    call logmsg ( "Test #21.2 : trim with chars argument" )
-    call vstring_new ( string1 , "*/*/*/my string***" )
-    call vstring_new ( string2 , "*/" )
-    string3 = vstring_trim ( string1 , chars = string2 )
-    call vstring_new ( string4 , "my string" )
-    call assertVstring_vstring ( string3 , string4 , "Wrong trim left. (1)" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    call vstring_free ( string3 )
-    call vstring_free ( string4 )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    ! test #21.2.b
-    !
-    call logmsg ( "Test #21.2.b : trim with chars argument" )
-    call vstring_new ( string1 , "*/*/*/my string***" )
-    string3 = vstring_trim ( string1 , chars = "*/" )
-    call assertVstring_charstring ( string3 , "my string" , "Wrong trim left. (1)" )
-    call vstring_free ( string1 )
-    call vstring_free ( string3 )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
-    ! test #21.3
-    !
-    call logmsg ( "Test #21.3 : trim with a string allready trimmed" )
-    call vstring_new ( string1 , "my string" )
-    string2 = vstring_trim ( string1 )
-    call assertVstring_vstring ( string1 , string2 , "Wrong trim left. (1)" )
-    call vstring_free ( string1 )
-    call vstring_free ( string2 )
-    !
-    ! Check the number of strings references
-    !
-    call string_reference_check ()
-    !
     ! test #22.1
     !
     call logmsg ( "Test #22.1 : trim right with no arguments" )
@@ -1564,6 +1508,64 @@ contains
     call vstring_free ( string2 )
     call vstring_free ( string3 )
 
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #21.1
+    !
+    call logmsg ( "Test #21.1 : trim with no arguments" )
+    call vstring_new ( string1 , "  my string   " )
+    string2 = vstring_trim ( string1 )
+    call vstring_new ( string3 , "my string" )
+    call assertVstring_vstring ( string2 , string3 , "Wrong trim left. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    call vstring_free ( string3 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #21.2
+    !
+    call logmsg ( "Test #21.2 : trim with chars argument" )
+    call vstring_new ( string1 , "*/*/*/my string***" )
+    call vstring_new ( string2 , "*/" )
+    string3 = vstring_trim ( string1 , chars = string2 )
+    call vstring_new ( string4 , "my string" )
+    call assertVstring_vstring ( string3 , string4 , "Wrong trim left. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
+    call vstring_free ( string3 )
+    call vstring_free ( string4 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #21.2.b
+    !
+    call logmsg ( "Test #21.2.b : trim with chars argument" )
+    call vstring_new ( string1 , "*/*/*/my string***" )
+    string3 = vstring_trim ( string1 , chars = "*/" )
+    call assertVstring_charstring ( string3 , "my string" , "Wrong trim left. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string3 )
+    !
+    ! Check the number of strings references
+    !
+    call string_reference_check ()
+    !
+    ! test #21.3
+    !
+    call logmsg ( "Test #21.3 : trim with a string allready trimmed" )
+    call vstring_new ( string1 , "my string" )
+    string2 = vstring_trim ( string1 )
+    call assertVstring_vstring ( string1 , string2 , "Wrong trim left. (1)" )
+    call vstring_free ( string1 )
+    call vstring_free ( string2 )
     !
     ! Check the number of strings references
     !

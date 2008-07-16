@@ -132,9 +132,9 @@ Test #27.1 : vstring_reverse
  -> Test #          58 PASS
 Test #28.1 : vstring_random
 String #1
-2cciyx8clw
+w04tlj50ki
 String #2
-8filnivdnx
+4u908tr7di
  -> Test #          59 PASS
  Number of strings :           0
  -> Test #          60 PASS
@@ -226,109 +226,109 @@ Test #26.6 : vstring_totitle with first = 1
  -> Test #         103 PASS
  Number of strings :           0
  -> Test #         104 PASS
-Test #20.1 : trim left with no arguments
+Test #16 : first
  -> Test #         105 PASS
  Number of strings :           0
  -> Test #         106 PASS
-Test #20.2 : trim left with chars argument
+Test #16.b : first with character string
  -> Test #         107 PASS
  Number of strings :           0
  -> Test #         108 PASS
-Test #20.2.b : trim left with chars argument
+Test #16.2 : first
  -> Test #         109 PASS
  Number of strings :           0
  -> Test #         110 PASS
-Test #20.3 : trim left with a string allready trimmed
+Test #16.3 : first
  -> Test #         111 PASS
  Number of strings :           0
  -> Test #         112 PASS
-Test #20.4 : trim left with blank spaces
+Test #16.4 : first when no one matches
  -> Test #         113 PASS
  Number of strings :           0
  -> Test #         114 PASS
-Test #21.1 : trim with no arguments
+Test #16.5 : first with firstIndex
  -> Test #         115 PASS
  Number of strings :           0
  -> Test #         116 PASS
-Test #21.2 : trim with chars argument
+Test #16.6 : first with empty string
  -> Test #         117 PASS
  Number of strings :           0
  -> Test #         118 PASS
-Test #21.2.b : trim with chars argument
+Test #19.1 : string last
  -> Test #         119 PASS
  Number of strings :           0
  -> Test #         120 PASS
-Test #21.3 : trim with a string allready trimmed
+Test #19.1.b : string last
  -> Test #         121 PASS
  Number of strings :           0
  -> Test #         122 PASS
-Test #22.1 : trim right with no arguments
+Test #19.2 : string last with lastIndex
  -> Test #         123 PASS
  Number of strings :           0
  -> Test #         124 PASS
-Test #22.2 : trim right with chars argument
+Test #19.3 : string last when no one matches
  -> Test #         125 PASS
  Number of strings :           0
  -> Test #         126 PASS
-Test #22.2.b : trim right with chars argument
+Test #19.4 : last with empty string
  -> Test #         127 PASS
  Number of strings :           0
  -> Test #         128 PASS
-Test #22.3 : trim right with a string allready trimmed
+ Number of strings :           0
  -> Test #         129 PASS
- Number of strings :           0
+Test #20.1 : trim left with no arguments
  -> Test #         130 PASS
-Test #22.4 : trim right with blank spaces
- -> Test #         131 PASS
  Number of strings :           0
+ -> Test #         131 PASS
+Test #20.2 : trim left with chars argument
  -> Test #         132 PASS
  Number of strings :           0
  -> Test #         133 PASS
-Test #16 : first
+Test #20.2.b : trim left with chars argument
  -> Test #         134 PASS
  Number of strings :           0
  -> Test #         135 PASS
-Test #16.b : first with character string
+Test #20.3 : trim left with a string allready trimmed
  -> Test #         136 PASS
  Number of strings :           0
  -> Test #         137 PASS
-Test #16.2 : first
+Test #20.4 : trim left with blank spaces
  -> Test #         138 PASS
  Number of strings :           0
  -> Test #         139 PASS
-Test #16.3 : first
+Test #22.1 : trim right with no arguments
  -> Test #         140 PASS
  Number of strings :           0
  -> Test #         141 PASS
-Test #16.4 : first when no one matches
+Test #22.2 : trim right with chars argument
  -> Test #         142 PASS
  Number of strings :           0
  -> Test #         143 PASS
-Test #16.5 : first with firstIndex
+Test #22.2.b : trim right with chars argument
  -> Test #         144 PASS
  Number of strings :           0
  -> Test #         145 PASS
-Test #16.6 : first with empty string
+Test #22.3 : trim right with a string allready trimmed
  -> Test #         146 PASS
  Number of strings :           0
  -> Test #         147 PASS
-Test #19.1 : string last
+Test #22.4 : trim right with blank spaces
  -> Test #         148 PASS
  Number of strings :           0
  -> Test #         149 PASS
-Test #19.1.b : string last
+Test #21.1 : trim with no arguments
  -> Test #         150 PASS
  Number of strings :           0
  -> Test #         151 PASS
-Test #19.2 : string last with lastIndex
+Test #21.2 : trim with chars argument
  -> Test #         152 PASS
  Number of strings :           0
  -> Test #         153 PASS
-Test #19.3 : string last when no one matches
+Test #21.2.b : trim with chars argument
  -> Test #         154 PASS
  Number of strings :           0
  -> Test #         155 PASS
-Test #19.4 : last with empty string
+Test #21.3 : trim with a string allready trimmed
  -> Test #         156 PASS
  Number of strings :           0
  -> Test #         157 PASS
@@ -438,63 +438,63 @@ Test #41.6 vstring_match with chars set range
  -> Test #         209 PASS
  Number of strings :           0
  -> Test #         210 PASS
- Number of strings :           0
+Test #41.7 vstring_match with chars set range
  -> Test #         211 PASS
-Test #41.8 vstring_match with nocase
+ Number of strings :           0
  -> Test #         212 PASS
- Number of strings :           0
+Test #41.8 vstring_match with nocase
  -> Test #         213 PASS
-Test #41.9 vstring_match with nocase
- -> Test #         214 PASS
  Number of strings :           0
+ -> Test #         214 PASS
+Test #41.9 vstring_match with nocase
  -> Test #         215 PASS
-Test #41.10 vstring_match with nocase
+ Number of strings :           0
  -> Test #         216 PASS
-Typical use
+Test #41.10 vstring_match with nocase
  -> Test #         217 PASS
 Typical use
  -> Test #         218 PASS
- Number of strings :           0
+Typical use
  -> Test #         219 PASS
  Number of strings :           0
  -> Test #         220 PASS
-Test vstring_cast to integer
+ Number of strings :           0
  -> Test #         221 PASS
-Test vstring_cast to real
+Test vstring_cast to integer
  -> Test #         222 PASS
-Test vstring_cast to double precision
+Test vstring_cast to real
  -> Test #         223 PASS
- Number of strings :           0
+Test vstring_cast to double precision
  -> Test #         224 PASS
-Test #23.1 : vstring_cast with fixed length
- -> Test #         225 PASS
-Test #23.2 : vstring_cast with auto length
- -> Test #         226 PASS
-Test #23.3 : vstring_cast with auto length and needed blanks
- -> Test #         227 PASS
-Test #23.4 : vstring_cast with auto length and truncation
- -> Test #         228 PASS
  Number of strings :           0
+ -> Test #         225 PASS
+Test #23.1 : vstring_cast with fixed length
+ -> Test #         226 PASS
+Test #23.2 : vstring_cast with auto length
+ -> Test #         227 PASS
+Test #23.3 : vstring_cast with auto length and needed blanks
+ -> Test #         228 PASS
+Test #23.4 : vstring_cast with auto length and truncation
  -> Test #         229 PASS
  Number of strings :           0
  -> Test #         230 PASS
-Test digit true
+ Number of strings :           0
  -> Test #         231 PASS
-Test digit false
+Test digit true
  -> Test #         232 PASS
-Test integer true
+Test digit false
  -> Test #         233 PASS
-Test integer false
+Test integer true
  -> Test #         234 PASS
-Test alpha true
+Test integer false
  -> Test #         235 PASS
-Test alpha false
+Test alpha true
  -> Test #         236 PASS
-Test alnum true
+Test alpha false
  -> Test #         237 PASS
-Test alnum false
+Test alnum true
  -> Test #         238 PASS
-Test logical true
+Test alnum false
  -> Test #         239 PASS
 Test logical true
  -> Test #         240 PASS
@@ -502,124 +502,132 @@ Test logical true
  -> Test #         241 PASS
 Test logical true
  -> Test #         242 PASS
-Test logical false
+Test logical true
  -> Test #         243 PASS
 Test logical false
  -> Test #         244 PASS
-Test true true
+Test logical false
  -> Test #         245 PASS
-Test true false
+Test real true
  -> Test #         246 PASS
-Test false true
+Test real true
  -> Test #         247 PASS
-Test false false
+Test real false
  -> Test #         248 PASS
-Test upper true
+Test true true
  -> Test #         249 PASS
-Test upper false
+Test true false
  -> Test #         250 PASS
-Test lower true
+Test false true
  -> Test #         251 PASS
-Test lower false
+Test false false
  -> Test #         252 PASS
-Test space true
+Test upper true
  -> Test #         253 PASS
-Test space false
+Test upper false
  -> Test #         254 PASS
-Test punct true
+Test lower true
  -> Test #         255 PASS
-Test punct false
+Test lower false
  -> Test #         256 PASS
-Test xdigit true
+Test space true
  -> Test #         257 PASS
-Test xdigit false
+Test space false
  -> Test #         258 PASS
-Test ascii true
+Test punct true
  -> Test #         259 PASS
-Test ascii false
+Test punct false
  -> Test #         260 PASS
-Test control true
+Test xdigit true
  -> Test #         261 PASS
-Test control false
+Test xdigit false
  -> Test #         262 PASS
-Test print true
+Test ascii true
  -> Test #         263 PASS
-Test print true
+Test ascii false
  -> Test #         264 PASS
-Test print false
+Test control true
  -> Test #         265 PASS
-Test graph true
+Test control false
  -> Test #         266 PASS
-Test graph false
+Test print true
  -> Test #         267 PASS
-Test graph false
+Test print true
  -> Test #         268 PASS
-Test wordchar true
+Test print false
  -> Test #         269 PASS
-Test wordchar false
+Test graph true
  -> Test #         270 PASS
-Test wordchar true
+Test graph false
  -> Test #         271 PASS
-Test wordchar false
+Test graph false
  -> Test #         272 PASS
-Test wordchar failing index
+Test wordchar true
  -> Test #         273 PASS
+Test wordchar false
  -> Test #         274 PASS
-Test digit failing index
+Test wordchar true
  -> Test #         275 PASS
+Test wordchar false
  -> Test #         276 PASS
-Test integer failing index
+Test wordchar failing index
  -> Test #         277 PASS
  -> Test #         278 PASS
-Test alpha failing index
+Test digit failing index
  -> Test #         279 PASS
  -> Test #         280 PASS
-Test logical failing index
+Test integer failing index
  -> Test #         281 PASS
  -> Test #         282 PASS
-Test true failing index
+Test alpha failing index
  -> Test #         283 PASS
  -> Test #         284 PASS
-Test false failing index
+Test logical failing index
  -> Test #         285 PASS
  -> Test #         286 PASS
-Test upper failing index
+Test true failing index
  -> Test #         287 PASS
  -> Test #         288 PASS
-Test lower failing index
+Test false failing index
  -> Test #         289 PASS
  -> Test #         290 PASS
-Test space failing index
+Test upper failing index
  -> Test #         291 PASS
  -> Test #         292 PASS
-Test punct failing index
+Test lower failing index
  -> Test #         293 PASS
  -> Test #         294 PASS
-Test xdigit failing index
+Test space failing index
  -> Test #         295 PASS
  -> Test #         296 PASS
-Test ascii failing index
+Test punct failing index
  -> Test #         297 PASS
  -> Test #         298 PASS
-Test control failing index
+Test xdigit failing index
  -> Test #         299 PASS
  -> Test #         300 PASS
-Test print failing index
+Test ascii failing index
  -> Test #         301 PASS
  -> Test #         302 PASS
-Test graph failing index
+Test control failing index
  -> Test #         303 PASS
  -> Test #         304 PASS
-Test wordchar failing index
+Test print failing index
  -> Test #         305 PASS
  -> Test #         306 PASS
- Number of strings :           0
+Test graph failing index
  -> Test #         307 PASS
- Number of strings :           0
  -> Test #         308 PASS
+Test wordchar failing index
+ -> Test #         309 PASS
+ -> Test #         310 PASS
+ Number of strings :           0
+ -> Test #         311 PASS
+ Number of strings :           0
+ -> Test #         312 PASS
 Test suite completed
 **********************
 End of tests.
- Total number of tests :          308
- Total number of success tests :          308
+ Total number of tests :          312
+ Total number of success tests :          312
  Total number of failing tests :            0
