@@ -518,7 +518,7 @@ contains
     !
     fexist = filedir_exists ( oldfn )
     if ( .NOT. fexist ) then
-       if ( present ( status )) then
+       if ( present ( status ) ) then
           status = FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
        else
           write(message,*) "Unable to access to old file :", trim( oldfn )
@@ -548,8 +548,9 @@ contains
     endif
 #endif
 #endif
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
+       ! TODO : check if the following line should be instead "elseif ( local_status /=0 ) then"
     else
        write ( message , * ) "Unable to rename file ", trim( oldfn ), " to file ", trim( newfn )
        call filedir_error ( "filedir_rename" , message )
@@ -578,7 +579,7 @@ contains
     !
     fexist = filedir_exists ( sourcefn )
     if ( .NOT. fexist ) then
-       if ( present ( status )) then
+       if ( present ( status ) ) then
           status = FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
        else
           write(message,*) "Unable to access to source file :", trim( sourcefn )
@@ -591,7 +592,7 @@ contains
     !
     write ( command , *) trim(command_copy) , " ",  trim(sourcefn), " ", trim(targetfn)
     call platform_system ( command , local_status )
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        write(message,*) "Unable to copy :", trim(sourcefn) , " into " , trim(targetfn)
@@ -651,7 +652,7 @@ contains
     !
     fexist = filedir_exists ( sourcefn )
     if ( .NOT. fexist ) then
-       if ( present ( status )) then
+       if ( present ( status ) ) then
           status = FS_ERROR_SOURCE_FILE_DOES_NOT_EXIST
        else
           write(message,*) "Source file :", trim(sourcefn) , " does not exist."
@@ -707,7 +708,7 @@ contains
        endif
        close ( source_unit )
     endif
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        write(message,*) "Unable to copy :", trim(sourcefn) , " into " , trim(targetfn)
@@ -1450,7 +1451,7 @@ contains
        write ( command , *) trim(command_mkdir) , " ",  trim(dirname)
        call platform_system ( command , local_status )
     endif
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        write(message,*) "Unable to make directory :", trim(dirname)

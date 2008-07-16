@@ -309,6 +309,7 @@ module m_vfile
   public :: vfile_tempfile
   public :: vfile_touch
   public :: vfile_volumes
+  public :: vfile_open
   !
   ! vfile_join --
   !   Generic join method
@@ -401,7 +402,7 @@ module m_vfile
   end interface vfile_first_separator_index
   !
   ! vfile_exists --
-  !   Generic method which returns .true. if the file exists.
+  !   Generic method which returns .true. if the file or directory exists.
   !
   interface vfile_exists
      module procedure vfile_exists_vstring
@@ -1087,7 +1088,7 @@ contains
     !
     ! Process errors.
     !
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        call vstring_new ( message , "Error while getting current working directory in vfile_pwd" )
@@ -1166,6 +1167,7 @@ contains
     type ( t_vstring ) , intent(in) :: filename
     logical :: exists
     logical :: fexist
+    logical :: isdirectory
 #ifdef _VFILE_STATIC_BUFFER
     character ( len = VFILE_BUFFER_SIZE ) :: filename_charstring
 #else
@@ -1179,8 +1181,14 @@ contains
     if (fexist) then
        exists = .true.
     else
-       exists = .false.
+       isdirectory = vfile_isdirectory ( filename )
+       if ( isdirectory ) then
+          exists = .true.
+       else
+          exists = .false.
+       endif
     endif
+
   end function vfile_exists_vstring
   !
   ! vfile_exists_charstring --
@@ -1224,7 +1232,7 @@ contains
     !
     fexist = vfile_exists ( filename )
     if ( .NOT. fexist ) then
-       if ( present ( status )) then
+       if ( present ( status ) ) then
           status = VFILE_ERROR_SOURCE_FILE_DOES_NOT_EXIST
           return
        else
@@ -1267,7 +1275,7 @@ contains
     !
     ! Process errors
     !
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        call vstring_new ( message )
@@ -1411,7 +1419,7 @@ contains
     !
     fexist = vfile_exists ( filename )
     if ( .NOT. fexist ) then
-       if ( present ( status )) then
+       if ( present ( status ) ) then
           status = VFILE_ERROR_SOURCE_FILE_DOES_NOT_EXIST
        else
        call vstring_new ( message )
@@ -1442,7 +1450,7 @@ contains
     call vstring_free ( command )
     call vstring_free ( filename_native )
     call vstring_free ( targetfn_native )
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        call vstring_new ( message , "Unable to copy :" )
@@ -1512,7 +1520,7 @@ contains
     !
     fexist = vfile_exists ( filename )
     if ( .NOT. fexist ) then
-       if ( present ( status )) then
+       if ( present ( status ) ) then
           status = VFILE_ERROR_SOURCE_FILE_DOES_NOT_EXIST
        else
           call vstring_new ( message )
@@ -1573,7 +1581,7 @@ contains
     !
     ! Process status
     !
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        call vstring_new ( message )
@@ -1683,6 +1691,14 @@ contains
   !
   ! vfile_isdirectory_vstring --
   !   Returns .true. if file name is a directory, .false. otherwise.
+  ! Note:
+  !   The method is based on "cd dirname", "cd ..".
+  !   But Intel Fortran provides an extension of the "inquire" statement
+  !   with the following syntax :
+  !     INQUIRE (DIRECTORY=dir, EXISTS=ex [, DIRSPEC=dirspec] [, ERR=label] [,IOSTAT=i-var] )
+  !   See the thread :
+  !     "How to determine whether or not there exists a directory" on comp.lang.fortran
+  !   The current method seems to work, so I do not include the "INQUIRE" extension.
   !
   function vfile_isdirectory_vstring ( filename ) result ( isdirectory )
     type ( t_vstring ), intent(in) :: filename
@@ -2643,7 +2659,7 @@ contains
        call vfile_error ( message )
        call vstring_free ( message )
     end select
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        call vstring_new ( message )
@@ -2887,7 +2903,7 @@ contains
     !
     ! Process errors
     !
-    if ( present ( status )) then
+    if ( present ( status ) ) then
        status = local_status
     elseif ( local_status /=0 ) then
        call vstring_new ( message )
