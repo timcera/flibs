@@ -1,3 +1,6 @@
+2008-08-10 arjenmarkus@sourceforge.net
+   * chksys/chksysff.f90: added a test for the type of hexdecimal and binary constants/literals
+
 2008-07-09 arjenmarkus@sourceforge.net
    * tests/tools/check_reals.f90: drop the elemental keyword
 
