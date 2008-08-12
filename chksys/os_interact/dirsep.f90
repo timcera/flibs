@@ -38,7 +38,12 @@ program dirsep
         write(*,'(a)') '   Error opening file: ' // trim(filename)
         write(*,'(a)') '   Forward slashes seem unusable as directory separator!'
     else
-        write(*,'(a)') '   Forward slashes are usable'
+        inquire( file = 'dirsep.inp', exist = exists ) ! No directory information given
+        if ( exists ) then
+            write(*,'(a)') '   Forward slashes are usable'
+        else
+            write(*,'(a)') '   Forward slashes seem unusable as directory separator!'
+        endif
         close( 10, status = 'delete' )
     endif
 
@@ -51,7 +56,12 @@ program dirsep
         write(*,'(a)') '   Error opening file: ' // trim(filename)
         write(*,'(a)') '   Backward slashes seem unusable as directory separator!'
     else
-        write(*,'(a)') '   Backward slashes are usable'
+        inquire( file = 'dirsep.inp', exist = exists ) ! No directory information given
+        if ( exists ) then
+            write(*,'(a)') '   Backward slashes are usable'
+        else
+            write(*,'(a)') '   Backward slashes seem unusable as directory separator!'
+        endif
         close( 10, status = 'delete' )
     endif
 
