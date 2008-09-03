@@ -190,6 +190,11 @@ starttoken: &
        endif
     enddo starttoken
 
+    if ( pos1 .gt. lenstr ) then
+        next_token_gaps = ' '
+        length          = -1
+        return
+    endif
     !
     ! Handle the delimiters - no escaping!
     !
@@ -262,6 +267,12 @@ function next_token_separs( token, string, length )
 
     lenstr = len(string)
     pos    = token%position
+
+    if ( pos .gt. lenstr ) then
+        next_token_separs = ' '
+        length            = -1
+        return
+    endif
 
     if ( index(token%separators(1:token%len_separators), &
                string(pos:pos)) .gt. 0 ) then
