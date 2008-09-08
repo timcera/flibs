@@ -6,17 +6,43 @@
 !     evaluate both the value and the first derivative without having to
 !     go through mathematics ourselves.
 !
+!     Also find a root of some equation via Newton-Raphson
+!
+
+module find_a_root
+    use automatic_differentiation
+
+contains
+!
+! g may not be an internal routine, hence the module
+!
+type(AUTODERIV) function g( x )
+    type(AUTODERIV), intent(in)  :: x
+
+    g = x ** 2 - 2.0
+end function g
+
+end module
+
 program test_diff
     use automatic_differentiation
+    use find_a_root
+
     implicit none
 
-    type(AUTODERIV)  :: x
+    type(AUTODERIV)  :: x, root
     integer          :: i
+    logical          :: found
 
     do i = 1,20
         x = derivvar( 0.2 * (i-1) )
         write( *, * ) f(x), df(x%v)
     enddo
+
+    x = derivvar( 3.0 )
+    call find_root( g, x, 1.0e-6_wp, root, found )
+    write(*,*) 'Equation: x**2 - 2 = 0'
+    write(*,*) 'Root: ', root%v, ' - expected: ', sqrt(2.0_wp)
 
 contains
 !
@@ -36,3 +62,5 @@ real(wp) function df( x )
 end function df
 
 end program
+
+

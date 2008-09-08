@@ -68,11 +68,81 @@ module ipc_file
     end interface
 contains
 
+! ipc_open --
+!     Initialise the connection on "this" side
+!
+! Arguments:
+!     me         String identifying the calling process
+!
+! Result:
+!     Initialised structure ready for further communications
+!
 type(ipc_comm) function ipc_open( me )
     character(len=*) :: me
 
     ipc_open%me = me
 end function ipc_open
+
+! ipc_try_connect --
+!     Try to open the connection to another process
+!
+! Arguments:
+!     comm       Initialised connection structure
+!     dest       Identifying string for that other process
+!     idstring   Unique identifier to check the connection
+!     success    Whether the connection was achieved or not
+!
+! Note:
+!     This routine is meant for use in the context of the tuple_space
+!     module.
+!
+subroutine ipc_try_connect( comm, dest, idstring, success )
+    type(ipc_comm)   :: comm
+    character(len=*) :: dest
+    character(len=*) :: idstring
+    logical          :: success
+
+    integer                      :: ierr
+    character(len=len(idstring)) :: answer
+
+    sucess = .false.
+
+    !
+    ! Open the send file - but it must not yet exist
+    !
+    TODO!!!
+    lun = 10
+
+    open( lun, file = trim(comm%me) // "-" // trim(dest) // ".send", &
+        form = 'unformatted', status = 'new', iostat = ierr )
+
+    if ( ierr /= 0 ) then
+        return
+    endif
+    close( lun )
+
+    call ipc_send_start(  comm, dest, idstring, 0 )
+    call ipc_send_data(   comm, idstring )
+    call ipc_send_finish( comm )
+
+    !
+    ! Now wait for the _same_ string to be returned
+    !
+
+    call ipc_receive_start(  comm, dest, idstring, 0 )
+    call ipc_receive_data(   comm, answer )
+    call ipc_receive_finish( comm )
+
+    if ( idstring == answer ) then
+        sucess = .true.
+    endif
+
+end subroutine ipc_try_connect
+
+subroutine ipc_cleanup( comm )
+    TODO
+end subroutine ipc_cleanup
+
 
 subroutine ipc_send_start( comm, dest, tag, id )
     type(ipc_comm)   :: comm

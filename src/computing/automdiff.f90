@@ -8,7 +8,7 @@
 !
 !     $Id$
 !
-module automatic_differentiation
+module automatic_differentiation_type
     use select_precision
     implicit none
 
@@ -16,6 +16,11 @@ module automatic_differentiation
         real(wp) :: v
         real(wp) :: dv
     end type AUTODERIV
+end module automatic_differentiation_type
+
+module automatic_differentiation
+    use automatic_differentiation_type
+    implicit none
 
     interface sin
         module procedure sin_v
@@ -37,8 +42,24 @@ module automatic_differentiation
         module procedure log_v
     end interface
 
+    interface log10
+        module procedure log10_v
+    end interface
+
     interface sqrt
         module procedure sqrt_v
+    end interface
+
+    interface asin
+        module procedure asin_v
+    end interface
+
+    interface acos
+        module procedure acos_v
+    end interface
+
+    interface atan
+        module procedure atan_v
     end interface
 
     interface operator(+)
@@ -76,7 +97,7 @@ module automatic_differentiation
 contains
 
 ! derivvar
-!     Properly initialthe an independent variable
+!     Properly initialise an independent variable
 ! Arguments:
 !     val        Value for the variable
 ! Result:
@@ -141,6 +162,14 @@ elemental function log_v( x ) result( y )
     y%dv = x%dv / x%v
 end function log_v
 
+elemental function log10_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = log10(x%v)
+    y%dv = x%dv / (log(10.0) * x%v)
+end function log10_v
+
 elemental function sqrt_v( x ) result( y )
     type(AUTODERIV), intent(in) :: x
     type(AUTODERIV)             :: y
@@ -148,6 +177,41 @@ elemental function sqrt_v( x ) result( y )
     y%v  = sqrt(x%v)
     y%dv = 0.5 *x%dv / y%v
 end function sqrt_v
+
+! asin, acos, atan
+!     Return the arcsine etc. of x
+! Arguments:
+!     x          Variable in question
+! Result:
+!     The function value and its first derivative at x
+! Note:
+!     Variables (not constant) need to be initialised as
+!     x = autoderiv(x0,1.0). Use the function derivvar
+!     for convenience.
+!
+elemental function asin_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = asin(x%v)
+    y%dv = x%dv * sqrt(1.0 - x%v ** 2)
+end function asin_v
+
+elemental function acos_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = acos(x%v)
+    y%dv = -x%dv * sqrt(1.0 - x%v ** 2)
+end function acos_v
+
+elemental function atan_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = atan(x%v)
+    y%dv = -x%dv / (1.0 + x%v ** 2)
+end function atan_v
 
 ! +, -, *, /, **
 !     Implementation of the arithmetic operations
@@ -311,5 +375,72 @@ elemental function expon_vn( x, n ) result( z )
     z%v  =            x%v ** n
     z%dv = n * x%dv * x%v ** (n-1)
 end function expon_vn
+
+! find_root
+!     Find a root using Newton-Raphson
+! Arguments:
+!     f          Function whose root we want to find
+!     xinit      Initial estimate
+!     tolerance  Tolerance in finding root
+!     root       Final estimate
+!     found      Whether it was found or not
+! Note:
+!     If the iteration does not converge, we assume
+!     that the iterate will grow indefinitely.
+!
+!     If you need a more general interface to the function,
+!     consider using the implementation as a template
+!
+subroutine find_root( f, xinit, tolerance, root, found )
+    interface
+        function f(x)
+            use automatic_differentiation_type
+            type(AUTODERIV), intent(in) :: x
+            type(AUTODERIV)             :: f
+        end function
+    end interface
+
+    type(AUTODERIV), intent(in)  :: xinit
+    type(AUTODERIV), intent(out) :: root
+    real(wp)                     :: tolerance
+    logical                      :: found
+
+    integer                      :: iter
+    integer, parameter           :: maxiter = 1000
+    type(AUTODERIV)              :: fvalue
+
+    found = .false.
+    root  = xinit
+
+    do iter = 1,maxiter
+
+        fvalue = f(root)
+        call find_root_iter( fvalue, root, tolerance, found )
+        if ( found .or. abs(root%v) > huge(1.0_wp)/10.0 ) exit
+    enddo
+
+end subroutine find_root
+
+! find_root_iter
+!     Do one iteration in the Newton-Raphson method
+! Arguments:
+!     fvalue     Function value (plus derivative)
+!     root       Current iterate
+!     tolerance  Tolerance in finding root
+!     found      Whether it was found or not
+!
+subroutine find_root_iter( fvalue, root, tolerance, found )
+    type(AUTODERIV), intent(in)    :: fvalue
+    type(AUTODERIV), intent(inout) :: root
+    real(wp), intent(in)           :: tolerance
+    logical, intent(out)           :: found
+
+    type(AUTODERIV)                :: newroot
+
+    newroot = root - fvalue%v / fvalue%dv
+    found   = abs( newroot%v - root%v ) < tolerance
+    root    = newroot
+
+end subroutine find_root_iter
 
 end module automatic_differentiation
