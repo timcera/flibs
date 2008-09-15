@@ -17,8 +17,10 @@ type ANNEALING_PARAMETERS
     integer :: number_iterations
     integer :: iteration_count
     integer :: state               = 0 ! Initialisation
+    integer :: accepted
     logical :: verbose
     logical :: automatic_scaling
+    logical :: changes
 endtype ANNEALING_PARAMETERS
 
 contains
@@ -126,7 +128,14 @@ subroutine get_next_step( params, range, x, value, task )
 
     !
     ! Initial stage: automatic scaling required?
+    ! Then simply accumulate the function values
     !
+    if ( task == annealing_report ) then
+        call determine_new_vector( range, x, idx, oldx )
+        task = annealing_value
+        return
+    endif
+
     if ( params%state == 0 ) then
         if ( params%automatic_scaling ) then
 
@@ -134,7 +143,7 @@ subroutine get_next_step( params, range, x, value, task )
                 params%scale_factor    = params%scale_factor    + value
                 params%iteration_count = params%iteration_count + 1
 
-                call determine_new_vector( range, x )
+                call determine_new_vector( range, x, idx, oldx )
                 task = annealing_value
                 return
             else
@@ -144,14 +153,34 @@ subroutine get_next_step( params, range, x, value, task )
         endif
         params%state           = 1
         params%iteration_count = 0
+        params%changes         = .true.
+        params%accepted        = 0
     endif
 
     !
     ! Evaluate the function value and decide what to do now
     !
+    call random_number( threshold )
+    if ( exp((params%old_value - value)/(params%scale_factor *params%temperature)) > &
+            threshold ) then
+        params%old_value       = value
+        params%changes         = .true.
+        params%accepted        = params%accepted + 1
+        params%iteration_count = params%iteration_count + 1
+    endif
 
-
-
-    TODO!!
+    if ( params%iteration_count >= params%number_iterations ) then
+        params%iteration_count = 0
+        if ( params%changes ) then
+            if ( params%verbose ) then
+                task = annealing_report
+            else
+                task = annealing_value
+            endif
+            params%temperature = params%temperature * params%temp_reduction
+        else
+            task = annealing_done
+        endif
+    endif
 
 end subroutine get_next_step
