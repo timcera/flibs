@@ -8,6 +8,8 @@ include ../../config/options.mk
 PROGRAMS	=	test_diff$(EXEEXT) \
 		test_decimal$(EXEEXT) \
 		test_m_coordinates$(EXEEXT) \
+		test_libdate$(EXEEXT) \
+		test_intervals$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -40,6 +42,24 @@ m_coordinates$(OBJEXT):	../../src/computing/m_coordinates.f90
 
 test_m_coordinates$(EXEEXT):	test_m_coordinates$(OBJEXT) m_coordinates$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_coordinates$(OBJEXT) m_coordinates$(OBJEXT)
+
+libdate$(OBJEXT):	../../src/computing/libdate.f90
+	$(FC) $(FFLAGS) ../../src/computing/libdate.f90
+
+test_libdate$(OBJEXT):	test_libdate.f90 libdate$(OBJEXT)
+	$(FC) $(FFLAGS) test_libdate.f90
+
+test_libdate$(EXEEXT):	test_libdate$(OBJEXT) libdate$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_libdate$(OBJEXT) libdate$(OBJEXT)
+
+interval_simple$(OBJEXT):	../../src/computing/interval_simple.f90 select_precision$(OBJEXT)
+	$(FC) $(FFLAGS) ../../src/computing/interval_simple.f90
+
+test_intervals$(OBJEXT):	test_intervals.f90 interval_simple$(OBJEXT)
+	$(FC) $(FFLAGS) test_intervals.f90
+
+test_intervals$(EXEEXT):	test_intervals$(OBJEXT) interval_simple$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_intervals$(OBJEXT) interval_simple$(OBJEXT)
 
 clean:	
 	$(DELETE) *$(OBJEXT)
