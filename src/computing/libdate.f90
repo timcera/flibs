@@ -37,6 +37,7 @@ MODULE LibDate
 ! Improvements, suggestions and compliments always welcome!
 ! ____________________________________________________
 !
+IMPLICIT NONE
 
 INTEGER,PARAMETER :: Float = kind(1.0)
 
@@ -51,7 +52,6 @@ INTEGER,PARAMETER :: Float = kind(1.0)
 ! Beware: all REAL(Float) constants in this module also have "_Float" appended to ensure the right type!
 !
 
-IMPLICIT NONE
 !
 ! Principally everything is LOCAL...
 !
