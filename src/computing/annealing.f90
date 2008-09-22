@@ -1,27 +1,36 @@
 ! annealing.f90 --
-!     Module (or rather the contents) for a simple implementation of
+!     Module for a simple implementation of
 !     simulated annealing
 !
 !     $Id$
 !
 
-integer, parameter :: annealing_value  = 1
-integer, parameter :: annealing_report = 2
-integer, parameter :: annealing_done   = 3
+module simulated_annealing
+    use select_precision
 
-type ANNEALING_PARAMETERS
-    real    :: initial_temp
-    real    :: temperature
-    real    :: temp_reduction
-    real    :: scale_factor
-    integer :: number_iterations
-    integer :: iteration_count
-    integer :: state               = 0 ! Initialisation
-    integer :: accepted
-    logical :: verbose
-    logical :: automatic_scaling
-    logical :: changes
-endtype ANNEALING_PARAMETERS
+    integer, parameter :: annealing_init   = 0
+    integer, parameter :: annealing_value  = 1
+    integer, parameter :: annealing_report = 2
+    integer, parameter :: annealing_done   = 3
+
+    type ANNEALING_PARAMETERS
+        real    :: initial_temp
+        real    :: temperature
+        real    :: temp_reduction
+        real    :: scale_factor
+        real    :: old_value
+        real    :: old_x
+        integer :: number_iterations
+        integer :: iteration_count
+        integer :: state               = 0 ! Initialisation
+        integer :: accepted
+        integer :: old_idx
+        logical :: verbose
+        logical :: automatic_scaling
+        logical :: changes
+    endtype ANNEALING_PARAMETERS
+
+    private :: determine_new_vector
 
 contains
 
@@ -59,6 +68,7 @@ subroutine set_parameters( params, update, initial_temp, temp_reduction, &
         params%number_iterations  = 100
         params%verbose            = .false.
         params%automatic_scaling  = .false.
+        params%old_value          = sqrt(huge(params%old_value))
     endif
 
     if ( present(initial_temp) ) then
@@ -93,18 +103,20 @@ end subroutine set_parameters
 !     range               Range for the solution parameters
 !     x                   New solution parameters
 !
-subroutine determine_new_vector( range, x )
-    real(wp), dimension(2,:), intent(in)      :: range
+subroutine determine_new_vector( range, x, idx, oldx )
+    real(wp), dimension(:,:), intent(in)      :: range
     real(wp), dimension(:), intent(inout)     :: x
+    integer, intent(out)                      :: idx
+    real(wp), intent(out)                     :: oldx
 
     real(wp)                                  :: y
-    integer                                   :: idx
 
     call random_number( y )
     idx = min( 1 + size(x) * y, size(x) )
+    oldx = x(idx)
 
     call random_number( y )
-    x(idx) = range(1,idx) * (range(2,idx)-range(1,idx)) * y
+    x(idx) = range(1,idx) + (range(2,idx)-range(1,idx)) * y
 
 end subroutine determine_new_vector
 
@@ -120,23 +132,33 @@ end subroutine determine_new_vector
 !
 subroutine get_next_step( params, range, x, value, task )
     type(ANNEALING_PARAMETERS), intent(inout) :: params
-    real(wp), intent(in)                      :: range
-    real(wp), dimension(2,:), intent(in)      :: range
+    real(wp), dimension(:,:), intent(in)      :: range
     real(wp), dimension(:), intent(inout)     :: x
-    real(wp), intent(in)                      :: value
+    real(wp), intent(inout)                   :: value
     integer, intent(inout)                    :: task
 
     !
     ! Initial stage: automatic scaling required?
     ! Then simply accumulate the function values
     !
+    if ( task == annealing_init ) then
+        task = annealing_value
+        params%state = 0
+        return
+    endif
+
     if ( task == annealing_report ) then
         call determine_new_vector( range, x, idx, oldx )
-        task = annealing_value
+        params%old_idx  = idx
+        params%old_x    = oldx
+        params%accepted = 0
+        task            = annealing_value
         return
     endif
 
     if ( params%state == 0 ) then
+        x                  = 0.5 * ( range(1,:) + range(2,:) )
+        params%temperature = params%initial_temp
         if ( params%automatic_scaling ) then
 
             if ( params%iteration_count < params%number_iterations / 3 ) then
@@ -161,17 +183,26 @@ subroutine get_next_step( params, range, x, value, task )
     ! Evaluate the function value and decide what to do now
     !
     call random_number( threshold )
-    if ( exp((params%old_value - value)/(params%scale_factor *params%temperature)) > &
-            threshold ) then
+    if ( (params%old_value - value)/(params%scale_factor *params%temperature) > &
+            log(threshold) ) then
         params%old_value       = value
         params%changes         = .true.
-        params%accepted        = params%accepted + 1
-        params%iteration_count = params%iteration_count + 1
+        if ( params%iteration_count == 0 ) then
+            params%accepted = 1
+        else
+            params%accepted = params%accepted + 1
+        endif
+    else
+        value             = params%old_value
+        x(params%old_idx) = params%old_x
     endif
+
+    params%iteration_count = params%iteration_count + 1
 
     if ( params%iteration_count >= params%number_iterations ) then
         params%iteration_count = 0
         if ( params%changes ) then
+            params%changes = .false.
             if ( params%verbose ) then
                 task = annealing_report
             else
@@ -183,4 +214,72 @@ subroutine get_next_step( params, range, x, value, task )
         endif
     endif
 
+    if ( task == annealing_value ) then
+        call determine_new_vector( range, x, idx, oldx )
+        params%old_idx = idx
+        params%old_x   = oldx
+    endif
+
 end subroutine get_next_step
+
+! find_minimum --
+!     Simple routine implementing the simulated annealing procedure
+!
+! Arguments:
+!     params              The structure holding the process parameters
+!     range               Range for the solution parameters
+!     x                   Initial and final solution parameters
+!     func                Function to be minimised
+!     value               Function value at present solution
+!
+! Note:
+!     This assumes that the parameters have already been set!
+!
+subroutine find_minimum( params, range, x, func, value )
+    type(ANNEALING_PARAMETERS), intent(inout) :: params
+    real(wp), dimension(:,:), intent(in)      :: range
+    real(wp), dimension(:), intent(inout)     :: x
+    real(wp), intent(out)                     :: value
+
+    interface
+        function func( x )
+            use select_precision
+            real(wp), dimension(:), intent(in) :: x
+            real(wp)                           :: func
+        end function
+    end interface
+
+    integer :: task
+    !integer :: count = 0
+
+    task = annealing_init
+
+    do
+        call get_next_step( params, range, x, value, task )
+        !write(*,*) task, x, value
+
+        select case ( task )
+            case ( annealing_value )
+                !
+                ! Fill in the evaluation of the function
+                !
+                value = func(x)
+
+            case ( annealing_report )
+                !
+                ! Fill in the reporting code
+                !
+                write(*,'(a,e12.4)')      'Value so far: ', value
+                write(*,'(a,(5e12.4),/)') '    Vector:   ', x
+                write(*,'(2(a,i5))')     '    Accepted: ', &
+                    params%accepted, ' from ', params%number_iterations
+
+            case ( annealing_done )
+                exit
+        end select
+        !count = count + 1; if ( count > 10 ) exit
+    enddo
+
+end subroutine find_minimum
+
+end module simulated_annealing
