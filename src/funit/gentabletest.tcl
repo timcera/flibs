@@ -114,7 +114,8 @@ proc generateFromTable {tblname} {
     # Be careful not to override existing files
     #
     if { [file exists $outname] } {
-        return -code error "Output file already exists: $outname"
+        puts "Output file already exists: $outname"
+        exit
     }
 
     set outfile [open $outname w]
@@ -159,7 +160,6 @@ proc generateFromTable {tblname} {
     #
     # Generate the code from the various pieces
     #
-    appendResultsToRanges
 
     puts $outfile [string map [list PRECISION $data(precision) TRIALS $data(trials)] $data(prologue)]
     puts $outfile $data(expected_result)
@@ -187,8 +187,14 @@ proc generateFromTable {tblname} {
     }
 
     puts $outfile $data(end_all_tests)
-    puts $outfile $data(ranges)
-    puts $outfile $data(epilogue)
+    if { ![info exists data(prologue_ranges)] } {
+        puts $outfile $data(dummy_ranges)
+    } else {
+        puts $outfile $data(prologue_ranges)
+        puts $outfile $data(code_ranges)
+        puts $outfile $data(epilogue_ranges)
+        puts $outfile $data(epilogue)
+    }
 }
 
 
@@ -440,10 +446,20 @@ proc readRanges {infile var} {
     # Transform the entries into useable code fragments
     #
     set varnames {}
-    set prologue {
+    set prologue "
 subroutine run_ranges
+$data(declarations)
     integer :: i_
-}
+"
+
+    set result_vars {}
+    foreach {vn tolerance} $data(result_vars) {
+        append prologue "    real(wp) :: $vn, min_$vn = huge(1.0_wp), max_$vn = -huge(1.0_wp)\n"
+        lappend result_vars $vn
+    }
+
+    set header   "    write(luout_,'(100a12)') &
+"
     set epilogue {}
     set code {
     do i = 1,niters_
@@ -459,7 +475,8 @@ subroutine run_ranges
             if { $type == "" } {
                 set type $v2
             }
-            append prologue "    real(wp) :: $vn, min_$vn = huge(1.0_wp), max_$vn = -huge(1.0_wp)\n"
+            append prologue "    real(wp) :: min_$vn = huge(1.0_wp), max_$vn = -huge(1.0_wp)\n"
+            append header '$vn',
 
             switch -- $type {
                 "Constant" {
@@ -479,14 +496,21 @@ subroutine run_ranges
         }
     }
 
-    set epilogue "        write(lutbl_,'(100g12.4)') [join $varnames ,]
+    set epilogue "        $data(code)
+        write(lutbl_,'(100g12.4)') &
+[join [concat $varnames $result_vars] ,]
     enddo
     write(luout_,'(a)') 'Overview of iterations:'\n"
-    foreach vn $varnames {
+    foreach vn [concat $varnames $result_vars] {
         append epilogue "    write(luout_,'(a20,2g12.4)') '$vn', min_$vn, max_$vn\n"
     }
+
+    append header ' [join $result_vars ','] '
+
+    set code "$header
+$code"
+
     append epilogue "
-    ! TODO: results!
 end subroutine run_ranges"
 
     set data(prologue_ranges) $prologue
@@ -497,27 +521,57 @@ end subroutine run_ranges"
 }
 
 
-# appendResultsToRanges --
-#     Fill in the missing pieces for the run_ranges subroutine
+# writeMakefile --
+#     Write a simple makefile - if none exists yet
 #
 # Arguments:
-#     None
+#     tblname      Input file
 #
 # Result:
 #     None
 #
 # Side effects:
-#     Code for run_ranges routine completed
+#     Simple makefile "xxx.mk" written
 #
-proc appendResultsToRanges {} {
-    global data
+proc writeMakefile {tblname} {
 
-    if { ! [info exists data(prologue_ranges)] } {
+    set outname "[file root $tblname].mk"
+
+    #
+    # Be careful not to override existing files
+    #
+    if { [file exists $outname] } {
+        puts "Make file $outname already exists - not updated"
         return
     }
 
-    TODO
+    set rootname [file root $tblname]
+    set outfile  [open $outname w]
 
+    puts $outfile \
+"# Makefile for $tblname
+#
+include ../../config/config.mk
+include ../../config/options.mk
+
+PROGRAMS\t=\t$rootname\$(EXEEXT)
+
+#
+# Name of the source file containing the code to be tested
+# (no extension!)
+#
+SOURCE\t=\t... fill in ...
+
+all:\t\$(PROGRAMS)
+
+\$(SOURCE)\$(OBJEXT):\t\$(SOURCE).f90
+
+$rootname\$(OBJEXT):\t$rootname.f90 \$(SOURCE)\$(OBJEXT)
+
+$rootname\$(EXEEXT):\t$rootname\$(OBJEXT) \$(SOURCE)\$(OBJEXT)
+        \$(LD) \$(LDFLAGS) \$(LDOUTPUT) $rootname\$(OBJEXT) \$(SOURCE)\$(OBJEXT)"
+
+    close $outfile
 }
 
 # main --
@@ -528,6 +582,5 @@ if { [llength $argv] != 1 } {
 } else {
     set tblname [lindex $argv 0]
     generateFromTable $tblname
+    writeMakefile $tblname
 }
-
-#parray data
