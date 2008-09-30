@@ -116,6 +116,8 @@ proc generateFromTable {tblname} {
     if { [file exists $outname] } {
         puts "Output file already exists: $outname"
         exit
+    } else {
+        puts "Writing test program $outname ..."
     }
 
     set outfile [open $outname w]
@@ -454,7 +456,7 @@ $data(declarations)
 
     set result_vars {}
     foreach {vn tolerance} $data(result_vars) {
-        append prologue "    real(wp) :: $vn, min_$vn = huge(1.0_wp), max_$vn = -huge(1.0_wp)\n"
+        append prologue "    real(wp) :: min_$vn = huge(1.0_wp), max_$vn = -huge(1.0_wp)\n"
         lappend result_vars $vn
     }
 
@@ -462,7 +464,7 @@ $data(declarations)
 "
     set epilogue {}
     set code {
-    do i = 1,niters_
+    do i_ = 1,niters_
 }
     set varnames {}
     foreach vars $ranges {
@@ -543,6 +545,8 @@ proc writeMakefile {tblname} {
     if { [file exists $outname] } {
         puts "Make file $outname already exists - not updated"
         return
+    } else {
+        puts "Writing make file $outname ..."
     }
 
     set rootname [file root $tblname]
@@ -565,11 +569,13 @@ SOURCE\t=\t... fill in ...
 all:\t\$(PROGRAMS)
 
 \$(SOURCE)\$(OBJEXT):\t\$(SOURCE).f90
+\t\$(FC) \$(FFLAGS) \$(SOURCE).f90
 
 $rootname\$(OBJEXT):\t$rootname.f90 \$(SOURCE)\$(OBJEXT)
+\t\$(FC) \$(FFLAGS) $rootname.f90
 
 $rootname\$(EXEEXT):\t$rootname\$(OBJEXT) \$(SOURCE)\$(OBJEXT)
-        \$(LD) \$(LDFLAGS) \$(LDOUTPUT) $rootname\$(OBJEXT) \$(SOURCE)\$(OBJEXT)"
+\t\$(LD) \$(LDFLAGS) \$(LDOUTPUT) $rootname\$(OBJEXT) \$(SOURCE)\$(OBJEXT)"
 
     close $outfile
 }
@@ -583,4 +589,5 @@ if { [llength $argv] != 1 } {
     set tblname [lindex $argv 0]
     generateFromTable $tblname
     writeMakefile $tblname
+    puts "Done"
 }
