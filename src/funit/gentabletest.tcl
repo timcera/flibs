@@ -34,9 +34,12 @@ set data(contains) \
     lutbl_ = 11
     open( luout_, file = 'report.out' )
     open( lutbl_, file = 'table.out' )
+    write(*,*) 'Running random tests ...'
     call run_ranges
+    write(*,*) 'Running specific tests ...'
     call all_tests
     write(luout_,'(a,i5)') 'All tests completed. Number of errors:',error_
+    write(*,*) 'Done'
 contains
 
 logical function not_equal_abs( x, y, margin )
@@ -68,10 +71,15 @@ real function random_normal( xmean, xstdev )
     random_normal = xmean + xstdev * r * cos(phi)
 end function random_normal
 
-subroutine error
+subroutine recognised_error
     error_recognised_ = .true.
     write(luout_,'(a)') '    Note: error condition correctly recognised'
-end subroutine error
+end subroutine recognised_error
+
+subroutine unexpected_error
+    write(luout_,'(a)') '    Note: unexpected error detected'
+    error_ = error_ + 1
+end subroutine unexpected_error
 
 subroutine all_tests}
 
@@ -460,7 +468,7 @@ $data(declarations)
         lappend result_vars $vn
     }
 
-    set header   "    write(luout_,'(100a12)') &
+    set header   "    write(lutbl_,'(100a12)') &
 "
     set epilogue {}
     set code {
@@ -498,7 +506,15 @@ $data(declarations)
         }
     }
 
-    set epilogue "        $data(code)
+    set    epilogue "        $data(code)"
+    append epilogue "        $data(error)"
+
+    foreach vn $result_vars {
+        append epilogue "        if ( $vn < min_$vn ) min_$vn = $vn\n"
+        append epilogue "        if ( $vn > max_$vn ) max_$vn = $vn\n"
+    }
+
+    append epilogue "        $data(code)
         write(lutbl_,'(100g12.4)') &
 [join [concat $varnames $result_vars] ,]
     enddo
@@ -516,7 +532,7 @@ $code"
 end subroutine run_ranges"
 
     set data(prologue_ranges) $prologue
-    set data(code_ranges) $code
+    set data(code_ranges)     $code
     set data(epilogue_ranges) $epilogue
 
     return $cont
