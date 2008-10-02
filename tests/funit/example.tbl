@@ -68,12 +68,13 @@ RESULT
 ! parameter value is out of range). The code is invoked when any of
 ! result variables in a table entry has the keyword ERROR instead of
 ! a proper value.
-! Use the subroutine "error" to indicate the correctly reported error
-! condition.
+! Use the subroutine "recognised_error" to indicate the correctly
+! reported error condition. Use the subroutine "unexpected_error" to
+! indicate that some unexpected result occurred.
 !
 ERROR
     if ( time == -999.0 ) then
-        call error
+        call recognised_error
     endif
 !
 ! The keyword RANGES specifies that the variables are to be taken

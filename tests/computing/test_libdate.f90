@@ -6,9 +6,11 @@ program test_diff
 
     implicit none
 
-    type(DATETYPE)   :: date1, date2, date3
-    integer          :: i
-    logical          :: found
+    type(DATETYPE)    :: date1, date2, date3
+    integer           :: i
+    logical           :: found
+
+    character(len=20) :: datestring
 
     date1 = datetype( 2008, 1, 1, 0, 0 ) ! 1 january 2008, 0:00)
     date2 = datetype( 2009, 1, 1, 0, 0 ) ! 1 january 2009, 0:00)
@@ -26,4 +28,9 @@ program test_diff
 
     write(*,*) 'Time between 1 february 0:00 and 2 february 10:01: ', &
         timelag(date2 , date3)
+
+    call format_date( date3, 'yyyy/mm/dd HH:MM', datestring )
+    write(*,*) 'Date: ', datestring
+    call format_date( date3, 'yyyy/ms/ds HS:MS', datestring )
+    write(*,*) 'Date: ', datestring
 end program

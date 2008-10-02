@@ -6,13 +6,19 @@
 !
 !     wp: kind for working precision (set to either sp or dp)
 !
+!     Note:
+!     Originally the kind for double precision was determined by
+!     selecting a precision strictly larger than single precision.
+!     But what if via compiler options single precision constants
+!     are promoted to double precision?
+!
 !     $Id$
 !
 module select_precision
     implicit none
 
     integer, parameter :: sp = kind( 1.0 )
-    integer, parameter :: dp = selected_real_kind( precision( 1.0 ) + 1 )
+    integer, parameter :: dp = kind( 1.0d0 )
 
     integer, parameter :: wp = sp
 

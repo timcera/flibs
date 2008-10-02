@@ -62,7 +62,7 @@ PRIVATE
 PUBLIC ::         &
 & DateType       ,& ! User-defined type for year, month, day, hour and minute
 & OPERATOR(.EQ.) ,& ! Comparison of two DateTypes
-& OPERATOR(.NEQ.),& ! Comparison of two DateTypes
+& OPERATOR(.NE.) ,& ! Comparison of two DateTypes
 & OPERATOR(.GT.) ,& ! Comparison of two DateTypes
 & OPERATOR(.GE.) ,& ! Comparison of two DateTypes
 & OPERATOR(.LT.) ,& ! Comparison of two DateTypes
@@ -78,7 +78,8 @@ PUBLIC ::         &
 & DelaySeconds   ,& ! Real function converting a given DateType timestep to seconds (disregarding year and month!)
 & JulianDateType ,& ! Mostly for internal use only; Julian date is represented by 2 numbers since REAL*4 has too little digits...
 & Date2Julian    ,& ! Conversion routine DateType --> JulianDateType; for internal use
-& Julian2Date       ! Conversion routine JulianDateType --> DateType; for internal use
+& Julian2Date    ,& ! Conversion routine JulianDateType --> DateType; for internal use
+& format_date       ! Format a date/time structure
 
    TYPE DateType
      INTEGER :: Year,Month,Day,Hour,Minute
@@ -610,6 +611,134 @@ END FUNCTION Julian2Date
    MaxDate = DumDate
 !
    END FUNCTION MaxDate
+
+! format_date --
+!     Format a date/time as a string
+!
+! Arguments:
+!     date             Date/time to be formatted
+!     pattern          String that serves as the pattern
+!     datestring       Resulting string
+!
+! Note:
+!     The pattern can contain any of the following substrings
+!     that will be replaced by the corresponding date/time information
+!
+!     dd        Day of month ("01" for instance)
+!     ds        Day of month ("1" for instance, s for space)
+!     DDD       Day of the year
+!     HH        Hour (00-23)
+!     HS        Hour (0-23)
+!     mm        Month ("01" for january)
+!     ms        Month ("1" for january, s for space)
+!     MM        Minutes within the hour (00-59)
+!     MS        Minutes within the hour (0-59)
+!     YY        Year with the century
+!     yyyy      Year with the century
+!
+!     Each substring is replaced by a string of the same length or
+!     shorter.
+!
+!     The third argument should in general be at least as long
+!     as the pattern.
+!
+! (Added by Arjen Markus)
+
+   SUBROUTINE format_date( date, pattern, datestring )
+
+   TYPE(DateType), INTENT(IN) :: date
+   character(len=*)           :: pattern
+   character(len=*)           :: datestring
+
+   character(len=4)           :: piece
+   integer                    :: k
+   logical                    :: found
+
+   datestring = pattern
+
+   found = .true.
+   do while ( found )
+       found = .false.
+
+       k     = index( datestring, 'dd' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2.2)' ) date%day
+           datestring(k:k+1) = piece
+       endif
+
+       k     = index( datestring, 'ds' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2)' ) date%day
+           datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       endif
+
+       k     = index( datestring, 'DDD' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i3)' ) doy(date)
+           datestring(k:k+2) = piece
+       endif
+
+       k     = index( datestring, 'HH' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2.2)' ) date%hour
+           datestring(k:k+1) = piece
+       endif
+
+       k     = index( datestring, 'HS' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2)' ) date%hour
+           datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       endif
+
+       k     = index( datestring, 'mm' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2.2)' ) date%month
+           datestring(k:k+1) = piece
+       endif
+
+       k     = index( datestring, 'ms' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2)' ) date%month
+           datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       endif
+
+       k     = index( datestring, 'MM' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2.2)' ) date%minute
+           datestring(k:k+1) = piece
+       endif
+
+       k     = index( datestring, 'MS' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2)' ) date%minute
+           datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       endif
+
+       k     = index( datestring, 'YY' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i2.2)' ) mod(date%year, 100)
+           datestring(k:k+1) = piece
+       endif
+
+       k     = index( datestring, 'yyyy' )
+       if ( k > 0 ) then
+           found = .true.
+           write( piece, '(i4)' ) date%year
+           datestring(k:k+3) = piece
+       endif
+   ENDDO
+
+   END SUBROUTINE format_date
 
 
 END MODULE LibDate

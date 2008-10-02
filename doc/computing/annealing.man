@@ -6,7 +6,7 @@
 
 [description]
 
-The [strong simualted_annealing] module allows you to find the minimum
+The [strong simulated_annealing] module allows you to find the minimum
 of an arbitrary function of N variables using a straightforward
 simulated annealing algorithm.
 
