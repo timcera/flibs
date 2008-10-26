@@ -44,6 +44,25 @@ program test_diff
     write(*,*) 'Equation: x**2 - 2 = 0'
     write(*,*) 'Root: ', root%v, ' - expected: ', sqrt(2.0_wp)
 
+    write(*,*) 'Elementary functions: '
+    x = derivvar(0.0)
+    write(*,*) 'x = ', x
+    write(*,*) 'exp(x)  = ', exp(x)
+    write(*,*) 'sin(x)  = ', sin(x)
+    write(*,*) 'asin(x) = ', asin(x)
+    write(*,*) 'sinh(x) = ', sinh(x)
+    write(*,*) 'cos(x)  = ', cos(x)
+    write(*,*) 'acos(x) = ', acos(x)
+    write(*,*) 'cosh(x) = ', cosh(x)
+    write(*,*) 'tan(x)  = ', tan(x)
+    write(*,*) 'atan(x) = ', atan(x)
+    write(*,*) 'tanh(x) = ', tanh(x)
+
+    x = derivvar(1.0)
+    write(*,*) 'x = ', x
+    write(*,*) 'log(x)  = ', log(x)
+    write(*,*) 'exp(x)  = ', exp(x)
+
 contains
 !
 ! The AUTODERIV function and a function that implements the

@@ -62,6 +62,18 @@ module automatic_differentiation
         module procedure atan_v
     end interface
 
+    interface sinh
+        module procedure sinh_v
+    end interface
+
+    interface tanh
+        module procedure tanh_v
+    end interface
+
+    interface cosh
+        module procedure cosh_v
+    end interface
+
     interface operator(+)
         module procedure add_cv
         module procedure add_vc
@@ -111,7 +123,7 @@ function derivvar( val ) result( x )
     x%dv = 1.0_wp
 end function derivvar
 
-! sin, cos, tan, log, exp, sqrt
+! sin, cos, tan, log, exp, sqrt, sinh, cosh, tanh
 !     Return the sine etc. of x
 ! Arguments:
 !     x          Variable in question
@@ -178,6 +190,30 @@ elemental function sqrt_v( x ) result( y )
     y%dv = 0.5 *x%dv / y%v
 end function sqrt_v
 
+elemental function sinh_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = sinh(x%v)
+    y%dv = x%dv * cosh(x%v)
+end function sinh_v
+
+elemental function cosh_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = cosh(x%v)
+    y%dv = x%dv * sinh(x%v)
+end function cosh_v
+
+elemental function tanh_v( x ) result( y )
+    type(AUTODERIV), intent(in) :: x
+    type(AUTODERIV)             :: y
+
+    y%v  = tanh(x%v)
+    y%dv = x%dv * (1.0 - y%v**2)
+end function tanh_v
+
 ! asin, acos, atan
 !     Return the arcsine etc. of x
 ! Arguments:
@@ -210,7 +246,7 @@ elemental function atan_v( x ) result( y )
     type(AUTODERIV)             :: y
 
     y%v  = atan(x%v)
-    y%dv = -x%dv / (1.0 + x%v ** 2)
+    y%dv = x%dv / (1.0 + x%v ** 2)
 end function atan_v
 
 ! +, -, *, /, **

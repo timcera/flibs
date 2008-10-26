@@ -48,6 +48,15 @@ program test_intervals
     write(*,*) 'Equation: x**2 - 2 = 0'
     write(*,*) 'Root: ', root, ' - expected: ', sqrt(2.0_wp)
 
+    write(*,*) 'Elementary functions:'
+    write(*,*) 'x =', x
+    write(*,*) 'exp(x) = ', exp(x)
+    write(*,*) 'log(x) = ', log(x)
+    write(*,*) 'sin(x) = ', sin(x)
+    write(*,*) 'tan(x) = ', tan(x)
+    write(*,*) 'y =', y
+    write(*,*) 'cos(y) = ', cos(y)
+
 end program
 
 

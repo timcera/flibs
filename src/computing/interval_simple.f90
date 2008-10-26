@@ -22,6 +22,10 @@ module interval_arithmetic
     public   :: intval, mid, operator(+), operator(-), operator(*), operator(/)
     public   :: operator(.pgt.), operator(.cgt.), operator(.pge.), operator(.cge.)
     public   :: operator(.plt.), operator(.clt.), operator(.ple.), operator(.cle.)
+    public   :: abs, exp, log, log10, cos, sin, tan, acos, asin, atan, sinh, cosh, tanh, sqrt
+   !public   :: min, max
+
+    real(kind=wp), save :: pi = 0.0
 
     type INTERVAL
         real(kind=wp) :: lower
@@ -35,6 +39,7 @@ module interval_arithmetic
     end interface
 
     interface operator(-)
+        module procedure usub
         module procedure sub
         module procedure sub_r_i
         module procedure sub_i_r
@@ -51,6 +56,74 @@ module interval_arithmetic
         module procedure div_r_i
         module procedure div_i_r
     end interface
+
+    interface abs
+        module procedure abs_i
+    end interface
+
+    interface exp
+        module procedure exp_i
+    end interface
+
+    interface log
+        module procedure log_i
+    end interface
+
+    interface log10
+        module procedure log10_i
+    end interface
+
+    interface sqrt
+        module procedure sqrt_i
+    end interface
+
+    interface sin
+        module procedure sin_i
+    end interface
+
+    interface cos
+        module procedure cos_i
+    end interface
+
+    interface tan
+        module procedure tan_i
+    end interface
+
+    interface asin
+        module procedure asin_i
+    end interface
+
+    interface acos
+        module procedure acos_i
+    end interface
+
+    interface atan
+        module procedure atan_i
+    end interface
+
+    interface sinh
+        module procedure sinh_i
+    end interface
+
+    interface cosh
+        module procedure cosh_i
+    end interface
+
+    interface tanh
+        module procedure tanh_i
+    end interface
+
+   ! interface min
+   !     module procedure min_i
+   !     module procedure min_r_i
+   !     module procedure min_i_r
+   ! end interface
+
+   ! interface max
+   !     module procedure max_i
+   !     module procedure max_r_i
+   !     module procedure max_i_r
+   ! end interface
 
     !
     ! Relational operations:
@@ -147,6 +220,21 @@ function add_i_r( x, y ) result(r)
     r%lower = x%lower  + y
     r%upper = x%upper  + y
 end function add_i_r
+
+! usub --
+!     Unary minus
+! Arguments:
+!     x        Interval number
+! Result:
+!     -x
+!
+function usub( x ) result(r)
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = -x%upper
+    r%upper = -x%lower
+end function usub
 
 ! sub --
 !     Subtract two interval numbers
@@ -329,6 +417,208 @@ logical function cle( x, y )
 
     cle = x%upper <= y%lower
 end function cle
+
+! exp, log, ...
+!     Interval versions of elementary mathematical functions
+!     (monotone functions are easy)
+! Arguments:
+!     x        First interval number
+! Result:
+!     Interval containing the result
+!
+function abs_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    if ( x%lower < 0.0 .and. x%upper > 0.0 ) then
+        r%lower = 0.0
+        r%upper = max( abs(x%lower), abs(x%upper) )
+    else
+        r%lower = min( abs(x%lower), abs(x%upper) )
+        r%upper = max( abs(x%lower), abs(x%upper) )
+    endif
+end function abs_i
+
+function exp_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = exp( x%lower )
+    r%upper = exp( x%upper )
+end function exp_i
+
+function log_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = log( x%lower )
+    r%upper = log( x%upper )
+end function log_i
+
+function log10_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = log10( x%lower )
+    r%upper = log10( x%upper )
+end function log10_i
+
+function sinh_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = sinh( x%lower )
+    r%upper = sinh( x%upper )
+end function sinh_i
+
+function cosh_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    if ( x%lower < 0.0 .and. x%upper > 0.0 ) then
+        r%lower = 1.0_wp
+        r%upper = max( cosh(x%lower), cosh(x%upper) )
+    else
+        r%lower = cosh( x%lower )
+        r%upper = cosh( x%upper )
+    endif
+end function cosh_i
+
+function tanh_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = tanh( x%lower )
+    r%upper = tanh( x%upper )
+end function tanh_i
+
+function sqrt_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = sqrt( x%lower )
+    r%upper = sqrt( x%upper )
+end function sqrt_i
+
+function asin_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = asin( x%lower )
+    r%upper = asin( x%upper )
+end function asin_i
+
+function acos_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = acos( x%upper ) ! acos() is monotone decreasing
+    r%upper = acos( x%lower )
+end function acos_i
+
+function atan_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    r%lower = atan( x%lower ) ! acos() is monotone decreasing
+    r%upper = atan( x%upper )
+end function atan_i
+
+! sine, cosine and tangent are more involved
+!
+function sin_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    integer                    :: k1
+    integer                    :: k2
+
+    if ( pi == 0.0 ) then
+        pi = 4.0 * atan(1.0_wp)
+    endif
+
+    k1 = floor( (x%upper - 0.5*pi) / pi )
+    k2 = floor( (x%lower - 0.5*pi) / pi )
+
+    if ( k1 == k2 ) then
+        r%lower = sin( x%lower )
+        r%upper = sin( x%upper )
+    else
+        if ( abs(k1-k2) == 1 ) then
+            if ( mod(k1,2) == 0 ) then
+                r%lower = min( sin(x%lower), sin(x%upper) )
+                r%upper = 1.0_wp
+            else
+                r%lower = -1.0_wp
+                r%upper = max( sin(x%lower), sin(x%upper) )
+            endif
+        else
+            r%lower = -1.0_wp
+            r%upper =  1.0_wp
+        endif
+    endif
+end function sin_i
+
+function cos_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    integer                    :: k1
+    integer                    :: k2
+
+    if ( pi == 0.0 ) then
+        pi = 4.0 * atan(1.0_wp)
+    endif
+
+    k1 = floor( x%upper / pi )
+    k2 = floor( x%lower / pi )
+
+    if ( k1 == k2 ) then
+        r%lower = cos( x%lower )
+        r%upper = cos( x%upper )
+    else
+        if ( abs(k1-k2) == 1 ) then
+            if ( mod(k1,2) == 0 ) then
+                r%lower = min( cos(x%lower), cos(x%upper) )
+                r%upper = 1.0_wp
+            else
+                r%lower = -1.0_wp
+                r%upper = max( cos(x%lower), cos(x%upper) )
+            endif
+        else
+            r%lower = -1.0_wp
+            r%upper =  1.0_wp
+        endif
+    endif
+end function cos_i
+
+function tan_i( x ) result( r )
+    type(INTERVAL), intent(in) :: x
+    type(INTERVAL)             :: r
+
+    integer                    :: k1
+    integer                    :: k2
+
+    if ( pi == 0.0 ) then
+        pi = 4.0 * atan(1.0_wp)
+    endif
+
+    k1 = floor( (x%upper - 0.5*pi) / pi )
+    k2 = floor( (x%lower - 0.5*pi) / pi )
+
+    if ( k1 == k2 ) then
+        r%lower = tan( x%lower )
+        r%upper = tan( x%upper )
+    else
+        r%lower = -huge(1.0_wp)
+        r%upper =  huge(1.0_wp)
+    endif
+end function tan_i
+
+! min, max are involved as well
+!
+! TODO: min, max
+!
 
 ! find_root
 !     Find a root using Newton-Raphson
