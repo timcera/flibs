@@ -3,7 +3,6 @@
 !     (GET, POST, ...)
 !
 !     TODO:
-!     - cgi_get_logical
 !     - cgi_header
 !     - find out how to deal with text area data
 !     - find out how to deal with uploaded files
@@ -14,9 +13,17 @@
 !     - expand cgi_error (with template) to allow user-defined error messages
 !
 module cgi_protocol
+    implicit none
+
     integer, parameter :: DICT_KEY_LENGTH    = 80
     integer, parameter :: DICT_VALUE_LENGTH  = 200
     integer, parameter :: DICT_BUFFER_LENGTH = DICT_KEY_LENGTH + DICT_VALUE_LENGTH + 1
+
+    integer, parameter :: output_no_header    = 0
+    integer, parameter :: output_html         = 1
+    integer, parameter :: output_text         = 2
+    integer, parameter, private :: output_html_delayed = 3  ! Not implemented yet!
+    integer, parameter, private :: output_text_delayed = 4
 
     type DICT_DATA
         character(len=DICT_VALUE_LENGTH) :: value
@@ -30,7 +37,8 @@ module cgi_protocol
 
     type(DICT_DATA), parameter :: dict_null = dict_data('')
 
-    integer, private           :: method = -1
+    integer, private           :: method    = -1
+    integer, private           :: luout_cgi = -1
 
 !
 ! Body of source code for storing and retrieving the data
@@ -57,7 +65,7 @@ include 'dictionary.f90'
 !     than a few seconds)
 !
 subroutine cgi_begin( html, dict, luout )
-    logical, intent(in)               :: html
+    integer, intent(in)               :: html
     type(DICT_STRUCT), pointer        :: dict
     integer, intent(out)              :: luout
 
@@ -113,7 +121,7 @@ subroutine cgi_begin( html, dict, luout )
     ! whole thing off
     !
     if ( method == -1 ) then
-        call cgi_error
+        call cgi_error( "CGI protocol not recognised" )
     endif
 
     !
@@ -133,19 +141,46 @@ subroutine cgi_begin( html, dict, luout )
         enddo
         open( luout, file = 'cgiout' )
     endif
+    luout_cgi = luout
 
     !
     ! Write the header lines
     !
-    if ( html ) then
-        write( luout, '(a)' ) 'Content-Type: text/html;charset=iso8859-1'
-        write( luout, '(a)' ) ''
-    else
-        write( luout, '(a)' ) 'Content-Type: text/plain;charset=iso8859-1'
-        write( luout, '(a)' ) ''
-    endif
+    select case ( html )
+        case ( output_html, output_text )
+            call cgi_header( html )
+        case( output_html_delayed, output_text_delayed )
+            ! TODO
+        case( output_no_header )
+            ! Writing the header is delayed, because the type is not known yet
+        case default
+            call cgi_error( "Programming error: wrong value for parameter 'html' in CGI_BEGIN" )
+    end select
 
 end subroutine cgi_begin
+
+! cgi_header --
+!     Write the CGI header information
+!
+! Arguments:
+!     type           Type of header
+!
+subroutine cgi_header( type )
+    integer, intent(in) :: type
+
+    select case ( type )
+        case ( output_html, output_html_delayed )
+            write( luout_cgi, '(a)' ) 'Content-Type: text/html;charset=iso8859-1'
+            write( luout_cgi, '(a)' ) ''
+        case( output_text, output_text_delayed )
+            write( luout_cgi, '(a)' ) 'Content-Type: text/plain;charset=iso8859-1'
+            write( luout_cgi, '(a)' ) ''
+        case( output_no_header )
+            call cgi_error( "Programming error: value 'output_no_header' not allowed in CGI_HEADER" )
+        case default
+            call cgi_error( "Programming error: wrong value for parameter 'type' in CGI_HEADER" )
+    end select
+end subroutine cgi_header
 
 ! cgi_get_method --
 !     Get the information via the environment variable QUERY_STRING
@@ -336,24 +371,58 @@ subroutine cgi_end
 end subroutine cgi_end
 
 ! cgi_error --
-!     Report a fatal error (CGI method not recognised)
+!     Report a fatal error
 ! Arguments:
-!     None
+!     msg               Message to be printed
+!     template          Template file to be used (optional)
 !
-subroutine cgi_error
+subroutine cgi_error( msg, template )
+    character(len=*), intent(in)           :: msg
+    character(len=*), intent(in), optional :: template
 
+    character(len=200)                     :: text
+    integer :: k
+    integer :: ierr
     integer :: lu
     logical :: opend
+    logical :: exists
 
-    write( luout, '(a)' ) 'Content-Type: text/html;charset=iso8859-1'
-    write( luout, '(a)' ) ''
-    write( luout, '(a)' ) ''
+    exists = .false.
+    if ( present(template) ) then
+        inquire( file = template, exist = exists )
+    endif
 
-    write( 10, * ) '<html>'
-    write( 10, * ) '<head><title>Severe error</title></head>'
-    write( 10, * ) '<body>'
-    write( 10, * ) '<b>CGI method not recognised!</b>'
-    write( 10, * ) '</body></html>'
+    write( luout_cgi, '(a)' ) 'Content-Type: text/html;charset=iso8859-1'
+    write( luout_cgi, '(a)' ) ''
+
+    if ( exists ) then
+        do lu = 10,99
+            inquire( lu, opened = opend )
+            if ( .not. opend ) then
+                exit
+            endif
+        enddo
+        open( lu, file = template )
+
+        do
+            read( lu, '(a)', iostat=ierr ) text
+            if ( ierr /= 0 ) exit
+
+            k = index( text, 'MSG' )
+            if ( k > 0 ) then
+                write( luout_cgi, '(3a)' ) text(1:k-1), trim(msg), text(k+3:)
+            else
+                write( luout_cgi, '(a)' ) text
+            endif
+        enddo
+        close( lu )
+    else
+        write( luout_cgi, * ) '<html>'
+        write( luout_cgi, * ) '<head><title>Severe error</title></head>'
+        write( luout_cgi, * ) '<body>'
+        write( luout_cgi, * ) '<b>', trim(msg), '</b>'
+        write( luout_cgi, * ) '</body></html>'
+    endif
 
     call cgi_end
 
@@ -422,12 +491,31 @@ subroutine cgi_get_real( dict, varname, value )
 
 end subroutine cgi_get_real
 
+subroutine cgi_get_logical( dict, varname, value )
+    type(DICT_STRUCT), pointer :: dict
+    character(len=*)           :: varname
+    logical                    :: value
+
+    type(DICT_DATA)            :: data
+    integer                    :: ierr
+    integer                    :: new_value
+
+    if ( dict_has_key( dict, varname ) ) then
+        data = dict_get_key( dict, varname )
+        read( data%value, *, iostat=ierr ) new_value
+        if ( ierr == 0 ) then
+            value = (new_value == 1)
+        endif
+    endif
+
+end subroutine cgi_get_logical
+
 end module cgi_protocol
 
 program get_data
     use cgi_protocol
 
-    logical                     :: html = .true.
+    integer                     :: html = output_html
     type(dict_struct), pointer  :: dict => null()
     integer                     :: luout
 
