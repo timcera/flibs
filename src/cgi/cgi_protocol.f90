@@ -3,14 +3,12 @@
 !     (GET, POST, ...)
 !
 !     TODO:
-!     - cgi_header
+!     - cgi_get_session
 !     - find out how to deal with text area data
 !     - find out how to deal with uploaded files
 !     - merge environment variables into the cgi_get routines
 !     - implement the SCGI protocol
-!     - html -> output: output_no_header, output_html, output_html_delayed, ...
 !     - implement delayed responses (also via customisable template)
-!     - expand cgi_error (with template) to allow user-defined error messages
 !
 module cgi_protocol
     implicit none
@@ -37,8 +35,9 @@ module cgi_protocol
 
     type(DICT_DATA), parameter :: dict_null = dict_data('')
 
-    integer, private           :: method    = -1
-    integer, private           :: luout_cgi = -1
+    integer, private, save     :: method    = -1
+    integer, private, save     :: luout_cgi = -1
+    integer, private, save     :: header_written
 
 !
 ! Body of source code for storing and retrieving the data
@@ -81,6 +80,8 @@ subroutine cgi_begin( html, dict, luout )
     if ( associated(dict) ) then
         call dict_destroy( dict )
     endif
+
+    header_written = .false.
 
     !
     ! Determine which input method
@@ -167,6 +168,8 @@ end subroutine cgi_begin
 !
 subroutine cgi_header( type )
     integer, intent(in) :: type
+
+    header_written = .true.
 
     select case ( type )
         case ( output_html, output_html_delayed )
@@ -392,8 +395,10 @@ subroutine cgi_error( msg, template )
         inquire( file = template, exist = exists )
     endif
 
-    write( luout_cgi, '(a)' ) 'Content-Type: text/html;charset=iso8859-1'
-    write( luout_cgi, '(a)' ) ''
+    if ( .not. header_written ) then
+        write( luout_cgi, '(a)' ) 'Content-Type: text/html;charset=iso8859-1'
+        write( luout_cgi, '(a)' ) ''
+    endif
 
     if ( exists ) then
         do lu = 10,99
