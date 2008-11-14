@@ -37,7 +37,7 @@ module cgi_protocol
 
     integer, private, save     :: method    = -1
     integer, private, save     :: luout_cgi = -1
-    integer, private, save     :: header_written
+    logical, private, save     :: header_written
 
 !
 ! Body of source code for storing and retrieving the data
@@ -88,30 +88,25 @@ subroutine cgi_begin( html, dict, luout )
     !
     call get_environment_variable( "QUERY_STRING", length=length, status=status )
     if ( status == 0 ) then
-        write(*,*) 'GET: ',length
         call cgi_get_method( dict, length )
         method = 1
     else
         call get_environment_variable( "CONTENT_LENGTH", value=string, status=status )
         if ( status == 0 ) then
             read( string, * ) length
-            write(*,*) 'POST: ',length
             call cgi_post_method( dict, length )
             method = 1
         else
             read( *, '(A)', advance = 'no' ) ch
             if ( ch == '%' ) then
-                write(*,*) 'DUSTMOTE'
                 !
                 ! TODO: better method for determining length
                 call cgi_dustmote_method( dict )
                 method = 2
             elseif ( index( '1234567890', ch ) > 0 ) then
-                write(*,*) 'SIMPLE'
    !            call cgi_simple_cgi( dict )
                 method = -1
             else
-                write(*,*) 'METHOD NOT RECOGNISED!'
                 method = -1
             endif
         endif
@@ -122,7 +117,7 @@ subroutine cgi_begin( html, dict, luout )
     ! whole thing off
     !
     if ( method == -1 ) then
-        call cgi_error( "CGI protocol not recognised" )
+        call cgi_error( "CGI protocol not recognised or not implemented" )
     endif
 
     !
@@ -284,7 +279,6 @@ subroutine cgi_store_dict( dict, string )
         endif
 
         call cgi_decode_string( buffer(1:k-1) )
-        write(*,*) 'Found: ', buffer(1:k-1)
 
         !
         ! Store the string
@@ -516,14 +510,3 @@ subroutine cgi_get_logical( dict, varname, value )
 end subroutine cgi_get_logical
 
 end module cgi_protocol
-
-program get_data
-    use cgi_protocol
-
-    integer                     :: html = output_html
-    type(dict_struct), pointer  :: dict => null()
-    integer                     :: luout
-
-    call cgi_begin( html, dict, luout )
-
-end program get_data

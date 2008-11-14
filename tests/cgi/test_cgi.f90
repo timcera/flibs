@@ -10,7 +10,7 @@ program test_cgi
 
     use cgi_protocol
 
-    type(DICT_STRUCT), pointer :: dict
+    type(DICT_STRUCT), pointer :: dict => null() ! Initialisation is important!
     integer                    :: i
     integer                    :: luout
     integer                    :: steps
@@ -52,7 +52,7 @@ program test_cgi
            'error_message.html' )
     endif
     if ( function == 'J0' ) then
-        call cgi_error( 'Sorry, the Bessel function is not yet implemented',
+        call cgi_error( 'Sorry, the Bessel function is not yet implemented', &
            'error_message.html' )
     endif
 
@@ -84,7 +84,7 @@ program test_cgi
 
         do i = 0,steps
             write( luout, '(a)' ) '<tr>'
-            write( luout, '(a,f10.4,a,f10.4,a)' )
+            write( luout, '(a,f10.4,a,f10.4,a)' ) &
                 '    <td>', x(i), '</td><td>', y(i), '</td>'
             write( luout, '(a)' ) '</tr>'
         enddo
@@ -101,7 +101,7 @@ program test_cgi
     endif
 
     !
-    ! We  are done
+    ! We are done
     !
     call cgi_end
 
