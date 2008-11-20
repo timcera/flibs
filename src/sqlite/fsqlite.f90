@@ -58,9 +58,9 @@ module sqlite_types
    end type SQLITE_DATABASE
 
    type SQLITE_COLUMN
-      character(len=40)       :: name
-      character(len=40)       :: type
-      character(len=40)       :: function
+      character(len=40)       :: name     = ' '
+      character(len=40)       :: type     = ' '
+      character(len=40)       :: function = ' '
       integer                 :: type_set
       integer                 :: int_value
       real(kind=dp)           :: double_value
