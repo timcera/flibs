@@ -3,7 +3,6 @@
 !     (GET, POST, ...)
 !
 !     TODO:
-!     - cgi_get_session
 !     - find out how to deal with text area data
 !     - find out how to deal with uploaded files
 !     - merge environment variables into the cgi_get routines
@@ -426,6 +425,36 @@ subroutine cgi_error( msg, template )
     call cgi_end
 
 end subroutine cgi_error
+
+! cgi_get_session --
+!     Get the value of the "sessionid" variable
+! Arguments:
+!     dict          Dictionary with values
+!     value         Value of the session ID (character(len=20))
+! Note:
+!     The session ID can be used to uniquely identify the
+!     connection with the user. But it should be passed into the
+!     HTML output as a hidden variable (see the documentation
+!     for more information)
+!
+subroutine cgi_get_session( dict, value )
+    type(DICT_STRUCT), pointer :: dict
+    character(len=*)           :: value
+
+    character(len=20)          :: time_string
+    type(DICT_DATA)            :: data
+
+    if ( dict_has_key( dict, "sessionid" ) ) then
+        data = dict_get_key( dict, "sessionid" )
+        value = data%value
+    else
+        call date_and_time( time = time_string )
+        value = time_string(5:6) // time_string(8:10)
+        data%value = value
+        call dict_add_key( dict, "sessionid", data )
+    endif
+
+end subroutine cgi_get_session
 
 ! cgi_get_* --
 !     Get the value of variables
