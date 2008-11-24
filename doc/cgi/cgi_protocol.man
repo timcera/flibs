@@ -1,0 +1,50 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin cgi_protocol n 1.0]
+[copyright {2008 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[moddesc flibs]
+[titledesc {Module for supporting the Internet CGI protocol}]
+
+[description]
+
+When you want to create web applications, the CGI (common gateway
+interface) is one of the means to integrate your underlying programs
+with the web server. The protocol itself is, at least superficially,
+simple enough, but you need to take care of a number of details.
+It is these details that the [emph cgi_protocol] module seeks to take
+care of.
+
+[para]
+The global structure of a program that uses this module to
+communicate with the web server is basically:
+
+[list_begin bullet]
+[bullet]
+Get the data from the web server, via [emph cgi_begin]
+[bullet]
+Handle these input data and write the corresponding HTML-file
+[bullet]
+Notify the web server the result is available and stop
+[list_end]
+
+[section "DATA TYPES AND ROUTINES"]
+
+TODO
+
+[section NOTES]
+The current implementation assumes that the compiler supports the new
+intrinsic routine [emph get_environment_variable]. If this is not the
+case, then it is possible to mimick this routine (with a bit of
+trickery), but that has not been implemented yet in this version.
+
+[para]
+There is no support as yet for a delayed response. The idea is that the
+program sends a short note to the web server, to inform the user that
+the final result takes a few minutes (or longer) and that he/she can
+find it at such and such a location.
+
+[para]
+The [emph cgi_protocol] module uses the dictionary module underneath.
+For convenience the source code for that module is contained within the
+source directory for the [emph cgi_protocol].
+
+[manpage_end]
