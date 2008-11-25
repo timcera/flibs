@@ -27,8 +27,139 @@ Notify the web server the result is available and stop
 [list_end]
 
 [section "DATA TYPES AND ROUTINES"]
+The module defines the following data types:
 
-TODO
+[list_begin definitions]
+
+[call [cmd "dict_struct"]]
+A derived type holding a list of keyword-value pairs. Each value is of the
+type "dict_data" (see below). The routine [emph cgi_begin] fills such a
+structure to hold all form variables and their values.
+
+[call [cmd "dict_data"]]
+The derived type whose contents is the string value of a particular form
+variable. It has one component: value, a string of 200 characters long
+(the actual length is set via the parameter "dict_value_length", so you
+can easily change it if this should prove necessary).
+
+[list_end]
+
+The module defines the following routines:
+
+[list_begin definitions]
+
+[call [cmd "call cgi_begin( html, dict, luout )"]]
+Routine to start the interaction with the web server. It
+automatically determines the protocol to be used and fills the
+"dictionary" dict with the values of the form variables for easy
+retrieval. The last parameter, luout, should be used to write the
+results to the web server.
+
+[list_begin arg]
+
+[arg_def "integer, intent(in)" html]
+Type of output that will be written. Should be one of the following
+parameters:
+[list_begin bullet]
+[bullet]
+output_html - the output will be HTML text (the corresponding CGI header
+is written by this routine)
+[bullet]
+output_text - the output will be plain ASCII text (the corresponding CGI
+header is written by this routine)
+[bullet]
+output_no_header - it is not known yet what the output type will be -
+you can decide this on the basis of the form input. Use [emph
+cgi_header] to write the appropriate header later.
+[bullet]
+output_html_delayed, output_text_delayed - (not implemented yet)
+indicate that the computation will take a while, so that a simple
+message is written first.
+[list_end]
+
+[arg_def "type(dict_struct), pointer" dict]
+Variable to hold alll the form variables and their values. You pass
+this variable to [emph cgi_get()] to retrieve these values. You can also
+store new variables and values, if this is useful (via the plain
+dictionary routines).
+[nl]
+[emph Note:]
+Initialise it to "null()" before calling the routine.
+
+[arg_def "integer, intent(out)" luout]
+LU-number for writing output to the web server. Always use this
+LU-number, not "*" to write the output.
+[nl]
+[emph Note:]
+If "standard output" is used in the protocol, then this LU-number is
+set to 6 - this is not completely portable of course.
+
+[list_end]
+
+
+[call [cmd "call cgi_header( type )"]]
+Write the CGI header information
+
+[list_begin arg]
+[arg_def "integer, intent(in)" type]
+Type of output that will be written. See above
+[list_end]
+
+
+[call [cmd "call cgi_end"]]
+Indicate to the server that we are done. The routine stops the program.
+[nl]
+[emph Note:]
+If the run-time library produces extra output as a consequence
+of finishing the program, then you may want to use compile options to
+suppress that output. The [emph g95] compiler for instance reports any
+memory that has not been freed. Such output may end up in your HTML
+output!
+
+
+[call [cmd "call cgi_error( msg, template )"]]
+Report a fatal error in the form of HTML text
+
+[list_begin arg]
+[arg_def "character(len=*), intent(in)" msg]
+Message to be written
+
+[arg_def "character(len=*), intent(in), optional" template]
+Name of a file to be used as a template. If not given, a simple page
+will be written instead. The string "MSG" in that template is replaced
+by the contents of the variable msg.
+
+[list_end]
+
+
+[call [cmd "call cgi_get_session( dict, value )"]]
+Get the value of the "sessionid" variable. This variable is
+already present in the form or it is set by this routine to a (more or
+less) unique value.
+
+[list_begin arg]
+[arg_def "character(len=*), intent(in)" msg]
+Message to be written
+
+[arg_def "character(len=*), intent(in), optional" template]
+Name of a file to be used as a template. If not given, a simple page
+will be written instead. The string "MSG" in that template is replaced
+by the contents of the variable msg.
+
+[list_end]
+
+
+
+[list_begin arg]
+[arg_def "integer, intent(in)" type]
+Type of output that will be written. See above
+[list_end]
+
+
+
+
+
+
 
 [section NOTES]
 The current implementation assumes that the compiler supports the new
