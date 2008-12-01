@@ -69,8 +69,8 @@ output_text - the output will be plain ASCII text (the corresponding CGI
 header is written by this routine)
 [bullet]
 output_no_header - it is not known yet what the output type will be -
-you can decide this on the basis of the form input. Use [emph
-cgi_header] to write the appropriate header later.
+you can decide this on the basis of the form input. Use [emph cgi_header]
+to write the appropriate header later.
 [bullet]
 output_html_delayed, output_text_delayed - (not implemented yet)
 indicate that the computation will take a while, so that a simple
@@ -136,29 +136,39 @@ by the contents of the variable msg.
 Get the value of the "sessionid" variable. This variable is
 already present in the form or it is set by this routine to a (more or
 less) unique value.
+[nl]
+To use it as a session identifier (if your application requires a
+continued conversation with the user), make sure each subsequent HTML
+reply contains a line like:
+[example {
+    <input type="hidden" name="sessionid" value="(contents of the string)">
+}]
 
 [list_begin arg]
-[arg_def "character(len=*), intent(in)" msg]
-Message to be written
-
-[arg_def "character(len=*), intent(in), optional" template]
-Name of a file to be used as a template. If not given, a simple page
-will be written instead. The string "MSG" in that template is replaced
-by the contents of the variable msg.
-
+[arg_def "character(len=*), intent(out)" value]
+The unique session ID
 [list_end]
 
 
-
+[call [cmd "call cgi_get( dict, varname, value )"]]
+Get the value of a variable defined in the HTML form. If the variable is
+not actually present, the value is left unchanged.
+[nl]
+If you want to check if a form variable by the name of [term varname]
+actually exists, you can use the [term dict_has_key] function, defined
+by the [term dictionary] module.
 [list_begin arg]
-[arg_def "integer, intent(in)" type]
-Type of output that will be written. See above
+[arg_def "type(DICT_STRUCT), pointer" dict]
+The dictionary as returned originally by [term cgi_begin] (you may want
+to add new values and variables yourself for easy reference).
+[arg_def "character(len=*), intent(in)" varname]
+The name of the variable to retrieve
+[arg_def "character(len=*)|real|integer|logical, intent(inout)" value]
+The value (if the variable exists) - it can be a string, (single
+precision) real, integer or logical.
 [list_end]
 
-
-
-
-
+[list_end]
 
 
 [section NOTES]
