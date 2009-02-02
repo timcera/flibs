@@ -7,6 +7,8 @@
 !     a fairly basic form of test coverage.
 !
 program testcov
+    use testcov_reg
+
     implicit none
 
     character(len=200) :: line
@@ -57,6 +59,7 @@ program testcov
         endif
 
         if ( line == 'MODE=report' ) then
+            call testcov_load
             report = .true.
             cycle
         endif
@@ -119,7 +122,7 @@ subroutine make_outname( inname, outname, report )
             k = len_trim(line) ! Highly unlikely ..
         endif
 
-        outname = inname(1:k) // '.lst'
+        outname = inname(1:k) // 'lst'
     else
         k = index( inname, slash(1:1), .true. )
         if ( k == 0 ) then
@@ -169,7 +172,7 @@ subroutine process_file( report )
         select case( codetype )
             case ( is_comment, is_declaration )
                 if ( report ) then
-                    write( 21, '(i8,a,a)' ) lineno, ': ', trim(line(1))
+                    write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
                 else
                     write( 21, '(a)' ) (trim(line(i)) ,i=1,nolines)
                 endif
@@ -178,7 +181,7 @@ subroutine process_file( report )
             case ( is_subprogram )
                 start_sub = .true.
                 if ( report ) then
-                    write( 21, '(i8,a,a)' ) lineno, ': ', trim(line(1))
+                    write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
                 else
                     write( 21, '(a)' ) (trim(line(i)) ,i=1,nolines)
                 endif
@@ -190,7 +193,7 @@ subroutine process_file( report )
                     call handle_start( line, lineno, nolines, codetype )
                 endif
                 if ( report ) then
-                    write( 21, '(i8,a,a)' ) lineno, ': ', trim(line(1))
+                    write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
                 else
                     write( 21, '(a)' ) (trim(line(i)) ,i=1,nolines)
                 endif
@@ -603,6 +606,9 @@ end subroutine handle_start
 !     nolines        Number of lines
 !     codetype       Class to which it belongs
 !
+! Note:
+!     FORTRAN 77 style do-loops not treated correctedly!
+!
 subroutine handle_do( line, lineno, nolines, codetype )
     character(len=*), dimension(:), intent(in)    :: line
     integer, intent(in)                           :: lineno
@@ -610,18 +616,45 @@ subroutine handle_do( line, lineno, nolines, codetype )
     integer, intent(in)                           :: codetype
 
     integer                                       :: i
+    integer, dimension(100), save                 :: do_start = 0
+    integer, save                                 :: do_level = 0
+    integer                                       :: count
+    integer                                       :: skipped
 
     if ( report ) then
-        ! TODO
+        if ( codetype == do_statement ) then
+            call testcov_get_count( inname, lineno, 1, count   )
+            call testcov_get_count( inname, lineno, 2, skipped )
+            write( 21, '(i8,a,a)' ) count, ': ', line(1)
+            if ( count == 0 ) then
+                write( 21, '(a8,a)'  ) '==> ', ': (do-loop never ran)'
+            endif
+            if ( skipped == 0 ) then
+                write( 21, '(a8,a)'  ) '==> ', &
+                    ': (do-loop never skipped, that is: always at least one iteration)'
+            endif
+            if ( nolines > 1 ) then
+                write( 21, '(10x,a)'  ) ( line(i), i = 2,nolines )
+            endif
+        else
+            write( 21, '(10x,a)'  ) ( line(i), i = 1,nolines )
+        endif
     else
         if ( codetype == do_statement ) then
+            do_level = do_level + 1
+            do_start(do_level) = lineno
             call write_line( (/ ' ' /), lineno, 1, inname, 2 )
             call write_line( line, lineno, nolines, inname, 1 )
         else
             !
             ! TODO: should be written with lineno belonging to DO
             !
-            call write_line( line, lineno, nolines, inname, 3 )
+            call write_line( line, do_start(do_level), nolines, inname, 3 )
+            do_level = do_level - 1
+
+            if ( do_level < 0 ) then
+                write(*,*) 'Error in handle_do: more enddo than dos!'
+            endif
         endif
     endif
 end subroutine handle_do
@@ -646,9 +679,47 @@ subroutine handle_if( line, lineno, nolines, codetype )
 
     logical, dimension(100), save                 :: has_else = .false.
     integer, save                                 :: if_level = 0
+    integer                                       :: count
+    integer                                       :: i
 
     if ( report ) then
-        ! TODO
+        select case (codetype)
+            case ( if_statement )
+                if_level = if_level + 1
+                has_else(if_level) = .false.
+                call testcov_get_count( inname, lineno, 1, count )
+                write( 21, '(i8,a,a)' ) count, ': ', line(1)
+                if ( count == 0 ) then
+                    write( 21, '(a8,a)'  ) '==> ', ': (if/elseif condition was never true)'
+                endif
+                if ( nolines > 1 ) then
+                    write( 21, '(10x,a)'  ) ( line(i), i = 2,nolines )
+                endif
+
+            case ( else_statement )
+                has_else(if_level) = .true.
+                call testcov_get_count( inname, lineno, 1, count )
+                write( 21, '(i8,a,a)' ) count, ': ', line(1)
+                if ( count == 0 ) then
+                    write( 21, '(a8,a)'  ) '==> ', ': (else condition was never true)'
+                endif
+                if ( nolines > 1 ) then
+                    write( 21, '(10x,a)'  ) ( line(i), i = 2,nolines )
+                endif
+
+            case ( endif_statement )
+                write( 21, '(10x,a)'  ) ( line(i), i = 1,nolines )
+                if ( .not. has_else(if_level) ) then
+                    call testcov_get_count( inname, lineno, 2, count )
+                    if ( count > 0 ) then
+                        write( 21, '(i8,a,a)' ) count, ': (if condition false)'
+                    else
+                        write( 21, '(a8,a)' )   '==> ', ': (if condition always true ==> implicit else did not occur)'
+                    endif
+                endif
+                if_level = if_level - 1
+
+        end select
     else
         !
         ! TODO: if-statements instead of blocks
@@ -699,9 +770,55 @@ subroutine handle_case( line, lineno, nolines, codetype )
     logical, dimension(100), save                 :: has_default = .false.
     integer, save                                 :: select_level = 0
     integer                                       :: i
+    integer                                       :: count
 
     if ( report ) then
-        ! TODO
+        call testcov_get_count( inname, lineno, 1, count )
+        select case (codetype)
+            case ( select_statement )
+                select_level = select_level + 1
+                write( 21, '(10x,a)'  ) ( line(i), i = 1,nolines )
+
+            case ( case_statement )
+                write( 21, '(i8,a,a)' ) count, ': ', line(1)
+                if ( count == 0 ) then
+                    write( 21, '(a8,a)'  ) '==> ', ': (case never occurred)'
+                endif
+                if ( nolines > 1 ) then
+                    write( 21, '(10x,a)'  ) ( line(i), i = 2,nolines )
+                endif
+
+            case ( casedefault_statement )
+                has_default(select_level) = .true.
+                write( 21, '(i8,a,a)' ) count, ': ', line(1)
+                if ( count == 0 ) then
+                    write( 21, '(a8,a)'  ) '==> ', ': (default case never occurred)'
+                endif
+                if ( nolines > 1 ) then
+                    write( 21, '(10x,a)'  ) ( line(i), i = 2,nolines )
+                endif
+
+            case ( endselect_statement )
+                call testcov_get_count( inname, lineno, 2, count )
+                write( 21, '(i8,a,a)'  ) count, ': ', line(1)
+                if ( nolines > 1 ) then
+                    write( 21, '(10x,a)'  ) ( line(i), i = 2,nolines )
+                endif
+                if ( .not. has_default(select_level) ) then
+                    if ( count == 0 ) then
+                        write( 21, '(a8,a)'  ) '==> ', ': (implicit default case never occurred)'
+                    endif
+                endif
+                select_level = select_level - 1
+
+                if ( select_level < 0 ) then
+                    write(21,*) 'Error in handle_case: more endselects than selects!'
+                    write(*,*) 'Error in handle_case: more endselects than selects!'
+                endif
+
+            case default
+                write(*,*) 'Programming error in handle_select - unknown case'
+        endselect
     else
         !
         ! TODO: if-statements instead of blocks

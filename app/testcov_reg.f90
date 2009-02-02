@@ -59,7 +59,11 @@ subroutine testcov_dump
     integer :: lu
     integer :: records
 
+    integer :: ierr
+
     logical :: opend
+
+    integer :: j
 
     do i = 10,99
         inquire( unit = i, opened = opend )
@@ -69,16 +73,51 @@ subroutine testcov_dump
         endif
     enddo
 
-    open( lu, file = 'testcov.data', form = 'unformatted' )
-    write( lu ) records
+    write(*,*) 'testcov-dump:',lu, size(coverage)
 
-    do i = 1,records
+    open( lu, file = 'testcov.data', form = 'unformatted', iostat = ierr )
+    write(*,*) 'testcov-dump: error ',ierr
+    write( lu ) size(coverage)
+
+    do i = 1,size(coverage)
+    write(*,*) 'testcov-dump: record ',i, coverage(i)%count
         write( lu ) coverage(i)%filename, size(coverage(i)%count)
         write( lu ) coverage(i)%count
+
+        do j = 1,size(coverage(i)%count)/3
+            write( *,'(i5,a,3i5)' ) j,':', coverage(i)%count(3*j-2),&
+                coverage(i)%count(3*j-1), coverage(i)%count(3*j)
+        enddo
     enddo
     close( lu )
 
 end subroutine testcov_dump
+
+! testcov_get_count
+!     Get the count for the given file, record and type
+!
+! Arguments:
+!     filename          Name of the source file
+!     lineno            Line number in the source file
+!     type              Type of count
+!     count             Count value
+!
+subroutine testcov_get_count( filename, lineno, type, count )
+    character(len=*), intent(in)   :: filename
+    integer, intent(in)            :: lineno
+    integer, intent(in)            :: type
+    integer, intent(out)           :: count
+
+    integer                        :: idx
+
+    integer :: i
+
+    call testcov_make_available( filename, lineno, idx )
+
+    write(*,*) 'get_count: ', idx, lineno, (coverage(idx)%count(3*lineno+i), i=-3,0)
+    count = coverage(idx)%count(3*lineno-2+type)
+
+end subroutine testcov_get_count
 
 ! testcov_make_available
 !     Make a record and the line entry available
@@ -99,6 +138,8 @@ subroutine testcov_make_available( filename, lineno, idx )
     type(data_per_file), dimension(:), pointer :: newcoverage
 
     integer, save                  :: old_index = -1
+    integer                        :: firstidx
+    integer                        :: lastidx
 
     if ( .not. associated(coverage) ) then
         allocate( coverage(0) )
@@ -107,17 +148,20 @@ subroutine testcov_make_available( filename, lineno, idx )
     !
     ! Cached index may apply
     !
+    firstidx = 1
+    lastidx  = size(coverage)
+
     if ( old_index > 0 ) then
         if ( coverage(old_index)%filename == filename ) then
-            idx = old_index
-            return
+            firstidx = old_index
+            lastidx = old_index
         endif
     endif
 
     !
     ! Does the record already exist? If so, check the size
     !
-    do i = 1,size(coverage)
+    do i = firstidx, lastidx
         if ( coverage(i)%filename == filename ) then
             if ( size(coverage(i)%count) < 3*lineno ) then
                 oldsize = size(coverage(i)%count)
@@ -183,16 +227,18 @@ subroutine testcov_register__( filename, lineno, type )
 
     call testcov_make_available( filename, lineno, idx )
 
+    write(*,*) 'testcov: ', type
     select case( type )
         case( 0 ) ! Dump the results
+    write(*,*) 'testcov: dump'
             call testcov_dump
 
         case( 1 ) ! Normal case
+            coverage(idx)%count(3*lineno-2) = 1
             coverage(idx)%count(3*lineno-1) = coverage(idx)%count(3*lineno-1) + 1
 
         case( 2 ) ! Prepare do-loop
             coverage(idx)%count(3*lineno-2) = 0 ! "local" counter
-            coverage(idx)%count(3*lineno-1) = coverage(idx)%count(3*lineno-2) + 1
 
         case( 3 ) ! End of do-loop
             if ( coverage(idx)%count(3*lineno-2) == 0 ) then
