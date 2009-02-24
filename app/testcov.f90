@@ -632,7 +632,7 @@ subroutine handle_start( line, lineno, nolines, codetype )
             call write_line( (/ ' ' /), lineno, 1, inname, 1 )
         endif
         if ( codetype == is_endprogram .or. codetype == is_endsubprogram ) then
-            write( 21, '(a)' ) '      call testcov_dump__'
+            write( 21, '(a)' ) '      call testcov_register__("",0,0)'
             write( 21, '(a)' ) ( trim(line(i)), i = 1,nolines )
         endif
     endif

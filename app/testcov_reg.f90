@@ -80,10 +80,10 @@ subroutine testcov_dump
         write( lu ) coverage(i)%filename, size(coverage(i)%count)
         write( lu ) coverage(i)%count
 
-        do j = 1,size(coverage(i)%count)/3
-            write( *,'(i5,a,3i5)' ) j,':', coverage(i)%count(3*j-2),&
-                coverage(i)%count(3*j-1), coverage(i)%count(3*j)
-        enddo
+        !do j = 1,size(coverage(i)%count)/3
+        !    write( *,'(i5,a,3i5)' ) j,':', coverage(i)%count(3*j-2),&
+        !        coverage(i)%count(3*j-1), coverage(i)%count(3*j)
+        !enddo
     enddo
     close( lu )
 
@@ -246,15 +246,3 @@ subroutine testcov_register__( filename, lineno, type )
             coverage(idx)%count(3*lineno) = coverage(idx)%count(3*lineno) + 1
     end select
 end subroutine
-
-! testcov_dump__ --
-!     Dump the test coverage information
-!
-! Arguments:
-!     None
-!
-subroutine testcov_dump__
-    use testcov_reg
-
-    call testcov_dump
-end subroutine testcov_dump__
