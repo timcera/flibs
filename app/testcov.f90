@@ -26,20 +26,22 @@ program testcov
     integer, parameter :: is_declaration        = 2
     integer, parameter :: is_other              = 3
     integer, parameter :: is_endsubprogram      = 4
-    integer, parameter :: is_subprogram         = 5
-    integer, parameter :: if_statement          = 6
-    integer, parameter :: else_statement        = 7
-    integer, parameter :: endif_statement       = 8
-    integer, parameter :: do_statement          = 9
-    integer, parameter :: cycle_statement       = 10
-    integer, parameter :: exit_statement        = 11
-    integer, parameter :: enddo_statement       = 12
-    integer, parameter :: select_statement      = 13
-    integer, parameter :: case_statement        = 14
-    integer, parameter :: casedefault_statement = 15
-    integer, parameter :: endselect_statement   = 16
-    integer, parameter :: goto_statement        = 17
-    integer, parameter :: continue_statement    = 18
+    integer, parameter :: is_endprogram         = 5
+    integer, parameter :: is_subprogram         = 6
+    integer, parameter :: is_program            = 7
+    integer, parameter :: if_statement          = 8
+    integer, parameter :: else_statement        = 9
+    integer, parameter :: endif_statement       = 10
+    integer, parameter :: do_statement          = 11
+    integer, parameter :: cycle_statement       = 12
+    integer, parameter :: exit_statement        = 13
+    integer, parameter :: enddo_statement       = 14
+    integer, parameter :: select_statement      = 15
+    integer, parameter :: case_statement        = 16
+    integer, parameter :: casedefault_statement = 17
+    integer, parameter :: endselect_statement   = 18
+    integer, parameter :: goto_statement        = 19
+    integer, parameter :: continue_statement    = 20
 
 
     open( 10, file = 'testcov.inp', status = 'old' )
@@ -148,13 +150,15 @@ subroutine process_file( report )
     character(len=200), dimension(40) :: line
 
     logical                        :: start_sub
+    logical                        :: start_program
     integer                        :: lineno
     integer                        :: codetype
     integer                        :: nolines
     integer                        :: i
 
-    lineno    = 0
-    start_sub = .false.
+    lineno        = 0
+    start_sub     = .false.
+    start_program = .true.    ! The case of a missing program statement!
     do
         !
         ! TODO: continuation lines!
@@ -178,7 +182,10 @@ subroutine process_file( report )
                 endif
                 cycle
 
-            case ( is_subprogram )
+            case ( is_subprogram, is_program )
+                if ( codetype == is_program ) then
+                    start_program = .true.
+                endif
                 start_sub = .true.
                 if ( report ) then
                     write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
@@ -187,15 +194,29 @@ subroutine process_file( report )
                 endif
                 cycle
 
+            case ( is_endprogram, is_endsubprogram )
+                if ( start_program ) then
+                    start_program = .false.
+                    call handle_start( line, lineno, nolines, codetype )
+                else
+                    if ( report ) then
+                        write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
+                    else
+                        write( 21, '(a)' ) (trim(line(i)) ,i=1,nolines)
+                    endif
+                endif
+                cycle
+
             case ( is_other )
                 if ( start_sub ) then
                     start_sub = .false.
                     call handle_start( line, lineno, nolines, codetype )
-                endif
-                if ( report ) then
-                    write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
                 else
-                    write( 21, '(a)' ) (trim(line(i)) ,i=1,nolines)
+                    if ( report ) then
+                        write( 21, '(10x,a)' ) (trim(line(i)) ,i=1,nolines)
+                    else
+                        write( 21, '(a)' ) (trim(line(i)) ,i=1,nolines)
+                    endif
                 endif
                 cycle
 
@@ -357,26 +378,28 @@ subroutine classify_line( line, codetype )
     character(len=20)               :: keyword
 
     integer, dimension(10)          :: subprogram_type = &
-    (/ is_endsubprogram, is_endsubprogram, &
-       is_endsubprogram, is_endsubprogram, &
+    (/ is_endsubprogram, is_endprogram, &
+       is_endprogram, is_endsubprogram, &
        is_endsubprogram, is_endsubprogram, &
        is_endsubprogram, &
-       is_subprogram, is_subprogram, is_subprogram /)
+       is_program, is_subprogram, is_subprogram /)
     character(len=20), dimension(10) :: subprogram_keyword = &
     (/ 'contains', 'end program', 'endprogram', 'end subroutine', &
        'endsubroutine', 'end function', 'endfunction', &
        'program', 'subroutine', 'function' /)
 
-    integer, dimension(14)           :: control_type = &
+    ! Note: "end" is treated here, as we need to check the entire line
+
+    integer, dimension(15)           :: control_type = &
     (/ do_statement, enddo_statement, enddo_statement, &
        if_statement, else_statement, if_statement, if_statement, &
        endif_statement, endif_statement, &
        select_statement, endselect_statement, endselect_statement, &
-       casedefault_statement, case_statement /)
-    character(len=20), dimension(14) :: control_keyword = &
+       casedefault_statement, case_statement, is_endsubprogram /)
+    character(len=20), dimension(15) :: control_keyword = &
     (/ '$do', '%enddo', '%end do', '#if', '@else', '#elseif', '#else if', &
        '%endif', '%end if', '#select case', '%endselect', '%end select',  &
-       '@case default', '#case' /)
+       '@case default', '#case', '@end' /)
 
     character(len=20), dimension(71) :: declare_keyword = &
     (/ '#real::',     '#real ::',     '#real,',     '#real ,',     '#real(',     '#real (',     '%real',     &
@@ -584,8 +607,22 @@ subroutine handle_start( line, lineno, nolines, codetype )
     integer, intent(in)                           :: nolines
     integer, intent(in)                           :: codetype
 
+    integer                                       :: count
+    integer                                       :: i
+
     if ( report ) then
-        ! TODO
+        if ( codetype == is_endprogram .or. codetype == is_endsubprogram ) then
+            write( 21, '(10x,a)' ) trim(line(1))
+        else
+            call testcov_get_count( inname, lineno, 1, count )
+            write( 21, '(i8,a,a)' ) count, ': ', trim(line(1))
+            if ( count == 0 ) then
+                 write( 21, '(a8,a)'  ) '==> ', ': (subroutine/function never called)'
+             endif
+             if ( nolines > 1 ) then
+                 write( 21, '(10x,a)'  ) ( trim(line(i)), i = 2,nolines )
+             endif
+         endif
     else
         !
         ! If the routine starts with an IF or DO or SELECT, then
@@ -593,6 +630,10 @@ subroutine handle_start( line, lineno, nolines, codetype )
         !
         if ( codetype == is_other ) then
             call write_line( (/ ' ' /), lineno, 1, inname, 1 )
+        endif
+        if ( codetype == is_endprogram .or. codetype == is_endsubprogram ) then
+            write( 21, '(a)' ) '      call testcov_dump__'
+            write( 21, '(a)' ) ( trim(line(i)), i = 1,nolines )
         endif
     endif
 end subroutine handle_start

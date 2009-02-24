@@ -73,14 +73,10 @@ subroutine testcov_dump
         endif
     enddo
 
-    write(*,*) 'testcov-dump:',lu, size(coverage)
-
     open( lu, file = 'testcov.data', form = 'unformatted', iostat = ierr )
-    write(*,*) 'testcov-dump: error ',ierr
     write( lu ) size(coverage)
 
     do i = 1,size(coverage)
-    write(*,*) 'testcov-dump: record ',i, coverage(i)%count
         write( lu ) coverage(i)%filename, size(coverage(i)%count)
         write( lu ) coverage(i)%count
 
@@ -114,7 +110,6 @@ subroutine testcov_get_count( filename, lineno, type, count )
 
     call testcov_make_available( filename, lineno, idx )
 
-    write(*,*) 'get_count: ', idx, lineno, (coverage(idx)%count(3*lineno+i), i=-3,0)
     count = coverage(idx)%count(3*lineno-2+type)
 
 end subroutine testcov_get_count
@@ -202,6 +197,10 @@ end subroutine testcov_make_available
 
 end module
 
+! Public routines - outside of any module, so that we do not need
+! to add a USE statement
+!
+
 ! testcov_register__ --
 !     Register the test coverage in an instrumented program
 !
@@ -227,10 +226,8 @@ subroutine testcov_register__( filename, lineno, type )
 
     call testcov_make_available( filename, lineno, idx )
 
-    write(*,*) 'testcov: ', type
     select case( type )
         case( 0 ) ! Dump the results
-    write(*,*) 'testcov: dump'
             call testcov_dump
 
         case( 1 ) ! Normal case
@@ -249,3 +246,15 @@ subroutine testcov_register__( filename, lineno, type )
             coverage(idx)%count(3*lineno) = coverage(idx)%count(3*lineno) + 1
     end select
 end subroutine
+
+! testcov_dump__ --
+!     Dump the test coverage information
+!
+! Arguments:
+!     None
+!
+subroutine testcov_dump__
+    use testcov_reg
+
+    call testcov_dump
+end subroutine testcov_dump__
