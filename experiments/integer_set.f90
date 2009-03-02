@@ -25,6 +25,8 @@ module integer_sets
     type INTEGER_PAIR_SET
         type(INTEGER_RELATION)         :: relation
         integer, dimension(:), pointer :: cached
+        type(INTEGER_OPERAND), pointer :: first
+        type(INTEGER_OPERAND), pointer :: second
     end type INTEGER_PAIR_SET
 
     type INTEGER_RANGE
@@ -32,9 +34,6 @@ module integer_sets
         integer                        :: min_value
         integer                        :: max_value
     end type INTEGER_RANGE
-
-    type(INTEGER_OPERAND)              :: x
-    type(INTEGER_OPERAND)              :: y
 
     interface assignment(=)
         module procedure integer_set_value
@@ -64,21 +63,24 @@ module integer_sets
 contains
 
 function create_pair_set( relation, xin, yin ) result(set)
-    type(INTEGER_RELATION), intent(in) :: relation
-    type(INTEGER_RANGE),    intent(in) :: xin
-    type(INTEGER_RANGE),    intent(in) :: yin
-    type(INTEGER_PAIR_SET)             :: set
+    type(INTEGER_RELATION), intent(in)         :: relation
+    type(INTEGER_RANGE),    intent(in)         :: xin
+    type(INTEGER_RANGE),    intent(in)         :: yin
+    type(INTEGER_PAIR_SET)                     :: set
 
-    integer, dimension(:), pointer     :: values
-    integer, dimension(:), pointer     :: new_values
-    integer                            :: i
-    integer                            :: j
-    integer                            :: k
-    type(INTEGER_RANGE)                :: xrange
-    type(INTEGER_RANGE)                :: yrange
+    integer, dimension(:), pointer             :: values
+    integer, dimension(:), pointer             :: new_values
+    integer                                    :: i
+    integer                                    :: j
+    integer                                    :: k
+    type(INTEGER_RANGE)                        :: xrange
+    type(INTEGER_RANGE)                        :: yrange
 
     xrange = xin
     yrange = yin
+
+    set%first  => xrange%value
+    set%second => yrange%value
 
     allocate( values(2*(1+xrange%max_value-xrange%min_value)) )
 
@@ -107,6 +109,7 @@ function create_pair_set( relation, xin, yin ) result(set)
     !
     ! Store it all in a suitable array
     !
+    set%relation = relation
     allocate( new_values(2*k) )
     new_values = values(1:2*k)
     deallocate( values )
@@ -126,6 +129,17 @@ integer function number_elements( set )
 
     number_elements = size(set%cached)/2
 end function number_elements
+
+logical function has_element( set, pair )
+    type(INTEGER_PAIR_SET), intent(inout) :: set
+    integer, dimension(:),  intent(in)    :: pair
+
+    set%first  = pair(1)
+    set%second = pair(2)
+
+    has_element = integer_relation_eval(set%relation)
+
+end function has_element
 
 function range( operand, min_value, max_value )
     type(INTEGER_OPERAND), target      :: operand
@@ -332,12 +346,14 @@ end module integer_sets
 program test_sets
     use integer_sets
 
+    type(INTEGER_OPERAND), target   :: x
+    type(INTEGER_OPERAND), target   :: y
+
     type(INTEGER_RELATION), pointer :: relation
-    type(INTEGER_PAIR_SET)               :: set
+    type(INTEGER_PAIR_SET)          :: set
     integer, dimension(2)           :: values
 
     relation => x + y == 0
-!   relation => integer_equal_v( integer_add(x,y), 0 )
 
     x = 1
     y = -1
@@ -366,4 +382,15 @@ program test_sets
         values = pair(set, i)
         write(*, '(i4,'': ('',i0,'','',i0,'')'')' ) i, values
     enddo
+
+!
+! Yet another one: to show that the relationship persists
+!
+    write(*,*) 'Does the set {(x,y) | y**2 = 3*x**2 + 1} contain (1,2) or (3,3)?'
+
+    set = create_pair_set( y**2 == 3*x**2 + 1, range(x, 0, 0), &
+                                               range(y, 0, 0)  )
+
+    write(*,*) '(1,2) in this set? ', has_element(set, (/1,2/))
+    write(*,*) '(3,3) in this set? ', has_element(set, (/3,3/))
 end program
