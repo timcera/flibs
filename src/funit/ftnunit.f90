@@ -15,6 +15,11 @@
 !     runtests.sh
 !     runtests.tcl
 !
+!     TODO:
+!     - Get the number of runs right
+!     - Get the logic for the first and last tests right
+!     - Stylesheet
+!
 !     $Id$
 !
 module ftnunit
@@ -25,6 +30,10 @@ module ftnunit
     integer, private, save :: nofails             ! Number of assertions that failed
     integer, private, save :: noruns              ! Number of runs so far
     logical, private, save :: call_final = .true. ! Call runtests_final implicitly?
+    logical, private, save :: previous   = .false.! Previous test run?
+    integer, private, save :: failed_asserts = 0
+    character(len=20), private, save :: html_file = 'ftnunit.html'
+
 
     interface assert_equal
         module procedure assert_equal_int
@@ -64,13 +73,14 @@ subroutine test( proc, text )
     !
     call ftnunit_get_lun( lun )
     open( lun, file = 'ftnunit.lst' )
-    write( lun, * ) testno, nofails, noruns
+    write( lun, * ) testno, nofails, noruns, ' ', .true.
     close( lun )
 
     !
     ! Run the test
     !
     write( *, '(2a)' ) 'Test: ', trim(text)
+    call ftnunit_write_html_test_begin( text )
 
     call proc
 
@@ -78,9 +88,10 @@ subroutine test( proc, text )
     ! No runtime error or premature end of
     ! the program ...
     !
+    previous = .true.
     call ftnunit_get_lun( lun )
     open( lun, file = 'ftnunit.lst' )
-    write( lun, * ) testno, nofails, noruns
+    write( lun, * ) testno, nofails, noruns, ' ', .true.
     close( lun )
 
 end subroutine test
@@ -97,6 +108,10 @@ end subroutine test
 !
 subroutine runtests_init
     call_final = .false.
+
+    if ( .not. ftnunit_file_exists("ftnunit.lst") ) then
+        call ftnunit_write_html_header
+    endif
 end subroutine
 
 ! runtests_final --
@@ -111,9 +126,11 @@ end subroutine
 !
 subroutine runtests_final
     if ( ftnunit_file_exists("ftnunit.run") ) then
+        noruns = max( 1, noruns - 1 )
         write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
         write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
         call ftnunit_remove_file( "ftnunit.lst" )
+        call ftnunit_write_html_footer
         stop
     endif
 end subroutine
@@ -136,23 +153,31 @@ subroutine runtests( testproc )
     nofails   = 0
     noruns    = 0
     testno    = 0
+    previous  = .false.
 
     if ( ftnunit_file_exists("ftnunit.run") ) then
         if ( ftnunit_file_exists("ftnunit.lst") ) then
             call ftnunit_get_lun( lun )
             open( lun, file = "ftnunit.lst", iostat = ierr )
             if ( ierr == 0 ) then
-                read( lun, *, iostat = ierr ) last_test, nofails, noruns
+                read( lun, *, iostat = ierr ) last_test, nofails, noruns, previous
                 if ( ierr /= 0 ) then
                     last_test = 0
                     nofails   = 0
                     noruns    = 0
+                    previous  = .false.
                 endif
                 close( lun )
+            endif
+            if ( previous ) then
+                call ftnunit_write_html_previous_failed
             endif
         endif
 
         noruns = noruns + 1
+        if ( noruns == 1 .and. call_final ) then
+            call ftnunit_write_html_header
+        endif
 
         call testproc
 
@@ -181,6 +206,7 @@ subroutine assert_true( cond, text )
         nofails = nofails + 1
         write(*,*) '    Condition "',trim(text), '" failed'
         write(*,*) '    It should have been true'
+        call ftnunit_write_html_failed_logic( text, .true. )
     endif
 end subroutine assert_true
 
@@ -201,6 +227,7 @@ subroutine assert_false( cond, text )
         nofails = nofails + 1
         write(*,*) '    Condition "',trim(text), '" failed'
         write(*,*) '    It should have been false'
+        call ftnunit_write_html_failed_logic( text, .false. )
     endif
 end subroutine assert_false
 
@@ -223,6 +250,7 @@ subroutine assert_equal_int( value1, value2, text )
         nofails = nofails + 1
         write(*,*) '    Values not equal: "',trim(text), '" - assertion failed'
         write(*,*) '    Values: ', value1, ' and ', value2
+        call ftnunit_write_html_failed_int( text, value1, value2 )
     endif
 end subroutine assert_equal_int
 
@@ -258,6 +286,8 @@ subroutine assert_equal_int1d( array1, array2, text )
                     write(*,'(3a10)')    '    Index', '     First', '    Second'
                     if ( count < 50 ) then
                         write(*,'(3i10)')    i, array1(i), array2(i)
+                        call ftnunit_write_html_failed_int1d( &
+                            text, i, array1(i), array2(i) )
                     endif
                     write(*,*) 'Number of differences: ', count
                 endif
@@ -287,10 +317,11 @@ subroutine assert_comparable_real( value1, value2, margin, text )
         nofails = nofails + 1
         write(*,*) '    Values not comparable: "',trim(text), '" - assertion failed'
         write(*,*) '    Values: ', value1, ' and ', value2
+        call ftnunit_write_html_failed_real( text, value1, value2 )
     endif
 end subroutine assert_comparable_real
 
-! assert_compatable_real1d --
+! assert_comparable_real1d --
 !     Subroutine to check if two real arrays are comparable
 ! Arguments:
 !     array1        First array
@@ -324,6 +355,8 @@ subroutine assert_comparable_real1d( array1, array2, margin, text )
                     write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
                     if ( count < 50 ) then
                         write(*,'(i10,e15.5)')    i, array1(i), array2(i)
+                        call ftnunit_write_html_failed_real1d( &
+                            text, i, array1(i), array2(i) )
                     endif
                     write(*,*) 'Number of differences: ', count
                 endif
@@ -393,7 +426,7 @@ subroutine ftnunit_remove_file( filename )
     else
         close( lun, status = 'delete' )
         if ( ftnunit_file_exists( filename ) ) then
-            write(*,*) '    Removal of file unsuccssful: ', trim(filename)
+            write(*,*) '    Removal of file unsuccessful: ', trim(filename)
             nofails = nofails + 1
         endif
     endif
@@ -424,5 +457,284 @@ subroutine ftnunit_make_empty_file( filename )
     endif
 
 end subroutine ftnunit_make_empty_file
+
+! ftnunit_write_html_header --
+!     Auxiliary subroutine to write the header of the HTML file
+! Arguments:
+!     None
+!
+subroutine ftnunit_write_html_header
+    integer :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file )
+    write( lun, '(a)' ) &
+        '<html>', &
+        '<header>', &
+        '<title>Results of unit tests</title>', &
+        '</header>', &
+        '<body>', &
+        '<table border="no">'
+    close( lun )
+
+end subroutine ftnunit_write_html_header
+
+! ftnunit_write_html_footer --
+!     Auxiliary subroutine to write the footer of the HTML file
+! Arguments:
+!     None
+!
+subroutine ftnunit_write_html_footer
+    integer :: lun
+
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '</tr>',    &
+        '</table>'
+    write( lun,'(a,i5)') '<p>Number of failed assertions: ', nofails
+    write( lun,'(a,i5)') '<br>Number of runs needed to complete the tests:', noruns
+    write( lun, '(a)' ) &
+        '</body>',  &
+        '</html>'
+    close( lun )
+
+end subroutine ftnunit_write_html_footer
+
+! ftnunit_write_html_test_begin --
+!     Auxiliary subroutine to write the test text to the HTML file
+! Arguments:
+!     text         Description of the test
+!
+subroutine ftnunit_write_html_test_begin( text )
+    character(len=*)  :: text
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    write(*,*) 'test begin: ', previous
+    if ( previous ) then
+        if ( failed_asserts == 0 ) then
+            write( lun, '(a)' ) &
+                '<td>OK</td></tr>'
+        else
+            write( lun, '(a)' ) &
+                '</tr>'
+        endif
+    endif
+
+    failed_asserts = 0
+
+    write( lun, '(a)' ) &
+        '<tr>', &
+        '<td>', trim(text), '</td>'
+    close( lun )
+
+    previous = .true.
+
+end subroutine ftnunit_write_html_test_begin
+
+! ftnunit_write_html_previous_failed --
+!     Auxiliary subroutine to write the closing of the failed test
+!     from the previous run to the HTML file
+! Arguments:
+!     None
+!
+! Note:
+!     Apparently the test caused a run-time error, so most probably no
+!     assertions were checked.
+!
+subroutine ftnunit_write_html_previous_failed
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    write( lun, '(a)' ) &
+        '<td>Crashed</td></tr>', &
+        '<tr><td>Run-time failure: check the log file</td></tr>'
+
+    close( lun )
+
+    failed_asserts = 1 ! Implicit assertion failed that the test will complete
+
+end subroutine ftnunit_write_html_previous_failed
+
+! ftnunit_write_html_close_row --
+!     Auxiliary subroutine to write the closing of a row to the HTML file
+! Arguments:
+!     lun          LU-number for the HTML file
+!
+subroutine ftnunit_write_html_close_row( lun )
+    integer           :: lun
+
+    if ( failed_asserts > 0 ) then
+        if ( failed_asserts == 1 ) then
+            write( lun, '(a)' ) &
+                '<td>Failed</td>'
+        endif
+        write( lun, '(a)' ) &
+            '</tr><tr><td></td>'
+    endif
+end subroutine ftnunit_write_html_close_row
+
+! ftnunit_write_html_failed_logic --
+!     Auxiliary subroutine to write a failed logic assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     expected     Expected value
+!
+subroutine ftnunit_write_html_failed_logic( text, expected )
+    character(len=*)  :: text
+    logical           :: expected
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td>', trim(text), '</td>', &
+        '<td>Value should have been "', trim(merge("true ", "false", expected)), '"</td>'
+    close( lun )
+
+    failed_asserts = failed_asserts + 1
+
+end subroutine ftnunit_write_html_failed_logic
+
+! ftnunit_write_html_failed_int --
+!     Auxiliary subroutine to write a failed integer assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     value1       First value
+!     value2       Second value
+!
+subroutine ftnunit_write_html_failed_int( text, value1, value2 )
+    character(len=*)  :: text
+    integer           :: value1
+    integer           :: value2
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td>', trim(text), '</td>', &
+        '<td>Values: '
+    write( lun, '(a,i0,a,i0,a)' ) &
+        value1, ' -- ', value2, '</td>'
+    close( lun )
+
+    failed_asserts = failed_asserts + 1
+
+end subroutine ftnunit_write_html_failed_int
+
+! ftnunit_write_html_failed_int1d --
+!     Auxiliary subroutine to write a failed integer assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     idx          Index
+!     value1       First value
+!     value2       Second value
+!
+subroutine ftnunit_write_html_failed_int1d( text, idx, value1, value2 )
+    character(len=*)  :: text
+    integer           :: idx
+    integer           :: value1
+    integer           :: value2
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td>', trim(text), '</td>', &
+        '<td>Values at index: '
+    write( lun, '(i0,a,i0,a,i0,a)' ) &
+        idx, ':', &
+        value1, ' -- ', value2, '</td>'
+    close( lun )
+
+    failed_asserts = failed_asserts + 1
+
+end subroutine ftnunit_write_html_failed_int1d
+
+! ftnunit_write_html_failed_real --
+!     Auxiliary subroutine to write a failed real assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     value1       First value
+!     value2       Second value
+!
+subroutine ftnunit_write_html_failed_real( text, value1, value2 )
+    character(len=*)  :: text
+    real              :: value1
+    real              :: value2
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td>', trim(text), '</td>', &
+        '<td>Values: '
+    write( lun, '(a,e15.7,a,e15.7,a)' ) &
+        value1, ' -- ', value2, '</td>'
+    close( lun )
+
+    failed_asserts = failed_asserts + 1
+
+end subroutine ftnunit_write_html_failed_real
+
+! ftnunit_write_html_failed_real1d --
+!     Auxiliary subroutine to write a failed integer assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     idx          Index
+!     value1       First value
+!     value2       Second value
+!
+subroutine ftnunit_write_html_failed_real1d( text, idx, value1, value2 )
+    character(len=*)  :: text
+    integer           :: idx
+    real              :: value1
+    real              :: value2
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td>', trim(text), '</td>', &
+        '<td>Values at index: '
+    write( lun, '(i0,a,e15.7,a,e15.7,a)' ) &
+        idx, ':', &
+        value1, ' -- ', value2, '</td>'
+    close( lun )
+
+    failed_asserts = failed_asserts + 1
+
+end subroutine ftnunit_write_html_failed_real1d
 
 end module ftnunit
