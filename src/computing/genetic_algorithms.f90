@@ -160,7 +160,7 @@ subroutine random_index( maxidx, idx )
     real(wp)                                  :: y
 
     call random_number( y )
-    idx = min( 1 + maxidx * y, maxidx )
+    idx = min( 1 + int(maxidx * y), maxidx )
 
 end subroutine random_index
 

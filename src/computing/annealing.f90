@@ -112,7 +112,7 @@ subroutine determine_new_vector( range, x, idx, oldx )
     real(wp)                                  :: y
 
     call random_number( y )
-    idx = min( 1 + size(x) * y, size(x) )
+    idx = min( 1 + int(size(x) * y), size(x) )
     oldx = x(idx)
 
     call random_number( y )
