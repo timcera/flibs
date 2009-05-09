@@ -76,10 +76,11 @@ program test_dict
     call dict_add_key( dict, "Piano2", data )
     call dict_add_key( dict, "Piano-forte is long ", data )
     !                         12345678901234567890
-    write(*,*) 'Has key "Piano"? ', dict_has_key(dict, 'Piano' )
-    write(*,*) 'Has key "Piano2"? ', dict_has_key(dict, 'Piano2' )
+    write(*,*) 'Has key "Piano"? ', dict_has_key(dict, 'Piano')
+    write(*,*) 'Has key "Piano2"? ', dict_has_key(dict, 'Piano2')
     write(*,*) 'Has key "Piano-forte is long "? ', &
-        dict_has_key(dict, 'Piano-forte is long ' )
+        dict_has_key(dict, 'Piano-forte is long ')
+    write(*,*) 'Has key "Flute"? ', dict_has_key(dict, 'Flute')
     !
     ! Destroy the dictionary
     !
