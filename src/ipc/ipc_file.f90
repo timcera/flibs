@@ -5,7 +5,7 @@
 !     Module for IPC via file I/O
 !
 ! NOTES:
-!     Start in separet DOS-boxes
+!     Start in separate DOS-boxes
 !     Order of starting important - right now!
 !
 module ipc_file
