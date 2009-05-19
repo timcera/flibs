@@ -12,6 +12,9 @@
 
 #ifndef LINUX
 #include <windows.h>
+
+#define FTNCALL __stdcall
+
 #else
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -19,6 +22,8 @@
 #define caddr_t void *
 
 typedef int HANDLE;
+
+#define FTNCALL
 
 #endif
 
@@ -35,7 +40,8 @@ typedef struct _CommStruct {
     char    dest[21];
 } CommStruct;
 
-static CommStruct *comm;
+static CommStruct *comm = NULL;
+static int noConnects = 0;
 
 /* fsleep --
        Sleep for a while - Fortran interface
@@ -75,10 +81,10 @@ void FTNCALL ipc_start_c(
     int *maxsize,
     int *id
 #ifndef INBETWEEN
-   ,int len_src,
+   ,int len_src
    ,int len_dest
 #endif
-    )
+    ) {
 
 #ifndef LINUX
     HANDLE hfile;
@@ -99,10 +105,15 @@ void FTNCALL ipc_start_c(
 
     if ( !found ) {
         *id = 0;
-        comm = (CommStruct *) alloc( 1 * sizeof(CommStruct) );
-        strcpy( comm[*id]->src,  src  );
-        strcpy( comm[*id]->dest, dest );
-        comm[*id]->maxsize = *maxsize;
+        noConnects ++;
+        if ( comm == NULL ) {
+            comm = (CommStruct *) malloc( noConnects * sizeof(CommStruct) );
+        } else {
+            comm = (CommStruct *) realloc( comm, noConnects * sizeof(CommStruct) );
+        }
+        strcpy( comm[*id].src,  src  );
+        strcpy( comm[*id].dest, dest );
+        comm[*id].maxsize = *maxsize;
 
         /* Create the mmapped file
            Note: With the Linux style, we need to fill the file with
@@ -122,17 +133,17 @@ void FTNCALL ipc_start_c(
 
         hmap = CreateFileMapping( hfile, NULL, PAGE_READWRITE, 0, (*maxsize), "MAP" );
 
-        comm[*id]->data  = (int *) MapViewOfFile( hmap, FILE_MAP_ALL_ACCESS, 0, 0, 0 );
-        comm[*id]->hfile = hfile;
+        comm[*id].data  = (int *) MapViewOfFile( hmap, FILE_MAP_ALL_ACCESS, 0, 0, 0 );
+        comm[*id].hfile = hfile;
 #else
         fd = open( filename, O_CREAT|O_RDWR, S_IRWXU );
         pdata = (int *) malloc( (*maxsize + sizeof(int) - 1) / sizeof(int) );
         pdata[0] = 0;
         write( (size_t)(*maxsize), pdata, fd );
         free( pdata );
-        comm[*id]->data  = (int *) mmap( (caddr_t)0, (*maxsize),
+        comm[*id].data  = (int *) mmap( (caddr_t)0, (*maxsize),
             PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0 );
-        comm[*id]->hfile = fd;
+        comm[*id].hfile = fd;
 #endif
     }
 }
@@ -145,9 +156,9 @@ void FTNCALL ipc_start_c(
        pos          Position of the integer
        value        New value
 */
-void FTNCALL ipc_set_data_c( int *idcom, int *pos, int *value ) {
+void FTNCALL ipc_set_data_c( int *idcomm, int *pos, int *value ) {
 
-    comm[*idcomm]->data[*pos] = *value ;
+    comm[*idcomm].data[*pos] = *value ;
 }
 
 /* ipc_get_data_c --
@@ -158,9 +169,9 @@ void FTNCALL ipc_set_data_c( int *idcom, int *pos, int *value ) {
        pos          Position of the integer
        value        Current value of the integer
 */
-void FTNCALL ipc_get_data_c( int *idcom, int *pos, int *value ) {
+void FTNCALL ipc_get_data_c( int *idcomm, int *pos, int *value ) {
 
-    *value = comm[*idcomm]->data[*pos] ;
+    *value = comm[*idcomm].data[*pos] ;
 }
 
 /* ipc_send_int_c --
@@ -172,11 +183,11 @@ void FTNCALL ipc_get_data_c( int *idcom, int *pos, int *value ) {
        data         Array with values to send
        number       Number of values to send
 */
-void FTNCALL ipc_send_int_c( int *idcom, int *pos, int *data, int *number ) {
+void FTNCALL ipc_send_int_c( int *idcomm, int *pos, int *data, int *number ) {
     int  i      ;
 
     for ( i = 0 ; i < (*number) ; i ++ ) {
-        comm[*idcomm]->data[i + (*pos)] = data[i] ;
+        comm[*idcomm].data[i + (*pos)] = data[i] ;
     }
 }
 
@@ -192,11 +203,11 @@ void FTNCALL ipc_send_int_c( int *idcom, int *pos, int *data, int *number ) {
    NOTE:
        The type for the "data" argument remains the same!
 */
-void FTNCALL ipc_send_real_c( int *idcom, int *pos, int *data, int *number ) {
+void FTNCALL ipc_send_real_c( int *idcomm, int *pos, int *data, int *number ) {
     int  i      ;
 
     for ( i = 0 ; i < (*number) ; i ++ ) {
-        comm[*idcomm]->data[i + (*pos)] = data[i] ;
+        comm[*idcomm].data[i + (*pos)] = data[i] ;
     }
 }
 
@@ -212,11 +223,11 @@ void FTNCALL ipc_send_real_c( int *idcom, int *pos, int *data, int *number ) {
    NOTE:
        The type for the "data" argument remains the same!
 */
-void FTNCALL ipc_send_dbl_c( int *idcom, int *pos, int *data, int *number ) {
+void FTNCALL ipc_send_dbl_c( int *idcomm, int *pos, int *data, int *number ) {
     int  i      ;
 
     for ( i = 0 ; i < (*number) ; i ++ ) {
-        comm[*idcomm]->data[i + (*pos)] = data[i] ;
+        comm[*idcomm].data[i + (*pos)] = data[i] ;
     }
 }
 
@@ -232,11 +243,11 @@ void FTNCALL ipc_send_dbl_c( int *idcom, int *pos, int *data, int *number ) {
    NOTE:
        The type for the "data" argument remains the same!
 */
-void FTNCALL ipc_send_log_c( int *idcom, int *pos, int *data, int *number ) {
+void FTNCALL ipc_send_log_c( int *idcomm, int *pos, int *data, int *number ) {
     int  i      ;
 
     for ( i = 0 ; i < (*number) ; i ++ ) {
-        comm[*idcomm]->data[i + (*pos)] = data[i] ;
+        comm[*idcomm].data[i + (*pos)] = data[i] ;
     }
 }
 
@@ -252,11 +263,11 @@ void FTNCALL ipc_send_log_c( int *idcom, int *pos, int *data, int *number ) {
    NOTE:
        The type for the "data" argument remains the same!
 */
-void FTNCALL ipc_send_cmplx_c( int *idcom, int *pos, int *data, int *number ) {
+void FTNCALL ipc_send_cmplx_c( int *idcomm, int *pos, int *data, int *number ) {
     int  i      ;
 
     for ( i = 0 ; i < (*number) ; i ++ ) {
-        comm[*idcomm]->data[i + (*pos)] = data[i] ;
+        comm[*idcomm].data[i + (*pos)] = data[i] ;
     }
 }
 
@@ -269,28 +280,26 @@ void FTNCALL ipc_send_cmplx_c( int *idcom, int *pos, int *data, int *number ) {
        string       String to send
        len_string   Length of the string
 */
-void FTNCALL ipc_send_char_c( int *idcom, int *pos, char *string, int len_string ) {
+void FTNCALL ipc_send_char_c( int *idcomm, int *pos, char *string, int len_string ) {
 
-    memcpy( &comm[*idcomm]->data[(*pos)], string, len_string ) ;
+    memcpy( &comm[*idcomm].data[(*pos)], string, len_string ) ;
 }
 
-/* ipc_receive_int_c --
+/* ipc_receive_char_c --
        Receive an array of integers
 
    Arguments:
        idcomm       Communication ID
        pos          Position of the integer
-       data         Array to fill
-       number       Number of values to receive
+       string       String to send
+       len_string   Length of the string
 */
-void FTNCALL ipc_receive_int_c( int *idcom, int *pos, int *data, int *number ) {
-    int i ;
+void FTNCALL ipc_receive_int_c( int *idcomm, int *pos, char *string, int len_string ) {
 
-    for ( i = 0; i < (*number) ; i ++ ) {
-        *data[i] = comm[*idcomm]->data[(*pos)+i] ;
-    }
+    memcpy( string, &comm[*idcomm].data[(*pos)], len_string ) ;
 }
 
+#if 0
 /* sendStuff --
        In a loop set an integer to increasing values, with a guard to
        tell the receiver it is there
@@ -383,3 +392,4 @@ void receiveStuff( void ) {
         data[0] = 0;
     }
 }
+#endif
