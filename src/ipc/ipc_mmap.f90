@@ -314,29 +314,40 @@ subroutine ipc_send_start( comm, dest, tag, id )
     integer          :: value
     logical          :: error
 
+    write(*,*) 'Start 1'
     call ipc_start_c( comm%me, dest, comm%maxsize, idcomm )
+    write(*,*) 'Start 2'
     comm%in_progress = .true.
 
     !
     ! Wait until the communication channel is free
     !
     do
+        write(*,*) 'Start 3'
         call ipc_get_data_c( idcomm, 1, value )
         if ( value == 0 ) then
+            write(*,*) 'Start 4'
             call ipc_set_data_c( idcomm, 0, 1 )
             exit
         endif
 
         call fsleep( 10 )
     enddo
+    write(*,*) 'Start 5'
 
     !
     ! Send the header information
     !
+    write(*,*) 'Start me'
     call ipc_send_data( comm, comm%me, error )
+    write(*,*) 'Start dest'
     call ipc_send_data( comm, dest,    error )
+    write(*,*) 'Start tag'
     call ipc_send_data( comm, tag,     error )
+    write(*,*) 'Start id'
     call ipc_send_data( comm, id,      error )
+
+    write(*,*) 'Start 6'
 
     comm%connection = dest
     comm%tag        = tag
@@ -398,7 +409,7 @@ subroutine ipc_receive_start( comm, src, tag, id )
     comm%pos         = 2        ! Use C convention
 
     do
-        call ipc_get_c( comm%idcomm, 0, value )
+        call ipc_get_data_c( comm%idcomm, 0, value )
         if ( value == 2 ) then
             !
             ! Retrieve the header ...
