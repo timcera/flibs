@@ -124,12 +124,14 @@ void FTNCALL fsleep(
        Find or prepare a large enough mmapped file
 
    Arguments:
+       send         If 1, called from the sender - initialise the file
        src          String identifying source
        dest         String identifying destination
        maxsize      Maximum size of individual message
        id           (Returned) ID for the mmapped file
 */
 void FTNCALL ipc_start_c(
+    int *send,
     char *src,
 #ifdef INBETWEEN
     int len_src,
@@ -156,23 +158,37 @@ void FTNCALL ipc_start_c(
     char   filename[256];
     int   *pdata;
     int    found;
+    int    i;
 
-    /* TODO: search in the list of mmapped files for an existing one
+    /* Search in the list of mmapped files for an existing connection
+       If found, we are done. Otherwise create the mmap'ed file
     */
     found = 0;
-
-    /* SEARCH */
+    if ( comm != NULL ) {
+        for ( i = 0; i < noConnects; i ++ ) {
+            if ( strncmp( comm[i].src, src, len_src ) == 0    &&
+                 comm[i].src[len_src] == '\0'                 &&
+                 strncmp( comm[i].dest, dest, len_dest ) == 0 &&
+                 comm[i].src[len_dest] == '\0'                   ) {
+                found = 1;
+                *id   = i;
+                return;
+            }
+        }
+    }
 
     if ( !found ) {
-        *id = 0;
+        *id = noConnects;
         noConnects ++;
         if ( comm == NULL ) {
             comm = (CommStruct *) malloc( noConnects * sizeof(CommStruct) );
         } else {
             comm = (CommStruct *) realloc( comm, noConnects * sizeof(CommStruct) );
         }
-        strcpy( comm[*id].src,  src  );
-        strcpy( comm[*id].dest, dest );
+        strncpy( comm[*id].src,  src, len_src );
+        comm[*id].src[len_src]  = '\0';
+        strncpy( comm[*id].dest, dest, len_dest );
+        comm[*id].src[len_dest] = '\0';
         comm[*id].maxsize = *maxsize;
 
         /* Create the mmapped file
@@ -181,9 +197,9 @@ void FTNCALL ipc_start_c(
 
            TODO: directory
         */
-        strcpy( filename, src     );
+        strcpy( filename, comm[*id].src );
         strcat( filename, "-"     );
-        strcat( filename, dest    );
+        strcat( filename, comm[*id].dest );
         strcat( filename, ".mmap" );
 
 #ifndef LINUX
@@ -197,10 +213,13 @@ void FTNCALL ipc_start_c(
         comm[*id].hfile = hfile;
 #else
         fd = open( filename, O_CREAT|O_RDWR, S_IRWXU );
-        pdata = (int *) malloc( (*maxsize + sizeof(int) - 1) / sizeof(int) );
-        pdata[0] = 0;
-        write( (size_t)(*maxsize), pdata, fd );
-        free( pdata );
+
+        if ( *send ) {
+            pdata = (int *) malloc( (size_t)(*maxsize) );
+            pdata[0] = 0;
+            write( fd, pdata, (size_t)(*maxsize) );
+            free( pdata );
+        }
         comm[*id].data  = (int *) mmap( (caddr_t)0, (*maxsize),
             PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0 );
         comm[*id].hfile = fd;
@@ -448,14 +467,6 @@ void FTNCALL ipc_send_char_c( int *idcomm, int *pos, char *string,
 #endif
     ) {
 
-    fprintf( stderr, "idcomm: %d\n", *idcomm );
-    fprintf( stderr, "pos: %d\n", *pos );
-    fprintf( stderr, "string: %s\n", string );
-    fprintf( stderr, "len_string: %d\n", len_string );
-    fprintf( stderr, "comm: %p\n", comm );
-    fprintf( stderr, "comm: %p\n", &comm[*idcomm] );
-    fprintf( stderr, "comm: %p\n", &comm[*idcomm].data[(*pos)] );
-
     /* TODO: beware of the last few bytes! */
     memcpy( &comm[*idcomm].data[(*pos)], string, 4*(*number) ) ;
 }
@@ -469,102 +480,16 @@ void FTNCALL ipc_send_char_c( int *idcomm, int *pos, char *string,
        string       String to send
        len_string   Length of the string
 */
-void FTNCALL ipc_receive_char_c( int *idcomm, int *pos, char *string, int len_string ) {
-
-    memcpy( string, &comm[*idcomm].data[(*pos)], len_string ) ;
-}
-
-#if 0
-/* sendStuff --
-       In a loop set an integer to increasing values, with a guard to
-       tell the receiver it is there
-*/
-void sendStuff( void ) {
-
-#ifndef LINUX
-    HANDLE hfile;
-    HANDLE hmap;
-    int    *data;
-    int    i;
-
-    hfile = CreateFile( "test_mmap.map", GENERIC_WRITE | GENERIC_READ,
-                FILE_SHARE_WRITE, NULL, CREATE_ALWAYS,
-                FILE_ATTRIBUTE_TEMPORARY, NULL );
-
-    hmap = CreateFileMapping( hfile, NULL, PAGE_READWRITE, 0, 1024, "MAP" );
-
-    data = (int *) MapViewOfFile( hmap, FILE_MAP_ALL_ACCESS, 0, 0, 0 );
-#else
-    int fd;
-    int *data;
-    int i;
-
-    printf( "In send\n" );
-    fd = open( "test_mmap.map", O_CREAT|O_RDWR, S_IRWXU );
-    printf( "FD: %d\n", fd );
-    data = (int *) malloc( 1024 );
-    write( fd, data, (size_t)1024 );
-    free( data );
-    data = (int *) mmap( (caddr_t)0, 1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0 );
-    printf( "Data: %p\n", data );
+void FTNCALL ipc_receive_char_c( int *idcomm, int *pos, char *string,
+#ifdef INBETWEEN
+    int len_string,
 #endif
-
-    data[0] = 0;
-    /* Ready to "send" the data */
-    for ( i = 0; i < 10 ; i ++ ) {
-        data[1] = i;
-        data[0] = 1;
-
-        while ( data[0] == 1 ) {
-            Sleep( 100 ) ;
-        }
-    }
-}
-
-/* receiveStuff --
-       In a loop get an integer, while checking that there is a new value
-*/
-void receiveStuff( void ) {
-
-#ifndef LINUX
-    HANDLE hfile;
-    HANDLE hmap;
-    OFSTRUCT of;
-    int    *data;
-    int    i;
-
-    hfile = (HANDLE) NULL;
-    while ( hfile == (HANDLE) NULL ) {
-        hfile = CreateFile( "test_mmap.map", GENERIC_WRITE | GENERIC_READ,
-                    FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                    FILE_ATTRIBUTE_TEMPORARY, NULL );
-        Sleep( 100 ) ;
-    }
-
-    hmap = CreateFileMapping( hfile, NULL, PAGE_READWRITE, 0, 1024, "MAP" );
-
-    data = (int *) MapViewOfFile( hmap, FILE_MAP_ALL_ACCESS, 0, 0, 0 );
-#else
-    int fd;
-    int *data;
-    int i;
-
-    fd = open( "test_mmap.map", O_CREAT|O_RDWR, S_IRWXU );
-    printf( "FD: %d\n", fd );
-    data = (int *) malloc( 1024 );
-    write( (size_t)1024, data, fd );
-    free( data );
-    data = (int *) mmap( (caddr_t)0, 1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0 );
-    printf( "Data: %p\n", data );
+    int *number
+#ifndef INBETWEEN
+    , int len_string
 #endif
+    ) {
 
-    /* Ready to "receive" the data */
-    for ( i = 0; i < 10 ; i ++ ) {
-        while ( data[0] == 0 ) {
-            Sleep( 100 ) ;
-        }
-        printf( "Loop %d: %d\n", i, data[1] );
-        data[0] = 0;
-    }
+    /* TODO: beware of the last few bytes! */
+    memcpy( string, &comm[*idcomm].data[(*pos)], 4*(*number) ) ;
 }
-#endif

@@ -4,17 +4,19 @@ subroutine ipc_send_int_scalar( comm, data, error )
     integer       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = 1
-    integer, dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = 1
+    integer, dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = 0
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -35,7 +37,7 @@ subroutine ipc_receive_int_scalar( comm, data, error )
     integer                :: data
     integer, dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = 1
+    integer, save           :: typeid = 1
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -72,17 +74,19 @@ subroutine ipc_send_real_scalar( comm, data, error )
     real       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = 2
-    real, dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = 2
+    real, dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = 0
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -103,7 +107,7 @@ subroutine ipc_receive_real_scalar( comm, data, error )
     real                :: data
     real, dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = 2
+    integer, save           :: typeid = 2
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -140,17 +144,19 @@ subroutine ipc_send_dbl_scalar( comm, data, error )
     real(kind(1.0d0))       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = 3
-    real(kind(1.0d0)), dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = 3
+    real(kind(1.0d0)), dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = 0
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -171,7 +177,7 @@ subroutine ipc_receive_dbl_scalar( comm, data, error )
     real(kind(1.0d0))                :: data
     real(kind(1.0d0)), dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = 3
+    integer, save           :: typeid = 3
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -208,17 +214,19 @@ subroutine ipc_send_log_scalar( comm, data, error )
     logical       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = 4
-    logical, dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = 4
+    logical, dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = 0
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -239,7 +247,7 @@ subroutine ipc_receive_log_scalar( comm, data, error )
     logical                :: data
     logical, dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = 4
+    integer, save           :: typeid = 4
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -276,17 +284,19 @@ subroutine ipc_send_char_scalar( comm, data, error )
     character(len=*)       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = 5
-    character(len=len(data)), dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = 5
+    character(len=len(data)), dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = len(data)
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -307,7 +317,7 @@ subroutine ipc_receive_char_scalar( comm, data, error )
     character(len=*)                :: data
     character(len=len(data)), dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = 5
+    integer, save           :: typeid = 5
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -327,15 +337,16 @@ subroutine ipc_receive_char_scalar( comm, data, error )
     call ipc_receive_int_c( comm%idcomm, comm%pos, length_, size(length_) )
     comm%pos = comm%pos + size(length_)
 
-    if ( typeid_(1) /= typeid .or. length_(1) /= length ) then
+    ! Tricky: it is the contents that counts ...
+    if ( typeid_(1) /= typeid .or. length_(1) >  length ) then
         error = .true.
         return
     endif
 
-    call ipc_receive_char_c( comm%idcomm, comm%pos, data_, (len(data)+3)/4 )
-    comm%pos = comm%pos + size(length_)
+    call ipc_receive_char_c( comm%idcomm, comm%pos, data_, (length_(1)+3)/4 )
+    comm%pos = comm%pos + (length_(1)+3)/4
 
-    data = data_(1)
+    data = data_(1)(1:length_(1))
 
 end subroutine ipc_receive_char_scalar
 
@@ -344,17 +355,19 @@ subroutine ipc_send_cmplx_scalar( comm, data, error )
     complex       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = 6
-    complex, dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = 6
+    complex, dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = 0
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -375,7 +388,7 @@ subroutine ipc_receive_cmplx_scalar( comm, data, error )
     complex                :: data
     complex, dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = 6
+    integer, save           :: typeid = 6
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -412,7 +425,7 @@ subroutine ipc_send_int_1d( comm, data, error )
     integer, dimension(:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 1
+    integer, dimension(1), save  :: typeid = 1
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -446,7 +459,7 @@ subroutine ipc_receive_int_1d( comm, data, error )
     type(ipc_comm)         :: comm
     integer, dimension(:) :: data
     logical                :: error
-    integer                :: typeid = 1
+    integer, save          :: typeid = 1
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -482,7 +495,7 @@ subroutine ipc_send_int_2d( comm, data, error )
     integer, dimension(:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 1
+    integer, dimension(1), save  :: typeid = 1
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -516,7 +529,7 @@ subroutine ipc_receive_int_2d( comm, data, error )
     type(ipc_comm)         :: comm
     integer, dimension(:,:) :: data
     logical                :: error
-    integer                :: typeid = 1
+    integer, save          :: typeid = 1
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -552,7 +565,7 @@ subroutine ipc_send_int_3d( comm, data, error )
     integer, dimension(:,:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 1
+    integer, dimension(1), save  :: typeid = 1
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -586,7 +599,7 @@ subroutine ipc_receive_int_3d( comm, data, error )
     type(ipc_comm)         :: comm
     integer, dimension(:,:,:) :: data
     logical                :: error
-    integer                :: typeid = 1
+    integer, save          :: typeid = 1
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -622,7 +635,7 @@ subroutine ipc_send_real_1d( comm, data, error )
     real, dimension(:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 2
+    integer, dimension(1), save  :: typeid = 2
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -656,7 +669,7 @@ subroutine ipc_receive_real_1d( comm, data, error )
     type(ipc_comm)         :: comm
     real, dimension(:) :: data
     logical                :: error
-    integer                :: typeid = 2
+    integer, save          :: typeid = 2
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -692,7 +705,7 @@ subroutine ipc_send_real_2d( comm, data, error )
     real, dimension(:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 2
+    integer, dimension(1), save  :: typeid = 2
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -726,7 +739,7 @@ subroutine ipc_receive_real_2d( comm, data, error )
     type(ipc_comm)         :: comm
     real, dimension(:,:) :: data
     logical                :: error
-    integer                :: typeid = 2
+    integer, save          :: typeid = 2
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -762,7 +775,7 @@ subroutine ipc_send_real_3d( comm, data, error )
     real, dimension(:,:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 2
+    integer, dimension(1), save  :: typeid = 2
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -796,7 +809,7 @@ subroutine ipc_receive_real_3d( comm, data, error )
     type(ipc_comm)         :: comm
     real, dimension(:,:,:) :: data
     logical                :: error
-    integer                :: typeid = 2
+    integer, save          :: typeid = 2
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -832,7 +845,7 @@ subroutine ipc_send_dbl_1d( comm, data, error )
     real(kind(1.0d0)), dimension(:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 3
+    integer, dimension(1), save  :: typeid = 3
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -866,7 +879,7 @@ subroutine ipc_receive_dbl_1d( comm, data, error )
     type(ipc_comm)         :: comm
     real(kind(1.0d0)), dimension(:) :: data
     logical                :: error
-    integer                :: typeid = 3
+    integer, save          :: typeid = 3
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -902,7 +915,7 @@ subroutine ipc_send_dbl_2d( comm, data, error )
     real(kind(1.0d0)), dimension(:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 3
+    integer, dimension(1), save  :: typeid = 3
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -936,7 +949,7 @@ subroutine ipc_receive_dbl_2d( comm, data, error )
     type(ipc_comm)         :: comm
     real(kind(1.0d0)), dimension(:,:) :: data
     logical                :: error
-    integer                :: typeid = 3
+    integer, save          :: typeid = 3
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -972,7 +985,7 @@ subroutine ipc_send_dbl_3d( comm, data, error )
     real(kind(1.0d0)), dimension(:,:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 3
+    integer, dimension(1), save  :: typeid = 3
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1006,7 +1019,7 @@ subroutine ipc_receive_dbl_3d( comm, data, error )
     type(ipc_comm)         :: comm
     real(kind(1.0d0)), dimension(:,:,:) :: data
     logical                :: error
-    integer                :: typeid = 3
+    integer, save          :: typeid = 3
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1042,7 +1055,7 @@ subroutine ipc_send_log_1d( comm, data, error )
     logical, dimension(:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 4
+    integer, dimension(1), save  :: typeid = 4
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1076,7 +1089,7 @@ subroutine ipc_receive_log_1d( comm, data, error )
     type(ipc_comm)         :: comm
     logical, dimension(:) :: data
     logical                :: error
-    integer                :: typeid = 4
+    integer, save          :: typeid = 4
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1112,7 +1125,7 @@ subroutine ipc_send_log_2d( comm, data, error )
     logical, dimension(:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 4
+    integer, dimension(1), save  :: typeid = 4
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1146,7 +1159,7 @@ subroutine ipc_receive_log_2d( comm, data, error )
     type(ipc_comm)         :: comm
     logical, dimension(:,:) :: data
     logical                :: error
-    integer                :: typeid = 4
+    integer, save          :: typeid = 4
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1182,7 +1195,7 @@ subroutine ipc_send_log_3d( comm, data, error )
     logical, dimension(:,:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 4
+    integer, dimension(1), save  :: typeid = 4
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1216,7 +1229,7 @@ subroutine ipc_receive_log_3d( comm, data, error )
     type(ipc_comm)         :: comm
     logical, dimension(:,:,:) :: data
     logical                :: error
-    integer                :: typeid = 4
+    integer, save          :: typeid = 4
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1252,7 +1265,7 @@ subroutine ipc_send_char_1d( comm, data, error )
     character(len=*), dimension(:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 5
+    integer, dimension(1), save  :: typeid = 5
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1286,7 +1299,7 @@ subroutine ipc_receive_char_1d( comm, data, error )
     type(ipc_comm)         :: comm
     character(len=*), dimension(:) :: data
     logical                :: error
-    integer                :: typeid = 5
+    integer, save          :: typeid = 5
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1322,7 +1335,7 @@ subroutine ipc_send_char_2d( comm, data, error )
     character(len=*), dimension(:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 5
+    integer, dimension(1), save  :: typeid = 5
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1356,7 +1369,7 @@ subroutine ipc_receive_char_2d( comm, data, error )
     type(ipc_comm)         :: comm
     character(len=*), dimension(:,:) :: data
     logical                :: error
-    integer                :: typeid = 5
+    integer, save          :: typeid = 5
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1392,7 +1405,7 @@ subroutine ipc_send_char_3d( comm, data, error )
     character(len=*), dimension(:,:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 5
+    integer, dimension(1), save  :: typeid = 5
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1426,7 +1439,7 @@ subroutine ipc_receive_char_3d( comm, data, error )
     type(ipc_comm)         :: comm
     character(len=*), dimension(:,:,:) :: data
     logical                :: error
-    integer                :: typeid = 5
+    integer, save          :: typeid = 5
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1462,7 +1475,7 @@ subroutine ipc_send_cmplx_1d( comm, data, error )
     complex, dimension(:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 6
+    integer, dimension(1), save  :: typeid = 6
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1496,7 +1509,7 @@ subroutine ipc_receive_cmplx_1d( comm, data, error )
     type(ipc_comm)         :: comm
     complex, dimension(:) :: data
     logical                :: error
-    integer                :: typeid = 6
+    integer, save          :: typeid = 6
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1532,7 +1545,7 @@ subroutine ipc_send_cmplx_2d( comm, data, error )
     complex, dimension(:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 6
+    integer, dimension(1), save  :: typeid = 6
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1566,7 +1579,7 @@ subroutine ipc_receive_cmplx_2d( comm, data, error )
     type(ipc_comm)         :: comm
     complex, dimension(:,:) :: data
     logical                :: error
-    integer                :: typeid = 6
+    integer, save          :: typeid = 6
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
@@ -1602,7 +1615,7 @@ subroutine ipc_send_cmplx_3d( comm, data, error )
     complex, dimension(:,:,:) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = 6
+    integer, dimension(1), save  :: typeid = 6
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -1636,7 +1649,7 @@ subroutine ipc_receive_cmplx_3d( comm, data, error )
     type(ipc_comm)         :: comm
     complex, dimension(:,:,:) :: data
     logical                :: error
-    integer                :: typeid = 6
+    integer, save          :: typeid = 6
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_

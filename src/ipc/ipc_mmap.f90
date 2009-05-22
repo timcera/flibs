@@ -89,7 +89,8 @@ module ipc_mmap
             integer          :: millis
         end subroutine fsleep
 
-        subroutine ipc_start_c( src, dest, maxsize, idcomm )
+        subroutine ipc_start_c( send, src, dest, maxsize, idcomm )
+            integer          :: send
             character(len=*) :: src
             character(len=*) :: dest
             integer          :: maxsize
@@ -314,46 +315,40 @@ subroutine ipc_send_start( comm, dest, tag, id )
     integer          :: value
     logical          :: error
 
-    write(*,*) 'Start 1'
-    call ipc_start_c( comm%me, dest, comm%maxsize, idcomm )
-    write(*,*) 'Start 2'
+    call ipc_start_c( 1, trim(comm%me), trim(dest), comm%maxsize, idcomm )
     comm%in_progress = .true.
 
     !
     ! Wait until the communication channel is free
     !
     do
-        write(*,*) 'Start 3'
-        call ipc_get_data_c( idcomm, 1, value )
+        call ipc_get_data_c( idcomm, 0, value )
         if ( value == 0 ) then
-            write(*,*) 'Start 4'
-            call ipc_set_data_c( idcomm, 0, 1 )
+            call ipc_set_data_c( idcomm, 0, 2 )
             exit
         endif
 
-        call fsleep( 10 )
+        call fsleep( 1 )
     enddo
-    write(*,*) 'Start 5'
 
     !
-    ! Send the header information
+    ! Fill in the communication data
     !
-    write(*,*) 'Start me'
-    call ipc_send_data( comm, comm%me, error )
-    write(*,*) 'Start dest'
-    call ipc_send_data( comm, dest,    error )
-    write(*,*) 'Start tag'
-    call ipc_send_data( comm, tag,     error )
-    write(*,*) 'Start id'
-    call ipc_send_data( comm, id,      error )
-
-    write(*,*) 'Start 6'
-
     comm%connection = dest
     comm%tag        = tag
     comm%id         = id
     comm%idcomm     = idcomm
     comm%pos        = 2        ! Use C convention
+
+    !
+    ! Send the header information
+    !
+    call ipc_send_data( comm, comm%me, error )
+    call ipc_send_data( comm, dest,    error )
+    call ipc_send_data( comm, tag,     error )
+    call ipc_send_data( comm, id,      error )
+
+    call ipc_get_data_c( idcomm, 0, value )
 end subroutine
 
 ! ipc_send_finish --
@@ -369,9 +364,9 @@ subroutine ipc_send_finish( comm )
 
     integer          :: value
 
-    call ipc_set_data_c( comm%idcomm, 0, 2 )
+    call ipc_set_data_c( comm%idcomm, 0, 1 )
     comm%in_progress = .false.
-    write(*,*) 'Send finished'
+    call ipc_get_data_c( comm%idcomm, 0, value )
 
 end subroutine
 
@@ -380,7 +375,7 @@ end subroutine
 !
 ! Arguments:
 !     comm           Communication information
-!     dest           Name of destination
+!     src            Name of the source
 !     tag            Tag identifying the type of information to be sent
 !     id             Numerical identifier
 !
@@ -402,15 +397,13 @@ subroutine ipc_receive_start( comm, src, tag, id )
     comm%connection = src
     comm%tag        = tag
 
-    write(*,*) 'Receive started'
-
-    call ipc_start_c( src, comm%me, comm%maxsize, comm%idcomm )
+    call ipc_start_c( 0, trim(src), trim(comm%me), comm%maxsize, comm%idcomm )
     comm%in_progress = .true.
     comm%pos         = 2        ! Use C convention
 
     do
         call ipc_get_data_c( comm%idcomm, 0, value )
-        if ( value == 2 ) then
+        if ( value == 1 ) then
             !
             ! Retrieve the header ...
             !
@@ -419,11 +412,6 @@ subroutine ipc_receive_start( comm, src, tag, id )
             call ipc_receive_data( comm, tag_,  error )
             call ipc_receive_data( comm, id_,   error )
 
-            write(*,*) 'Receive starting: (read) ', error
-            write(*,*) 'Receive starting: (read) ', src_, src
-            write(*,*) 'Receive starting: (read) ', dest_, comm%me
-            write(*,*) 'Receive starting: (read) ', tag_, tag
-
             if ( .not. error .and. &
                  src_ == src .and. dest_ .eq. comm%me .and. &
                  tag_ == tag ) then
@@ -431,7 +419,7 @@ subroutine ipc_receive_start( comm, src, tag, id )
             endif
         endif
 
-        call fsleep( 1000 ) ! One second
+        call fsleep( 1 )
     enddo
 
     comm%id         = id_
@@ -450,9 +438,8 @@ end subroutine
 subroutine ipc_receive_finish( comm )
     type(ipc_comm)   :: comm
 
-    call ipc_set_data_c( comm%idcomm, 1, 0 )
+    call ipc_set_data_c( comm%idcomm, 0, 0 )
     comm%in_progress = .false.
-    write(*,*) 'Receive finished'
 
 end subroutine
 

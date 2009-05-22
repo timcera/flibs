@@ -2,7 +2,11 @@
 #     Generate the code for the various specific send/receive routines
 #     (A lot of it is completely generic)
 #
-set outfile [open "ipc_mmap_data.f90" w]
+#     Note:
+#     There is a problem with the character version: this is less
+#     generic than I hoped for. Hence the "_dummy" part in the file name
+#
+set outfile [open "ipc_mmap_data_dummy.f90" w]
 
 #
 # Scalar variants
@@ -25,17 +29,19 @@ subroutine ipc_send_TYPEN_scalar( comm, data, error )
     TYPEDECL       :: data
     logical        :: error
 
-    integer, dimension(1)   :: typeid = TYPEID
-    TYPEDECLX, dimension(1) :: data_
-    integer, dimension(3)   :: dims = 0
-    integer, dimension(1)   :: length
+    integer, dimension(1),save :: typeid = TYPEID
+    TYPEDECLX, dimension(1)    :: data_
+    integer, dimension(3)      :: dims
+    integer, dimension(1)      :: length
 
     error = .true.
     if ( comm%pos + 7 > comm%maxsize ) return
     if ( comm%pos + 7 > comm%maxsize ) return
     error = .false.
 
-    data_(1) = data
+    data_(1)  = data
+    dims      = 0
+    length(1) = LENGTH
 
     call ipc_send_int_c( comm%idcomm, comm%pos, typeid, 1 )
     comm%pos = comm%pos + size(typeid)
@@ -56,7 +62,7 @@ subroutine ipc_receive_TYPEN_scalar( comm, data, error )
     TYPEDECL                :: data
     TYPEDECLX, dimension(1) :: data_
     logical                 :: error
-    integer                 :: typeid = TYPEID
+    integer, save           :: typeid = TYPEID
     integer, dimension(1)   :: typeid_
     integer                 :: ierr
     integer, dimension(3)   :: dims_
@@ -122,7 +128,7 @@ subroutine ipc_send_TYPEN_DIMN( comm, data, error )
     TYPEDECL, dimension(DIMDECL) :: data
     logical                      :: error
 
-    integer, dimension(1)        :: typeid = TYPEID
+    integer, dimension(1), save  :: typeid = TYPEID
     integer, dimension(1)        :: length
     integer, dimension(3)        :: dims
     integer                      :: sizedata
@@ -156,7 +162,7 @@ subroutine ipc_receive_TYPEN_DIMN( comm, data, error )
     type(ipc_comm)         :: comm
     TYPEDECL, dimension(DIMDECL) :: data
     logical                :: error
-    integer                :: typeid = TYPEID
+    integer, save          :: typeid = TYPEID
     integer, dimension(1)  :: typeid_
     integer                :: ierr
     integer, dimension(3)  :: dims_
