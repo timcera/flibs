@@ -13,7 +13,11 @@
 #ifndef LINUX
 #include <windows.h>
 
+#ifndef MINGW
 #define FTNCALL __stdcall
+#else
+#define FTNCALL
+#endif
 
 #else
 #include <sys/stat.h>
