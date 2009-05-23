@@ -1,3 +1,33 @@
+Building the test program:
+-------------------------
+
+For Linux and Cygwin environments, use the "mk" shell script
+For MinGW and plain Windows, use the "mk.bat" batch file
+
+There are a number of macros defined:
+
+INBETWEEN          - Use this if the implicit length argument for string
+                     arguments appear right after the string argument
+                     itself (so, inbetween all arguments visible from
+                     the Fortran side)
+
+LINUX              - Use this for Linux-like environments (no __stdcall
+                     required and shared memory is provided via
+                     the mmap() interface)
+
+MINGW              - Use this for MinGW on Windows (no __stdcall, but
+                     using the Windows functions CreateFileMapping() and
+                     others)
+
+FTN_ALLCAPS        - Fortran names appear with all letters turned to
+                     capitals
+
+FTN_UNDERSCORE     - Fortran names have one underscore appended
+
+FTN_DBL_UNDERSCORE - Fortran names have two underscores appended, if the
+                     name has an embedded underscore
+
+
 Running the test program:
 ------------------------
 
