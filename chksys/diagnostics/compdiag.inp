@@ -1,0 +1,26 @@
+! compdiag.inp --
+!     File with the code for the test programs that are used
+!     to analyse the behaviour of the compiler
+!     Each test program should be documented using:
+!     @desc - short textutal description (also start of
+!             new test program)
+!     @category - one of:
+!              basic     - basic checks of certain aspects
+!              advanced  - checks for trickier aspects
+!              extension - checks whether popular extensions are
+!                          supported
+!              f2003     - checks for Fortran 2003 features
+!
+
+@desc Does the compiler check the values of keywords to OPEN
+@category basic
+program check
+    open( 10, file = 'check.inp', form = 'nonsense' )
+end program
+
+@desc Does the compiler accept FORM="BINARY"
+@category extension
+program check
+    open( 10, file = 'check.inp', form = 'binary' )
+end program
+
