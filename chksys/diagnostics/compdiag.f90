@@ -20,7 +20,6 @@ program compdiag
     !
     inquire( file = 'check.out', exist = exists )
 
-    write(*,*) 'Check: ', exists
     if ( exists ) then
         call analyse
     else
@@ -53,6 +52,10 @@ subroutine prepare
         read( 10, '(a)', iostat = ierr ) line
         if ( ierr /= 0 ) exit
 
+        if ( index( line, '@stop' ) == 1 ) then
+            exit  ! Terminate the testing - for debugging only
+        endif
+
         if ( index( line, '@desc' ) == 1 ) then
             count = count + 1
 
@@ -66,9 +69,10 @@ subroutine prepare
     ! We have found a new test case:
     ! copy it to file
 
-    write(*,*) 'Found: ', found, count, casecnt
 
     if ( found ) then
+        write(*,'(2a)') 'Testing: ', trim(adjustl(line(6:)))
+
         open( 21, file = 'compdiag.test' )
         open( 22, file = 'check.f90' )
 
@@ -101,7 +105,11 @@ end subroutine prepare
 subroutine analyse
     integer :: count
     integer :: ierr
+    character(len=132) :: description
+    character(len=132) :: category
     character(len=132) :: line
+    logical :: exists
+    logical :: failure
 
     open( 10, file = 'compdiag.test' )
     open( 11, file = 'check.out' )
@@ -109,24 +117,41 @@ subroutine analyse
 
     ! TODO: everything
 
-    read( 10, * ) count
+    read( 10, *     ) count
+    read( 10, '(a)' ) description
+    read( 10, '(a)' ) category
+    close( 10 )
 
     open( 22, file = 'compdiag.count' )
     write( 22, * ) count + 1
     close( 22 )
 
-    do
-        read( 10, '(a)', iostat = ierr ) line
-        if ( ierr /= 0 ) exit
+    !
+    ! Analyse the output file
+    !
+    inquire( file = 'compdiag.error', exist = exists )
 
-        write( 21, '(a)' ) trim(line)
-    enddo
+    failure = .false.
+    if ( exists ) then
+        open( 13, file = 'compdiag.error' )
+        close( 13, status = 'delete' )
+        failure = .true.
+    else
+    !!  call examine_compiler_output( failure )
+    endif
+
+    write( 21, '(2a)' ) 'Testing:  ', trim(adjustl(description(6:)))
+    write( 21, '(2a)' ) 'Category: ', trim(adjustl(category(10:)))
+    write( 21, '(1x)' )
+
     do
         read( 11, '(a)', iostat = ierr ) line
         if ( ierr /= 0 ) exit
 
         write( 21, '(a)' ) trim(line)
     enddo
+
+    write( 21, '(1x)' )
 
     close( 11, status = 'delete' )
 
