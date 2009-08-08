@@ -6,10 +6,14 @@
 !             new test program)
 !     @category - one of:
 !              basic     - basic checks of certain aspects
+!              medium    - checks that require more analysis
 !              advanced  - checks for trickier aspects
 !              extension - checks whether popular extensions are
 !                          supported
 !              f2003     - checks for Fortran 2003 features
+!
+!              Note that the categories basic, medium and advanced
+!              are fairly subjective.
 !
 
 @desc Does the compiler check the values of keywords to OPEN
@@ -24,3 +28,40 @@ program check
     open( 10, file = 'check.inp', form = 'binary' )
 end program
 
+@desc Function that does not set the value
+@category basic
+real function check( x )
+    real :: x
+end function check
+
+@desc Function that does not always set the value
+@category medium
+real function check( x )
+    real :: x
+    if ( x > 0 ) then
+        check = 2.0
+    endif
+end function check
+
+@desc Tabs are accepted
+@category extension
+program check
+	write(*,*)	'Tabs allowed'
+end program check
+
+@desc Warning: interface required because of optional arguments
+@category basic
+subroutine check( x, opt )
+    real :: x
+    logical, optional :: opt
+    logical :: opt_
+    opt_ = .false.
+    if ( present(opt) ) then
+        opt_ = opt
+    endif
+    if ( opt_ ) then
+        write(*,*) 'X: ', x
+    else
+        write(*,*) x
+    endif
+end subroutine check

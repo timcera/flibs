@@ -4,6 +4,21 @@
 program compdiag
     implicit none
 
+    type summary
+        integer :: success_count
+        integer :: total_count
+        logical :: error_expected   ! If the compiler complains, is that good or not?
+        character(len=20) :: category
+    end type summary
+
+    type(summary), dimension(6) :: result = &
+        (/ summary( 0, 0, .true.,  'basic'     ), &
+           summary( 0, 0, .true.,  'medium'    ), &
+           summary( 0, 0, .true.,  'advanced'  ), &
+           summary( 0, 0, .false., 'extension' ), &
+           summary( 0, 0, .false., 'f2003'     ), &
+           summary( 0, 0, .false., 'other'     ) /)
+
     logical            :: exists
 
     !
@@ -12,6 +27,7 @@ program compdiag
     inquire( file = 'compdiag.complete', exist = exists )
 
     if ( exists ) then
+        call print_summary
         stop
     endif
 
@@ -104,27 +120,45 @@ end subroutine prepare
 
 subroutine analyse
     integer :: count
+    integer :: i
+    integer :: idx
     integer :: ierr
     character(len=132) :: description
     character(len=132) :: category
     character(len=132) :: line
     logical :: exists
     logical :: failure
+    logical :: empty
 
     open( 10, file = 'compdiag.test' )
     open( 11, file = 'check.out' )
-    open( 21, file = 'compdiag.log', position = 'append' )
+    open( 12, file = 'check.f90' )
+    open( 21, file = 'compdiag.log',     position = 'append' )
+    open( 22, file = 'compdiag.summary', position = 'append' )
 
-    ! TODO: everything
+    !
+    ! Retrieve the previous scores and the information on the
+    ! current test
+    !
+    open( 13, file = 'compdiag.score', status = 'old', iostat = ierr )
+    if ( ierr == 0 ) then
+        do i = 1,size(result)
+            read( 13, * ) result(i)%success_count, result(i)%total_count
+        enddo
+        close( 13 )
+    else
+        write( 21, '(a,/)' ) 'Testing compiler diagnostics'
+        write( 22, '(a,/)' ) 'Testing compiler diagnostics'
+    endif
 
     read( 10, *     ) count
     read( 10, '(a)' ) description
     read( 10, '(a)' ) category
     close( 10 )
 
-    open( 22, file = 'compdiag.count' )
-    write( 22, * ) count + 1
-    close( 22 )
+    open( 23, file = 'compdiag.count' )
+    write( 23, * ) count + 1
+    close( 23 )
 
     !
     ! Analyse the output file
@@ -140,20 +174,94 @@ subroutine analyse
     !!  call examine_compiler_output( failure )
     endif
 
+    idx = size(result)
+    do i = 1,size(result)
+        if ( adjustl(category(10:)) == result(i)%category ) then
+            idx = i
+            exit
+        endif
+    enddo
+
+    result(idx)%total_count = result(idx)%total_count + 1
+    if ( failure .eqv. result(idx)%error_expected ) then
+        result(idx)%success_count = result(idx)%success_count + 1
+    endif
+
+    write( 21, '(1x)' )
     write( 21, '(2a)' ) 'Testing:  ', trim(adjustl(description(6:)))
     write( 21, '(2a)' ) 'Category: ', trim(adjustl(category(10:)))
     write( 21, '(1x)' )
 
+    write( 21, '(a)' ) 'Code for this test:'
     do
-        read( 11, '(a)', iostat = ierr ) line
+        read( 12, '(a)', iostat = ierr ) line
         if ( ierr /= 0 ) exit
 
         write( 21, '(a)' ) trim(line)
     enddo
+    close( 12 )
 
+    write( 21, '(/,a)' ) 'Report from the compiler:'
+    empty = .true.
+    do
+        read( 11, '(a)', iostat = ierr ) line
+        if ( ierr /= 0 ) exit
+        empty = .false.
+
+        write( 21, '(a)' ) trim(line)
+    enddo
+
+    if ( empty ) then
+        write( 21, '(a)' ) '-- no output --'
+    endif
     write( 21, '(1x)' )
 
+    !
+    ! Save the new score
+    !
+    open( 12, file = 'compdiag.score' )
+    do i = 1,size(result)
+        write( 12, * ) result(i)%success_count, result(i)%total_count
+    enddo
+    close( 12 )
+
+    !
+    ! Clean up
+    !
     close( 11, status = 'delete' )
 
 end subroutine analyse
+
+subroutine print_summary
+    integer :: i
+    integer :: lun
+    integer :: ierr
+
+    open( 13, file = 'compdiag.score', status = 'old', iostat = ierr )
+    if ( ierr == 0 ) then
+        do i = 1,size(result)
+            read( 13, * ) result(i)%success_count, result(i)%total_count
+        enddo
+        close( 13 )
+    else
+        write(*,*) 'No score file found - no summary!'
+        return
+    endif
+
+    open( 21, file = 'compdiag.log',     position = 'append' )
+    open( 22, file = 'compdiag.summary', position = 'append' )
+
+    do lun = 21,22
+        write( lun, '(//,a)' ) 'Success   Total     Category'
+
+        do i = 1,size(result)
+            write( lun, '(2(i5,5x),a)' ) &
+                result(i)%success_count, result(i)%total_count, &
+                result(i)%category
+        enddo
+    enddo
+
+    close( 21 )
+    close( 22 )
+end subroutine print_summary
 end program compdiag
