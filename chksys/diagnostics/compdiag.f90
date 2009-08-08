@@ -172,7 +172,7 @@ subroutine analyse
         close( 13, status = 'delete' )
         failure = .true.
     else
-    !!  call examine_compiler_output( failure )
+        call examine_compiler_output( failure )
     endif
 
     idx = size(result)
@@ -269,4 +269,35 @@ subroutine print_summary
     close( 21 )
     close( 22 )
 end subroutine print_summary
+
+subroutine examine_compiler_output( failure )
+    logical, intent(inout)                :: failure
+
+    character(len=200)                    :: line
+    integer                               :: i
+    integer                               :: k
+    integer                               :: ierr
+    character(len=20), dimension(6), save :: keyword = &
+    (/ 'Error',    'ERROR',   'error',   &
+       'Warningr', 'WARNING', 'warning'  /)
+
+read_file: &
+    do
+        read( 11, '(a)', iostat = ierr ) line
+        if ( ierr /= 0 ) exit
+
+        do i = 1,size(keyword)
+            k = index( line, trim(keyword(i)) )
+            if ( k > 0 ) then
+                failure = .true.
+                exit read_file
+            endif
+        enddo
+    enddo &
+read_file
+
+    rewind( 11 )
+
+end subroutine examine_compiler_output
+
 end program compdiag

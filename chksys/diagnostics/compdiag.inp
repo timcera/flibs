@@ -43,6 +43,24 @@ real function check( x )
     endif
 end function check
 
+@desc Using function variable before it is set
+@category medium
+real function check( x )
+    real :: x
+    if ( check > 0 ) then
+        check = 2.0 * x
+    endif
+end function check
+
+@desc Unused argument in subroutine
+@category medium
+subroutine check( x )
+    real :: x
+    real :: y
+
+    y = 10.0
+end subroutine check
+
 @desc Tabs are accepted
 @category extension
 program check
@@ -65,3 +83,156 @@ subroutine check( x, opt )
         write(*,*) x
     endif
 end subroutine check
+
+@desc Using a real as the control variable of a DO loop
+@category basic
+program check
+    real :: x
+
+    do x = 0.1,1.0,0.1
+        write(*,*) x
+    enddo
+end program check
+
+@desc Duplicate case in SELECT block
+@category basic
+program check
+    integer :: x
+
+    do x = 1,10
+        select case ( x )
+            case( 1, 2, 3 )
+                write(*,*) x
+            case( 3 )
+                write(*,*) x
+            case default
+                write(*,*) x
+        end select
+    enddo
+end program check
+
+@desc Duplicate case in SELECT block - same case
+@category basic
+program check
+    integer :: x
+
+    do x = 1,10
+        select case ( x )
+            case( 1, 1, 3 )
+                write(*,*) x
+            case( 4 )
+                write(*,*) x
+            case default
+                write(*,*) x
+        end select
+    enddo
+end program check
+
+@desc Missing default case in SELECT block - defensive programming
+@category advanced
+program check
+    integer :: x
+
+    do x = 1,10
+        select case ( x )
+            case( 1, 2, 3 )
+                write(*,*) x
+            case( 4 )
+                write(*,*) x
+        end select
+    enddo
+end program check
+
+@desc Uninitialised variable used - defensive programming
+@category basic
+program check
+    integer :: x
+    integer :: y
+
+    y = x
+end program check
+
+@desc Mismatch in static shapes of arrays
+@category basic
+program check
+    integer, dimension(4) :: x
+    integer, dimension(5) :: y
+
+    y = x
+end program check
+
+@desc Accepting different string lengths in array constructor
+@category extension
+program check
+
+    write(*,*) (/ 'A', 'BBB' /)
+end program check
+
+@desc Accepting square brackets in array constructor
+@category f2003
+program check
+
+    write(*,*) [ 1, 2, 3 ]
+end program check
+
+@desc Accepting different string lengths in MERGE function
+@category extension
+program check
+
+    logical :: cond
+
+    cond = .false.
+    write(*,*) merge( 'true', 'false', cond )
+end program check
+
+@desc Violating intent() constraint - input only
+@category basic
+subroutine check( x )
+    real, intent(in) :: x
+
+    x = 2.0
+end subroutine check
+
+@desc Violating intent() constraint - output only
+@category basic
+subroutine check( x )
+    real, intent(out) :: x
+
+    ! x not set
+end subroutine check
+
+@desc Violating intent() constraint - checking output only variable before set
+@category medium
+subroutine check( x )
+    real, intent(out) :: x
+
+    ! x not yet set
+    if ( x > 0.0 ) then
+        write(*,*) 'x positive'
+    endif
+    x = -1.0
+end subroutine check
+
+@desc Allocatable arguments to a subroutine
+@category f2003
+program checkit
+    real, allocatable, dimension(:) :: x
+
+    call check( x )
+contains
+subroutine check( x )
+    real, allocatable, dimension(:) :: x
+
+    allocate( x(10) )
+end subroutine check
+end program checkit
+
+@desc Allocatable components in a derived type
+@category f2003
+program check
+    type allocs
+        real, allocatable, dimension(:) :: x
+    end type allocs
+
+    type(allocs) :: value
+end program check

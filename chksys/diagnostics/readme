@@ -16,4 +16,6 @@ compdiag.f90 -- source code for the program
 rundiag.bat  -- Windows batch file to run the program
 rundiag.sh   -- Linux/UNIX/OSX shell script to run it
 compdiag.inp -- file containing the code for the test programs
+compile.bat  -- small batch file to run the compiler of choice
+compile.sh   -- small shell script to run the compiler of choice
 
