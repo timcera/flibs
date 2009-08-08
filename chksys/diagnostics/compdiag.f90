@@ -148,7 +148,8 @@ subroutine analyse
         close( 13 )
     else
         write( 21, '(a,/)' ) 'Testing compiler diagnostics'
-        write( 22, '(a,/)' ) 'Testing compiler diagnostics'
+        write( 22, '(a,/)' ) 'Testing compiler diagnostics', &
+                             'Success   Category  Description'
     endif
 
     read( 10, *     ) count
@@ -191,6 +192,10 @@ subroutine analyse
     write( 21, '(2a)' ) 'Testing:  ', trim(adjustl(description(6:)))
     write( 21, '(2a)' ) 'Category: ', trim(adjustl(category(10:)))
     write( 21, '(1x)' )
+
+    write( 22, '(2x,a5,3x,a10,a)' ) &
+        merge( 'Yes','No ', failure .eqv. result(idx)%error_expected ), &
+            adjustl(category(10:)), description(6:)
 
     write( 21, '(a)' ) 'Code for this test:'
     do

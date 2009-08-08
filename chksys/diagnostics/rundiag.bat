@@ -9,6 +9,7 @@ if not exist compdiag.complete goto loop
     if exist compdiag.test      del compdiag.test
     if exist compdiag.complete  del compdiag.complete
     if exist compdiag.log       del compdiag.log
+    if exist compdiag.summary   del compdiag.summary
     if exist compdiag.score     del compdiag.score
 
 :loop
