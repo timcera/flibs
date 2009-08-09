@@ -67,7 +67,7 @@ program check
 	write(*,*)	'Tabs allowed'
 end program check
 
-@desc Warning: interface required because of optional arguments
+@desc Interface required because of optional arguments
 @category basic
 subroutine check( x, opt )
     real :: x
@@ -82,6 +82,20 @@ subroutine check( x, opt )
     else
         write(*,*) x
     endif
+end subroutine check
+
+@desc Interface required because of pointer arguments
+@category basic
+subroutine check( x )
+    real, pointer, dimension(:) :: x
+    write(*,*) x
+end subroutine check
+
+@desc Interface required because of assumed shape arguments
+@category basic
+subroutine check( x )
+    real, dimension(:) :: x
+    write(*,*) x
 end subroutine check
 
 @desc Using a real as the control variable of a DO loop
@@ -152,13 +166,40 @@ program check
     y = x
 end program check
 
-@desc Mismatch in static shapes of arrays
+@desc Mismatch in static shapes of arrays - assignment
 @category basic
 program check
     integer, dimension(4) :: x
     integer, dimension(5) :: y
 
+    x = 1
     y = x
+end program check
+
+@desc Mismatch in static shapes of arrays - merge function
+@category basic
+program check
+    integer, dimension(4) :: x
+    integer, dimension(5) :: y
+    logical, dimension(5) :: z
+    x = 1
+    z = .true.
+    write(*,*) merge( x, y, z )
+end program check
+
+@desc Mismatch in static shapes of arrays - user-defined function
+@category advanced
+program check
+    integer, dimension(4) :: x
+    integer, dimension(5) :: y
+    x = 1
+    y = f(x)
+contains
+function f( x )
+    integer, dimension(:) :: x
+    integer, dimension(size(x)) :: f
+    f = x
+end function f
 end program check
 
 @desc Accepting different string lengths in array constructor
@@ -183,6 +224,17 @@ program check
 
     cond = .false.
     write(*,*) merge( 'true', 'false', cond )
+end program check
+
+@desc Accepting different numerical types in MERGE function
+@category basic
+program check
+
+    logical :: cond
+
+    ! There is no sensible type for the result!
+    cond = .false.
+    write(*,*) merge( 1, 2.0, cond )
 end program check
 
 @desc Violating intent() constraint - input only
@@ -235,4 +287,18 @@ program check
     end type allocs
 
     type(allocs) :: value
+end program check
+
+@desc Integer overflow at compile time
+@category basic
+program check
+    integer :: y
+
+    y = 2 * huge(1)
+end program check
+
+@desc Transcendental functions in parameter statement
+@category extension
+program check
+    real, parameter :: x = sin(1.0)
 end program check
