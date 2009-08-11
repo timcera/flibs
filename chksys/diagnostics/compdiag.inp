@@ -5,12 +5,15 @@
 !     @desc - short textutal description (also start of
 !             new test program)
 !     @category - one of:
-!              basic     - basic checks of certain aspects
-!              medium    - checks that require more analysis
-!              advanced  - checks for trickier aspects
-!              extension - checks whether popular extensions are
-!                          supported
-!              f2003     - checks for Fortran 2003 features
+!              basic      - basic checks of certain aspects
+!              medium     - checks that require more analysis
+!              advanced   - checks for trickier aspects
+!              limitation - known limitations of certain compilers
+!                           (success means the current compiler supports
+!                           that feature)
+!              extension  - checks whether popular extensions are
+!                           supported
+!              f2003      - checks for Fortran 2003 features
 !
 !              Note that the categories basic, medium and advanced
 !              are fairly subjective.
@@ -166,6 +169,14 @@ program check
     y = x
 end program check
 
+@desc Uninitialised variable printed - defensive programming
+@category basic
+program check
+    integer :: x
+
+    write(*,*) x
+end program check
+
 @desc Mismatch in static shapes of arrays - assignment
 @category basic
 program check
@@ -186,6 +197,30 @@ program check
     z = .true.
     write(*,*) merge( x, y, z )
 end program check
+
+@desc Mismatch in static shapes of array sections
+@category basic
+program check
+    integer, dimension(4) :: x
+    integer, dimension(5) :: y
+
+    x = 1
+    y(:) = x(:)
+end program check
+
+@desc Using array element out of bounds
+@category basic
+program checkit
+    integer, dimension(4) :: x
+
+    x = 0
+    call check
+    write(*,*) x
+contains
+subroutine check
+    x(5) = 1
+end subroutine check
+end program checkit
 
 @desc Mismatch in static shapes of arrays - user-defined function
 @category advanced
@@ -265,6 +300,102 @@ subroutine check( x )
     x = -1.0
 end subroutine check
 
+@desc Violating intent constraint via second subprogram
+@category medium
+subroutine check( x )
+    real, intent(in) :: x
+
+    call check2
+contains
+subroutine check2
+    x = -1.0
+end subroutine check2
+end subroutine check
+
+@desc Resetting do-loop variable directly
+@category basic
+subroutine check( x )
+    real    :: x
+    integer :: i
+
+    x = 0.0
+    do i = 1,10
+       x = x + float(i)
+       i = 100
+    enddo
+end subroutine check
+
+@desc Resetting do-loop variable via subroutine
+@category basic
+subroutine check( x )
+    real    :: x
+    integer :: i
+
+    x = 0.0
+    do i = 1,10
+       x = x + float(i)
+       call check2
+    enddo
+contains
+subroutine check2
+    i = 100
+end subroutine check2
+end subroutine check
+
+@desc Unreachable statement - do loop
+@category basic
+subroutine check
+    integer :: i
+
+    do i = 1,10
+       exit
+       write(*,*) i
+    enddo
+end subroutine check
+
+@desc Unreachable statement - goto
+@category basic
+subroutine check( x )
+    integer :: i
+
+    goto 110
+    x = 1
+110 continue
+    write(*,*) i
+end subroutine check
+
+@desc Straightforward endless loop - do while
+@category basic
+subroutine check
+    integer :: i
+
+    do while(.true.)
+       i = 1
+    enddo
+end subroutine check
+
+@desc Straightforward endless loop - do
+@category basic
+subroutine check
+    integer :: i
+
+    do
+       i = 1
+    enddo
+end subroutine check
+
+@desc Straightforward endless loop - condition does not change
+@category medium
+subroutine check
+    integer :: i
+    logical :: cond
+
+    cond = .true.
+    do while( cond )
+       i = 1
+    enddo
+end subroutine check
+
 @desc Allocatable arguments to a subroutine
 @category f2003
 program checkit
@@ -287,6 +418,8 @@ program check
     end type allocs
 
     type(allocs) :: value
+
+    allocate( value%x(10) )
 end program check
 
 @desc Integer overflow at compile time
@@ -301,4 +434,91 @@ end program check
 @category extension
 program check
     real, parameter :: x = sin(1.0)
+end program check
+
+@desc Loss of precision
+@category basic
+program check
+    real :: x
+
+    x = 1.0d0 / 3.0d0
+end program check
+
+@desc Comparing reals
+@category basic
+program check
+    real :: x
+    real :: y
+
+    x = 1.0 / 3.0
+    y = real(1.0d0 /3.0d0, kind(y))
+    if ( x == y ) then
+        write(*,*) 'Equal'
+    endif
+end program check
+
+@desc Pointer to a variable that is not a target
+@category basic
+program check
+    real, pointer :: x
+    real          :: y
+
+    x => y
+    y = 1.0
+    write(*,*) x
+end program check
+
+@desc Using unassociated pointer variable
+@category basic
+program check
+    real, dimension(:), pointer :: x
+
+    nullify( x )
+    x = 1.0
+end program check
+
+@desc Using unallocated allocatable array
+@category basic
+program check
+    real, dimension(:), allocatable :: x
+
+    x = 1.0
+end program check
+
+@desc Assumed-length string supported
+@category limitation
+subroutine check( length )
+    !
+    ! Some compilers do not support this feature
+    !
+    character(len=length) :: string
+
+    string = repeat('x', length)
+end subroutine check
+
+@desc Mixed-precision computations
+@category basic
+real function check( x, y )
+    real(kind=kind(1.0d0)) :: x
+    real                   :: y
+
+    check = x * y
+end function check
+
+@desc Mixed-precision initialisation
+@category basic
+program check
+    real(kind=kind(1.0d0)) :: x = 1.01
+    real(kind=kind(1.0d0)) :: y = 1.01d0
+
+    write(*,*) x == y
+end program check
+
+@desc Mixed-precision array construction
+@category basic
+program check
+    real(kind=kind(1.0d0)), dimension(2) :: x
+
+    x = (/ 1.0, 2.0d0 /)
+    write(*,*) x
 end program check

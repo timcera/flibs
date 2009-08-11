@@ -11,13 +11,14 @@ program compdiag
         character(len=20) :: category
     end type summary
 
-    type(summary), dimension(6) :: result = &
-        (/ summary( 0, 0, .true.,  'basic'     ), &
-           summary( 0, 0, .true.,  'medium'    ), &
-           summary( 0, 0, .true.,  'advanced'  ), &
-           summary( 0, 0, .false., 'extension' ), &
-           summary( 0, 0, .false., 'f2003'     ), &
-           summary( 0, 0, .false., 'other'     ) /)
+    type(summary), dimension(7) :: result = &
+        (/ summary( 0, 0, .true.,  'basic'      ), &
+           summary( 0, 0, .true.,  'medium'     ), &
+           summary( 0, 0, .true.,  'advanced'   ), &
+           summary( 0, 0, .false., 'limitation' ), &
+           summary( 0, 0, .false., 'extension'  ), &
+           summary( 0, 0, .false., 'f2003'      ), &
+           summary( 0, 0, .false., 'other'      ) /)
 
     logical            :: exists
 
@@ -154,7 +155,10 @@ subroutine analyse
 
     read( 10, *     ) count
     read( 10, '(a)' ) description
-    read( 10, '(a)' ) category
+    read( 10, '(a)', iostat = ierr ) category
+    if ( ierr /= 0 ) then
+        category = 'other'
+    endif
     close( 10 )
 
     open( 23, file = 'compdiag.count' )
