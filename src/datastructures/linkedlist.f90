@@ -91,13 +91,13 @@ subroutine list_destroy( list )
     type(LINKED_LIST), pointer  :: list
 
     type(LINKED_LIST), pointer  :: current
-    type(LINKED_LIST), pointer  :: next
+    type(LINKED_LIST), pointer  :: elem
 
-    current => list
-    do while ( associated(current%next) )
-        next => current%next
+    elem => list
+    do while ( associated(elem) )
+        current => elem
+        elem => current%next
         deallocate( current )
-        current => next
     enddo
 end subroutine list_destroy
 
