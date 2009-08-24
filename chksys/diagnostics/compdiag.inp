@@ -522,3 +522,55 @@ program check
     x = (/ 1.0, 2.0d0 /)
     write(*,*) x
 end program check
+
+@desc IOMSG keyword supported
+@category f2003
+program check
+    integer           :: ierr
+    character(len=80) :: msg
+    open( 10, file = 'check.inp', status = 'old', iostat = ierr, &
+        iomsg = msg )
+end program
+
+@desc ISO_FORTRAN_ENV module supported
+@category f2003
+program check
+    use iso_fortran_env
+    implicit none
+    write(*,*) iostat_eor
+end program
+
+@desc FLUSH statement supported
+@category f2003
+program check
+    implicit none
+    write(*,'(1x,a)') "prompt"
+    flush( 6 )
+end program
+
+@desc Very long identifiers are truncated
+@category basic
+program check
+    this_is_an_identifier_name_which_exceeds_32_characters = 1.0
+end program
+
+@desc Very long identifiers are truncated and mapped to the same name
+@category basic
+program check
+    this_is_an_identifier_name_which_exceeds_32_characters     = 1.0
+    this_is_an_identifier_name_which_exceeds_32_characters_too = 2.0
+end program
+
+@desc Backslashes are ordinary characters
+@category other
+program check
+    character(len=2) :: string
+    string = '\'
+end program
+
+@desc Formats are checked with the transfer list at compile time
+@category advanced
+program check
+    integer :: a
+    write(*,'(a)') a
+end program
