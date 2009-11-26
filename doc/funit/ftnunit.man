@@ -1,6 +1,6 @@
 [comment {-*- flibs -*- doctools manpage}]
-[manpage_begin flibs/ftnunit n 1.1]
-[copyright {2006 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[manpage_begin flibs/ftnunit n 1.2]
+[copyright {2009 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [moddesc flibs]
 [titledesc {Unit testing}]
 
@@ -179,6 +179,22 @@ A Tcl program that presents a simple graphical user-interface
 
 [list_end]
 
+
+[section OUTPUT]
+When you run a program in test mode via the batch file/shell script,
+it produces two output files:
+
+[list_begin bullet]
+
+[bullet]
+[emph "runtests.log"] contains all the output that was written to the screen.
+[bullet]
+[emph "ftnunit.html"] is an HTML file with a summary of the tests and a colour
+encoding to indicate the test cases that succeeded or failed.
+
+[list_end]
+
+
 [section ROUTINES]
 The module ftnunit contains the following subroutines and functions:
 
@@ -263,9 +279,22 @@ Text describing the condition
 
 
 [call [cmd "call assert_equal( value1, value2, text )"]]
-Routine to check that two integers are equal or if two one-dimensional
-integer arrays are equal. If not, a message is printed, along with the
-values that were different.
+Routine to check that two logicals, two strings, or two integers are equal
+or if two one-dimensional integer arrays are equal. If not, a message is
+printed, along with the values that were different.
+
+[list_begin arg]
+[arg_def "<type>" value1]
+The first integer/logical/string value
+
+[arg_def "<type>" value2]
+The second integer/logical/string value
+
+[arg_def "character(len=*), intent(in)" text]
+Text describing the condition
+[list_end]
+
+Or:
 
 [list_begin arg]
 [arg_def "integer \[, dimension(:)\]" value1]
@@ -296,6 +325,32 @@ The first real value or array
 
 [arg_def "real \[, dimension(:)\]" value2]
 The second real value or array
+
+[arg_def "character(len=*), intent(in)" text]
+Text describing the condition
+[list_end]
+
+
+[call [cmd "call assert_files_comparable( filename1, filename2, margin, text )"]]
+Routine to check that two files are equal or almost equal. The files are scanned
+line by line and item by item. If an item can be interpreted as a number, then
+the comparison is done using a margin, otherwise the corresponding items are
+considered strings and should be exactly equal.
+[nl]
+A report is produced of all differing lines.
+[nl]
+The margin is taken as a relative tolerance. Two numerical values are
+considered almost equal if:
+[example {
+    abs( v1 - v2 ) < margin * (abs(v1)+abs(v2)) / 2
+}]
+
+[list_begin arg]
+[arg_def "character(len=*)" filename1]
+The name of the first file to read
+
+[arg_def "character(len=*)" filename2]
+The name of the second file to read
 
 [arg_def "character(len=*), intent(in)" text]
 Text describing the condition

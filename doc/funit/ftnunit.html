@@ -1,16 +1,17 @@
-
+<! -- -*- flibs -*- doctools manpage
+   -->
 <html><head>
 <title>flibs/ftnunit - flibs </title>
 </head>
 <! -- Generated from file 'ftnunit.man' by tcllib/doctools with format 'html'
    -->
-<! -- Copyright &copy; 2006 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
+<! -- Copyright &copy; 2009 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
    -->
 <! -- CVS: $Id$ flibs/ftnunit.n
    -->
 
 <body>
-<h1> flibs/ftnunit(n) 1.1  &quot;flibs&quot;</h1>
+<h1> flibs/ftnunit(n) 1.2  &quot;flibs&quot;</h1>
 <h2><a name="name">NAME</a></h2>
 <p>
 <p> flibs/ftnunit - Unit testing
@@ -22,6 +23,7 @@
 <p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#table_of_contents">TABLE OF CONTENTS</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#synopsis">SYNOPSIS</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#description">DESCRIPTION</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#output">OUTPUT</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#routines">ROUTINES</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#generating_tests_from_a_table">GENERATING TESTS FROM A TABLE</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#todo">TODO</a><br>
@@ -40,10 +42,11 @@
 <tr valign=top ><td ><a href="#9"><b class='cmd'>call assert_false( cond, text )</b> </a></td></tr>
 <tr valign=top ><td ><a href="#10"><b class='cmd'>call assert_equal( value1, value2, text )</b> </a></td></tr>
 <tr valign=top ><td ><a href="#11"><b class='cmd'>call assert_comparable( value1, value2, margin, text )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#12"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#13"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#14"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a></td></tr>
-<tr valign=top ><td ><a href="#15"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#12"><b class='cmd'>call assert_files_comparable( filename1, filename2, margin, text )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#13"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#14"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#15"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#16"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -235,6 +238,24 @@ A Tcl program that presents a simple graphical user-interface
 
 </dl>
 
+
+<h2><a name="output">OUTPUT</a></h2>
+<p>
+When you run a program in test mode via the batch file/shell script,
+it produces two output files:
+
+<ul>
+
+<li>
+<em>runtests.log</em> contains all the output that was written to the screen.
+<br><br>
+<li>
+<em>ftnunit.html</em> is an HTML file with a summary of the tests and a colour
+encoding to indicate the test cases that succeeded or failed.
+
+</ul>
+
+
 <h2><a name="routines">ROUTINES</a></h2>
 <p>
 The module ftnunit contains the following subroutines and functions:
@@ -336,9 +357,25 @@ Text describing the condition
 
 <dt><a name="10"><b class='cmd'>call assert_equal( value1, value2, text )</b> </a><dd>
 
-Routine to check that two integers are equal or if two one-dimensional
-integer arrays are equal. If not, a message is printed, along with the
-values that were different.
+Routine to check that two logicals, two strings, or two integers are equal
+or if two one-dimensional integer arrays are equal. If not, a message is
+printed, along with the values that were different.
+
+<br><br>
+<dl>
+<dt>&lt;type&gt; <i class='arg'>value1</i><dd>
+The first integer/logical/string value
+
+<br><br>
+<dt>&lt;type&gt; <i class='arg'>value2</i><dd>
+The second integer/logical/string value
+
+<br><br>
+<dt>character(len=*), intent(in) <i class='arg'>text</i><dd>
+Text describing the condition
+</dl>
+
+Or:
 
 <br><br>
 <dl>
@@ -382,7 +419,37 @@ Text describing the condition
 </dl>
 
 
-<dt><a name="12"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a><dd>
+<dt><a name="12"><b class='cmd'>call assert_files_comparable( filename1, filename2, margin, text )</b> </a><dd>
+
+Routine to check that two files are equal or almost equal. The files are scanned
+line by line and item by item. If an item can be interpreted as a number, then
+the comparison is done using a margin, otherwise the corresponding items are
+considered strings and should be exactly equal.
+<br><br>
+A report is produced of all differing lines.
+<br><br>
+The margin is taken as a relative tolerance. Two numerical values are
+considered almost equal if:
+<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+    abs( v1 - v2 ) &lt; margin * (abs(v1)+abs(v2)) / 2
+</pre></td></tr></table></p>
+
+<br><br>
+<dl>
+<dt>character(len=*) <i class='arg'>filename1</i><dd>
+The name of the first file to read
+
+<br><br>
+<dt>character(len=*) <i class='arg'>filename2</i><dd>
+The name of the second file to read
+
+<br><br>
+<dt>character(len=*), intent(in) <i class='arg'>text</i><dd>
+Text describing the condition
+</dl>
+
+
+<dt><a name="13"><b class='cmd'>exists = ftnunit_file_exists( filename )</b> </a><dd>
 
 Logical function to check that a particular file exists
 
@@ -393,7 +460,7 @@ Name of the file to be checked
 </dl>
 
 
-<dt><a name="13"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a><dd>
+<dt><a name="14"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a><dd>
 
 Subroutine to get a free LU-number
 
@@ -404,7 +471,7 @@ Next free LU-number
 </dl>
 
 
-<dt><a name="14"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a><dd>
+<dt><a name="15"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a><dd>
 
 Subroutine to remove (delete) a file
 
@@ -415,7 +482,7 @@ Name of the file to be removed
 </dl>
 
 
-<dt><a name="15"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a><dd>
+<dt><a name="16"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a><dd>
 
 Subroutine to make a new, empty file
 
@@ -582,5 +649,6 @@ implemented in Fortran</a> by Brice Womack and Tom Clune
 
 <h2><a name="copyright">COPYRIGHT</a></h2>
 <p>
-Copyright &copy; 2006 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;<br>
+Copyright &copy; 2009 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;<br>
 </body></html>
+

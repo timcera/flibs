@@ -282,7 +282,7 @@ CONTAINS
     myfortran_num_rows = c_num_rows (res%res)
   END FUNCTION myfortran_num_rows
 
-  
+
   ! Fetch a row.  Returns false if no more rows available.
   LOGICAL FUNCTION myfortran_fetch_row (res, row)
     IMPLICIT NONE

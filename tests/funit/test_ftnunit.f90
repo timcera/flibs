@@ -153,12 +153,6 @@ module dataproc_testing
     character(len=40) :: datafile
 contains
 
-!
-! The code is generic, but this way we can access the private routines
-! in this testing module. And we do not get any name conflicts
-!
-include "ftnunit_test.f90"
-
 subroutine prolog
     ! Nothing in this case
 end subroutine prolog
@@ -181,6 +175,7 @@ subroutine test_all
     call test( test_empty_file, "Read an empty file" )
     call test( test_invalid_file, "Read an invalid file" )
     call test( test_ordinary_file, "Read an ordinary file" )
+    call test( test_compare_files, "Comparing two files" )
 
 end subroutine test_all
 
@@ -294,6 +289,33 @@ subroutine test_ordinary_file
     call assert_true( vmax   == 8.0, "Correct maximum value" )
 
 end subroutine test_ordinary_file
+
+
+! test_compare_files --
+!     Test: compare two files (with some tolerance for numerical values)
+! Arguments:
+!     None
+!
+subroutine test_compare_files
+
+    open( 11, file = 'test1.out' )
+    open( 12, file = 'test2.out' )
+
+    write( 11, '(a)' ) 'Line 1 is the same in both files'
+    write( 12, '(a)' ) 'Line 1 is the same in both files'
+    write( 11, '(a)' ) 'Line 2 differs'
+    write( 12, '(a)' ) 'Line 2 differs ...'
+    write( 11, '(a)' ) 'Line 3 differs only slightly: pi = 3.1415926 ...'
+    write( 12, '(a)' ) 'Line 3 differs only slightly: pi = 3.1415927 ...'
+    write( 11, '(a)' ) 'Line 4 differs significantly: pi = 3.1415926 ...'
+    write( 12, '(a)' ) 'Line 4 differs significantly: pi = 3.1       ...'
+
+    close( 11 )
+    close( 12 )
+
+    call assert_files_comparable( 'test1.out', 'test2.out', 'Files should be equal' )
+
+end subroutine test_compare_files
 
 end module dataproc_testing
 
