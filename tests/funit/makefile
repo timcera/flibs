@@ -8,13 +8,19 @@ FCOPTS = -c -I../../src/funit
 EXEEXT = .exe
 OBJEXT = .o
 
-all:	test_ftnunit$(EXEEXT)
+all:	test_ftnunit$(EXEEXT) test_tridiag$(EXEEXT)
 
 test_ftnunit$(EXEEXT):	ftnunit$(OBJEXT) test_ftnunit$(OBJEXT)
 	$(F95) -o test_ftnunit$(EXEEXT) test_ftnunit$(OBJEXT) ftnunit$(OBJEXT)
 
 test_ftnunit$(OBJEXT):	test_ftnunit.f90
 	$(F95) $(FCOPTS) test_ftnunit.f90
+
+test_tridiag$(EXEEXT):	ftnunit$(OBJEXT) test_tridiag$(OBJEXT)
+	$(F95) -o test_tridiag$(EXEEXT) test_tridiag$(OBJEXT) ftnunit$(OBJEXT)
+
+test_tridiag$(OBJEXT):	test_tridiag.f90
+	$(F95) $(FCOPTS) test_tridiag.f90
 
 ftnunit$(OBJEXT):	../../src/funit/ftnunit.f90
 	$(F95) $(FCOPTS) ../../src/funit/ftnunit.f90
