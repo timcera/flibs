@@ -4,18 +4,24 @@
 !     $id$
 !
 !     TODO:
-!     - Almost everything
-!     - Get drivers
+!     - Get columns
+!     - odbc_prepare_select: split up because of extra_clause
+!     - selecting FLOAT columns
+!     - trim() function on bind text?
+!     - error handling
 !
 module odbc_types
     implicit none
 
     integer, parameter         :: dp = kind(1.0d0)
 
-    integer, parameter         :: ODBC_INT    = 1
-    integer, parameter         :: ODBC_REAL   = 2
-    integer, parameter         :: ODBC_DOUBLE = 3
-    integer, parameter         :: ODBC_CHAR   = 4
+    integer, parameter         :: ODBC_INT     = 1
+    integer, parameter         :: ODBC_REAL    = 2
+    integer, parameter         :: ODBC_DOUBLE  = 3
+    integer, parameter         :: ODBC_CHAR    = 4
+
+    integer, parameter         :: ODBC_ROW     = 100
+    integer, parameter         :: ODBC_ERRCODE = 999
 
     character(len=40), parameter :: ODBC_MSACCESS ="MicroSoft Access Driver (*.mdb)"
 
@@ -56,10 +62,10 @@ module odbc
         module procedure odbc_open_file
     end interface
 
-!    interface odbc_errmsg
-!        module procedure odbc_errmsg_db
-!        module procedure odbc_errmsg_stmt
-!    end interface
+    interface odbc_errmsg
+        module procedure odbc_errmsg_db
+        module procedure odbc_errmsg_stmt
+    end interface
 
    !
    ! Convenient interfaces
@@ -438,12 +444,12 @@ logical function odbc_error( db )
 end function odbc_error
 
 
-! odbc_errmsg --
+! odbc_errmsg_db --
 !    Print the last error message (TODO)
 ! Arguments:
 !    db            Connection to the database
 !
-subroutine odbc_errmsg( db )
+subroutine odbc_errmsg_db( db )
    type(odbc_database) :: db
 
     interface
@@ -461,7 +467,7 @@ subroutine odbc_errmsg( db )
     character(len=10) :: state
     character(len=80) :: text
 
-    do i = 0,10
+    do i = 1,10
         rc = odbc_get_diagnostics_c( db%db_handle, 0, i, state, text )
 
         if ( rc /= 0 ) exit
@@ -472,7 +478,44 @@ subroutine odbc_errmsg( db )
         write(*,*) state, trim(text)
     enddo
 
-end subroutine odbc_errmsg
+end subroutine odbc_errmsg_db
+
+
+! odbc_errmsg_stmt --
+!    Print the last error message (TODO)
+! Arguments:
+!    stmt          Prepared statement
+!
+subroutine odbc_errmsg_stmt( stmt )
+   type(odbc_statement) :: stmt
+
+    interface
+        integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
+            integer, dimension(*) :: handle
+            integer               :: type
+            integer               :: idx
+            character(len=*)      :: state
+            character(len=*)      :: text
+        end function odbc_get_diagnostics_c
+    end interface
+
+    integer           :: rc
+    integer           :: i
+    character(len=10) :: state
+    character(len=80) :: text
+
+    do i = 1,10
+        rc = odbc_get_diagnostics_c( stmt%stmt_handle, 1, i, state, text )
+
+        if ( rc /= 0 ) exit
+
+        call stringtof( state )
+        call stringtof( text )
+
+        write(*,*) state, trim(text)
+    enddo
+
+end subroutine odbc_errmsg_stmt
 
 
 ! odbc_get_data_source --
@@ -559,6 +602,42 @@ subroutine odbc_get_driver( next, driver, description, success )
     endif
 
 end subroutine odbc_get_driver
+
+
+! odbc_do --
+!    Run a single SQL command
+! Arguments:
+!    db            Structure for the database
+!    command       Complete SQL command
+! Side effects:
+!    Whatever effects the command has. Note
+!    that no output is reported back to the
+!    caller (except for error codes and
+!    messages if any)
+!    longer be accessed
+!
+subroutine odbc_do( db, command )
+   type(ODBC_DATABASE) :: db
+   character(len=*)    :: command
+
+   interface
+      integer function odbc_do_c( handle, command, errmsg )
+         integer, dimension(*) :: handle
+         character(len=*)      :: command
+         character(len=*)      :: errmsg
+      end function odbc_do_c
+   end interface
+
+   character(len=len(command)+1) :: commandc
+   integer                       :: k
+
+   commandc = command
+   call stringtoc( commandc )
+
+   db%errmsg = ' '
+   db%error  = odbc_do_c( db%db_handle, commandc, db%errmsg )
+
+end subroutine odbc_do
 
 
 ! odbc_get_table --
@@ -680,6 +759,361 @@ subroutine odbc_create_table( db, tablename, columns, primary )
    call odbc_do( db, command )
 end subroutine odbc_create_table
 
+
+! odbc_prepare_select --
+!    Prepare a selection of data from the database
+! Arguments:
+!    db            Structure for the database
+!    tablename     Name of the table
+!    columns       Columns to be returned
+!    stmt          Prepared statement (returned)
+!    extra_clause  Extra clause for SELECT statement (appended)
+! Side effects:
+!    A new selection is prepared
+!
+subroutine odbc_prepare_select( db, tablename, columns, stmt, extra_clause )
+    type(ODBC_DATABASE)                       :: db
+    character(len=*)                          :: tablename
+    type(ODBC_COLUMN), dimension(:), pointer  :: columns     ! On return: actual columns!
+    character(len=*), optional                :: extra_clause
+    type(ODBC_STATEMENT), intent(out)         :: stmt
+
+    character(len=20+80*size(columns))        :: command
+    integer                                   :: nocols
+    integer                                   :: i
+
+    interface
+        integer function odbc_exec_c( handle, rc )
+            integer, dimension(*) :: handle
+            integer               :: rc
+        end function odbc_exec_c
+    end interface
+
+    !
+    ! Prepare the select statement for this table
+    !
+    ! TODO: expand the syntax!!
+    !
+    nocols = size(columns)
+    write( command, '(100a)' ) 'select ', &
+        (trim(column_func(columns(i))), ',', i = 1,nocols-1), &
+         trim(column_func(columns(nocols))), &
+        ' from ', trim(tablename)
+
+    !
+    ! Hm, appending a string of arbitrary length is tricky ...
+    !
+    if ( present(extra_clause) ) then
+        command = trim(command) // ' ' // extra_clause
+    endif
+
+    command = trim(command) // ';'
+
+    call stringtoc( command )
+    call odbc_prepare( db, command, stmt, columns )
+    call odbc_exec_c( stmt%stmt_handle, db%error )
+
+end subroutine odbc_prepare_select
+
+
+! odbc_insert --
+!    Insert a row into the given table
+! Arguments:
+!    db            Structure for the database
+!    tablename     Name of the table
+!    columns       Columns whose value is to be inserted
+! Side effects:
+!    A new row is written to the database
+!
+subroutine odbc_insert( db, tablename, columns )
+    type(ODBC_DATABASE)                       :: db
+    character(len=*)                          :: tablename
+    type(ODBC_COLUMN), dimension(:), target   :: columns
+    character(len=20+80*size(columns))        :: command
+
+    type(ODBC_COLUMN), dimension(:), pointer  :: prepared_columns
+    type(ODBC_STATEMENT)                      :: stmt
+    integer                                   :: i
+    integer                                   :: rc
+    integer, save                             :: indicator
+
+    interface
+        subroutine odbc_errmsg_c( handle, errmsg )
+            integer, dimension(*) :: handle
+            character(len=*)      :: errmsg
+        end subroutine odbc_errmsg_c
+    end interface
+
+    interface
+        integer function odbc_bind_int_c( handle, colidx, value, indicator )
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            integer               :: value
+            integer               :: indicator
+        end function odbc_bind_int_c
+    end interface
+
+    interface
+        integer function odbc_bind_double_c( handle, colidx, value, indicator )
+            use odbc_types
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            real(kind=dp)         :: value
+            integer               :: indicator
+        end function odbc_bind_double_c
+    end interface
+
+    interface
+        integer function odbc_bind_text_c( handle, colidx, value, indicator )
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            character(len=*)      :: value
+            integer               :: indicator
+        end function odbc_bind_text_c
+    end interface
+
+    interface
+        integer function odbc_exec_c( handle, rc )
+            integer, dimension(*) :: handle
+            integer               :: rc
+        end function odbc_exec_c
+    end interface
+
+    !
+    ! Prepare the insert statement for this table
+    !
+    write( command, '(100a)' ) 'insert into ', trim(tablename), ' values(', &
+       ('?,', i = 1,size(columns)-1), '?);'
+
+    call stringtoc( command )
+    prepared_columns => columns
+    call odbc_prepare( db, command, stmt, prepared_columns )
+
+    !
+    ! Bind the values
+    !
+    do i = 1,size(columns)
+
+       select case (columns(i)%type_set)
+           case (ODBC_INT)
+               rc = odbc_bind_int_c( stmt%stmt_handle, i, columns(i)%int_value, indicator )
+           case (ODBC_REAL, ODBC_DOUBLE)
+               rc = odbc_bind_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator )
+           case (ODBC_CHAR)
+               rc = odbc_bind_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator )
+        end select
+        if ( rc .ne. 0 ) then
+           db%error = rc
+           call odbc_errmsg_c( db%db_handle, db%errmsg )
+           call stringtof( db%errmsg )
+        endif
+    enddo
+
+    !
+    ! Actually perform the insert command
+    !
+    call odbc_exec_c( stmt%stmt_handle, rc )
+
+    ! AD HOC
+    if ( rc /= 0 ) then
+        call odbc_errmsg_stmt( stmt )
+    endif
+    db%error = rc
+    call odbc_finalize( stmt )
+end subroutine odbc_insert
+
+
+! odbc_next_row --
+!    Gets the next row of data from a selection
+! Arguments:
+!    stmt          Prepared statement
+!    columns       Columns to be returned
+!    finished      Indicates there are no more data
+!
+subroutine odbc_next_row( stmt, columns, finished )
+    type(ODBC_STATEMENT)            :: stmt
+    type(ODBC_COLUMN), dimension(:) :: columns
+    logical                         :: finished
+
+    interface
+        integer function odbc_column_int_c( handle, colidx, value, indicator )
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            integer               :: value
+            integer               :: indicator
+        end function odbc_column_int_c
+    end interface
+
+    interface
+        integer function odbc_column_double_c( handle, colidx, value, indicator )
+            use odbc_types
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            real(kind=dp)         :: value
+            integer               :: indicator
+        end function odbc_column_double_c
+    end interface
+
+    interface
+        integer function odbc_column_text_c( handle, colidx, value, indicator )
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            character(len=*)      :: value
+            integer               :: indicator
+        end function odbc_column_text_c
+    end interface
+
+    integer                           :: rc
+    integer                           :: i
+    integer, save                     :: indicator
+
+    call odbc_step( stmt, rc )
+
+    if ( rc .eq. ODBC_ROW ) then
+        finished = .false.
+
+        !
+        ! Get the values
+        !
+        ! TODO: check validity of "type_set"
+        !
+        do i = 1,size(columns)
+            select case (columns(i)%type_set)
+                case (ODBC_INT)
+                    rc = odbc_column_int_c( stmt%stmt_handle, i, columns(i)%int_value, indicator )
+                case (ODBC_REAL,ODBC_DOUBLE)
+                   rc = odbc_column_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator  )
+                case (ODBC_CHAR)
+                   rc = odbc_column_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator  )
+                   call stringtof( columns(i)%char_value )
+            end select
+            ! if ( rc .ne. 0 ) then
+            !    db%error = rc
+            !    call odbc_errmsg_c( db%db_handle, db%errmsg )
+            !    call stringtof( db%errmsg )
+            ! endif
+        enddo
+    else
+        finished = .true.
+    endif
+
+end subroutine odbc_next_row
+
+
+! odbc_prepare --
+!    Reset the prepared SQL statement so that it can
+!    be used again
+! Arguments:
+!    stmt          Handle to the prepared statement
+!
+subroutine odbc_prepare( db, command, stmt, columns )
+    type(ODBC_DATABASE), intent(inout)        :: db
+    character(len=*), intent(in)              :: command
+    type(ODBC_STATEMENT), intent(out)         :: stmt
+    type(ODBC_COLUMN), dimension(:), pointer  :: columns     ! On return: actual columns!
+
+    interface
+       integer function odbc_prepare_c( db, command, stmt )
+          integer, dimension(*) :: db
+          character(len=*)      :: command
+          integer, dimension(*) :: stmt
+       end function odbc_prepare_c
+    end interface
+
+    interface
+       subroutine odbc_column_count_c( handle, count )
+          integer, dimension(*) :: handle
+          integer               :: count
+       end subroutine odbc_column_count_c
+    end interface
+
+    interface
+       subroutine odbc_column_name_type_c( handle, colidx, name, type )
+          integer, dimension(*) :: handle
+          integer               :: colidx
+          character(len=*)      :: name
+          character(len=*)      :: type
+       end subroutine odbc_column_name_type_c
+    end interface
+
+    integer                                     :: count
+    integer                                     :: i
+    character(len=len(command)+1)               :: commandc
+
+    commandc = command
+    call stringtoc( commandc )
+    db%error = odbc_prepare_c( db%db_handle, commandc, stmt%stmt_handle )
+
+    if ( db%error .eq. 0 ) then
+        if ( associated(columns) ) return ! Assumption: they are already known
+
+        call odbc_column_count_c( stmt%stmt_handle, count )
+
+        allocate( columns(1:count) )
+
+        do i = 1,count
+            call odbc_column_name_type_c( stmt%stmt_handle, i, &
+                columns(i)%name, columns(i)%type )
+            call stringtof( columns(i)%name )
+            call stringtof( columns(i)%type )
+
+            select case (columns(i)%type(1:4) )
+                case( 'INT ', 'INTE' )
+                    columns(i)%type_set = ODBC_INT
+                case( 'FLOA', 'DOUB' )
+                    columns(i)%type_set = ODBC_DOUBLE
+                case( 'CHAR', 'VARC' )
+                    columns(i)%type_set = ODBC_CHAR
+            end select
+
+        enddo
+    else
+        call odbc_errmsg_c( db%db_handle, db%errmsg )
+    endif
+
+end subroutine odbc_prepare
+
+
+! odbc_finalize --
+!    Finalize the prepared SQL statement
+! Arguments:
+!    stmt          Handle to the prepared statement
+!
+subroutine odbc_finalize( stmt )
+   type(ODBC_STATEMENT) :: stmt
+
+   call odbc_finalize_c( stmt%stmt_handle )
+
+end subroutine odbc_finalize
+
+
+! odbc_step --
+!    Run the prepared SQL statement
+! Arguments:
+!    stmt          Handle to the prepared statement
+!    completion    Return code, indicating if the command is complete or
+!                  not (ODBC_DONE, ODBC_MISUSE or ODBC_ERROR)
+!
+subroutine odbc_step( stmt, completion )
+   type(ODBC_STATEMENT)                      :: stmt
+   integer, intent(out)                        :: completion
+
+   interface
+      subroutine odbc_step_c( stmt, completion )
+         integer, dimension(*) :: stmt
+         integer               :: completion
+      end subroutine odbc_step_c
+   end interface
+
+   call odbc_step_c( stmt%stmt_handle, completion )
+
+   ! AD HOC
+   if ( completion == 999 ) then
+       call odbc_errmsg_stmt( stmt )
+   endif
+
+end subroutine odbc_step
+
 end module
 
 
@@ -699,9 +1133,14 @@ program test_odbc
     character(len=40)                 :: table
     character(len=200)                :: description
     character(len=200), dimension(10) :: table_desc
+    character(len=10)                 :: param
+    integer                           :: colno
+    logical                           :: finished
 
     type(odbc_database)               :: db
-    type(odbc_column), dimension(3)   :: column
+    type(odbc_statement)              :: stmt
+    type(odbc_column), dimension(4), target  :: column
+    type(odbc_column), dimension(:), pointer :: p_columns
     !
     ! First, simple step: check what data sources we have
     !
@@ -759,12 +1198,56 @@ program test_odbc
     ! Create a new table
     !
     call odbc_open( "measurements.mdb", odbc_msaccess, db )
+    if ( odbc_error(db) ) then
+        call odbc_errmsg( db )
+    endif
 
     call odbc_column_props( column(1), 'X', ODBC_CHAR, 10 )
     call odbc_column_props( column(2), 'Y', ODBC_CHAR, 10 )
     call odbc_column_props( column(3), 'Salinity', ODBC_REAL )
     call odbc_column_props( column(4), 'Temperature', ODBC_REAL )
 
-    call odbc_create_table( db, 'measurements', column )
+   !call odbc_create_table( db, 'measurements', column )
+
+    !
+    ! Insert a few rows -- this does not work yet!
+    !
+    if ( .false. ) then
+    call odbc_set_column( column(1), 'A' )
+    call odbc_set_column( column(2), 'B' )
+    call odbc_set_column( column(3), 10.0 )
+    call odbc_set_column( column(3), 12.0 )
+    call odbc_insert( db, 'measurements', column )
+    if ( odbc_error(db) ) then
+        call odbc_errmsg(db)
+    endif
+
+    call odbc_set_column( column(1), 'C' )
+    call odbc_set_column( column(2), 'D' )
+    call odbc_set_column( column(3), 20.0 )
+    call odbc_set_column( column(3), 3.0 )
+    call odbc_insert( db, 'measurements', column )
+    endif
+
+    call odbc_column_props( column(1), 'kolomnummer', ODBC_INT )
+    call odbc_column_props( column(2), 'parameter', ODBC_CHAR, 10 )
+
+    p_columns => column(1:2)
+    call odbc_prepare_select( db, 'KolomBetekenis', p_columns, stmt )
+
+    finished = .false.
+    do while ( .not. finished )
+        call odbc_next_row( stmt, p_columns, finished )
+
+        if ( .not. finished ) then
+            call odbc_get_column( p_columns(1), colno )
+            call odbc_get_column( p_columns(2), param )
+
+            write(*,*) colno, param
+        endif
+    enddo
+
+    call odbc_finalize( stmt )
+    call odbc_close( db )
 
 end program test_odbc
