@@ -17,7 +17,7 @@
 #define odbc_exec_c_                ODBC_EXEC_C
 #define odbc_get_data_source_c_     ODBC_GET_DATA_SOURCE_C
 #define odbc_get_driver_c_          ODBC_GET_DRIVER_C
-#define odbc_get_table_c_           ODBC_GET_TABLE_C
+#define odbc_get_table_name_c_      ODBC_GET_TABLE_NAME_C
 #define odbc_get_diagnostics_c_     ODBC_GET_DIAGNOSTICS_C
 #define odbc_finalize_c_            ODBC_FINALIZE_C
 #define odbc_reset_c_               ODBC_RESET_C
@@ -34,8 +34,8 @@
 #define odbc_column_int_c_          ODBC_COLUMN_INT_C
 #define odbc_column_double_c_       ODBC_COLUMN_DOUBLE_C
 #define odbc_column_text_c_         ODBC_COLUMN_TEXT_C
-#define odbc_get_table_1_c_         ODBC_GET_TABLE_1_C
-#define odbc_get_table_2_c_         ODBC_GET_TABLE_2_C
+#define odbc_get_table_name_1_c_    ODBC_GET_TABLE_1_C
+#define odbc_get_table_name_2_c_    ODBC_GET_TABLE_2_C
 #include <windows.h>
 #endif /* WIN32 */
 #endif /* !defined(LOWERCASE) && !defined(DBL_UNDERSCORE) */
@@ -50,7 +50,7 @@
 #define odbc_exec_c_                odbc_exec_c__
 #define odbc_get_data_source_c_     odbc_get_data_source_c__
 #define odbc_get_driver_c_          odbc_get_driver_c__
-#define odbc_get_table_c_           odbc_get_table_c
+#define odbc_get_table_name_c_      odbc_get_table_name_c
 #define odbc_get_diagnostics_c_     odbc_get_diagnostics_c__
 #define odbc_finalize_c_            odbc_finalize_c__
 #define odbc_reset_c_               odbc_reset_c__
@@ -288,7 +288,7 @@ int FTNCALL odbc_get_driver_c_(
     }
 }
 
-int FTNCALL odbc_get_table_c_(
+int FTNCALL odbc_get_table_name_c_(
        SQLHDBC  *db,
        SQLHSTMT *stmt,
        int      *direction,
@@ -433,16 +433,48 @@ void FTNCALL odbc_column_name_type_c_(
        int       len_type
       )
 {
-    int   rc   ;
-    char *pstr ;
-/*
-    pstr = odbc_column_name(*stmt, *colidx ) ;
-    strncpy( name, pstr, len_name ) ;
+    int          rc   ;
+    char        *pstr ;
+    SQLSMALLINT  actual_length ;
+    SQLSMALLINT  data_type     ;
+    SQLSMALLINT  column_size   ;
+    SQLSMALLINT  decimals      ;
+    SQLSMALLINT  nullable      ;
+
+    rc = SQLDescribeCol( *stmt, *colidx, name, (SQLSMALLINT)len_name, &actual_length,
+             &data_type, &column_size, &decimals, &nullable ) ;
+
     name[len_name-1] = '\0' ;
-    pstr = odbc_column_decltype(*stmt, *colidx ) ;
-    strncpy( type, pstr, len_type ) ;
-    type[len_type-1] = '\0' ;
-*/
+
+    switch (data_type) {
+        case SQL_INTEGER:
+        case SQL_SMALLINT:
+            strcpy( type, "INTEGER" ) ;
+            break ;
+        case SQL_REAL:
+        case SQL_FLOAT:
+            strcpy( type, "FLOAT" ) ;
+            break ;
+        case SQL_DOUBLE:
+        case SQL_NUMERIC:
+        case SQL_DECIMAL:
+            strcpy( type, "DOUBLE" ) ;
+            break ;
+        case SQL_CHAR:
+        case SQL_VARCHAR:
+            strcpy( type, "CHARACTER" ) ;
+            break ;
+        case SQL_DATETIME:
+        case SQL_TYPE_TIME:
+        case SQL_TYPE_DATE:
+        case SQL_TYPE_TIMESTAMP:
+            strcpy( type, "CHARACTER" ) ; /* For now at least */
+            break ;
+        default:
+            strcpy( type, "????" ) ;
+            break ;
+    }
+
     return ;
 }
 
@@ -591,7 +623,7 @@ int FTNCALL odbc_get_table_1_c_(
    int   rc  ;
    char *msg ;
 
-   rc = odbc_get_table(*db, command, &result, nrow, ncol, &msg ) ;
+   rc = odbc_get_table_name(*db, command, &result, nrow, ncol, &msg ) ;
    if ( msg != NULL )
    {
       strncpy( errmsg, msg, len_errmsg ) ;

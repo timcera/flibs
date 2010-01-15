@@ -24,6 +24,8 @@ module odbc_types
     integer, parameter         :: ODBC_ERRCODE = 999
 
     character(len=40), parameter :: ODBC_MSACCESS ="MicroSoft Access Driver (*.mdb)"
+    character(len=40), parameter :: ODBC_MSEXCEL  ="MicroSoft Excel Driver (*.xls)"
+    character(len=40), parameter :: ODBC_SQLITE3  ="SQLite3 ODBC"
 
     type ODBC_STATEMENT
         integer, dimension(2)   :: stmt_handle
@@ -362,9 +364,12 @@ subroutine odbc_open_file( filename, driver, db )
     character(len=len(filename)+len(driver)+100)   :: connection_string
 
     select case (driver)
-        case (odbc_msaccess)
+        case (odbc_msaccess, odbc_msexcel)
             connection_string = "DBQ=" // trim(filename) // &
                 ";DRIVER={" // trim(driver) // "};"
+        case (odbc_sqlite3)
+            connection_string = "Database=" // trim(filename) // &
+                ";DRIVER={" // trim(driver) // "}; LongNames=0; Timeout=1000; NoTXN=0; SyncPragma=NORMAL; StepAPI=0"
         case default
             db%errmsg = "Unknown driver: " // trim(driver)
             db%error  = -1
@@ -640,7 +645,53 @@ subroutine odbc_do( db, command )
 end subroutine odbc_do
 
 
-! odbc_get_table --
+! odbc_begin --
+!    Start a transaction on the given database
+! Arguments:
+!    db            Structure for the database
+! Note:
+!    Should be accompanied by a call to either
+!    odbc_commit or odbc_rollback
+!
+subroutine odbc_begin( db )
+   type(ODBC_DATABASE) :: db
+
+   call odbc_do( db, "BEGIN TRANSACTION" )
+
+end subroutine odbc_begin
+
+
+! odbc_commit --
+!    Commits a transaction on the given database
+! Arguments:
+!    db            Structure for the database
+! Note:
+!    Accompanies odbc_begin
+!
+subroutine odbc_commit( db )
+   type(ODBC_DATABASE) :: db
+
+   call odbc_do( db, "COMMIT TRANSACTION" )
+
+end subroutine odbc_commit
+
+
+! odbc_rollback --
+!    Rolls back any changes to the database since the last commit
+! Arguments:
+!    db            Structure for the database
+! Note:
+!    Accompanies odbc_begin
+!
+subroutine odbc_rollback( db )
+   type(ODBC_DATABASE) :: db
+
+   call odbc_do( db, "ROLLBACK" )
+
+end subroutine odbc_rollback
+
+
+! odbc_get_table_name --
 !     Get information on the first or the next table
 !
 ! Arguments:
@@ -652,7 +703,7 @@ end subroutine odbc_do
 !     success              Whether we had success or not
 !                          (if not, no source was returned)
 !
-subroutine odbc_get_table( db, next, table, description, success )
+subroutine odbc_get_table_name( db, next, table, description, success )
     type(odbc_database), intent(inout)          :: db
     logical, intent(in)                         :: next
     character(len=*), intent(out)               :: table
@@ -660,14 +711,14 @@ subroutine odbc_get_table( db, next, table, description, success )
     logical, intent(out)                        :: success
 
     interface
-        integer function odbc_get_table_c( db, stmt, direction, &
+        integer function odbc_get_table_name_c( db, stmt, direction, &
                 nstrings, description )
             integer, dimension(*)          :: db
             integer, dimension(*)          :: stmt
             integer                        :: direction
             integer                        :: nstrings
             character(len=*), dimension(*) :: description
-        end function odbc_get_table_c
+        end function odbc_get_table_name_c
     end interface
 
     integer :: direction
@@ -685,7 +736,7 @@ subroutine odbc_get_table( db, next, table, description, success )
     nstrings    = size(description)
     table       = ' '
     description = ' '
-    error = odbc_get_table_c( db%db_handle, db%stmt_handle, direction, &
+    error = odbc_get_table_name_c( db%db_handle, db%stmt_handle, direction, &
                 nstrings, description )
 
     if ( error == 0 ) then
@@ -700,7 +751,42 @@ subroutine odbc_get_table( db, next, table, description, success )
         description = ' '
     endif
 
-end subroutine odbc_get_table
+end subroutine odbc_get_table_name
+
+
+! odbc_query_table --
+!    Retrieve the column names and types from a table
+! Arguments:
+!    db            Structure for the database
+!    tablename     Name of the table
+!    columns       Columns (allocated array)
+! Side effects:
+!    The columns array is allocated and filled
+! Note:
+!    On entry the columns argument must not be
+!    associated. On exit, it will point to a
+!    freshly allocated array of column names/types
+!
+subroutine odbc_query_table( db, tablename, columns )
+   type(ODBC_DATABASE)                       :: db
+   character(len=*)                          :: tablename
+   type(ODBC_COLUMN), dimension(:), pointer  :: columns     ! On return: actual columns!
+
+   type(ODBC_STATEMENT)                      :: stmt
+   character(len=20+len(tablename))          :: command
+
+   write( command, '(2a)' ) 'select * from ',tablename
+
+   !
+   ! Note, we must free the columns, but we can not be sure
+   ! they are no longer used. So simply disassociate.
+   if ( associated(columns) ) then
+      nullify( columns )
+   endif
+   call odbc_prepare( db, command, stmt, columns )
+   call odbc_finalize( stmt )
+
+end subroutine odbc_query_table
 
 
 ! odbc_delete_table --
@@ -1134,8 +1220,12 @@ program test_odbc
     character(len=200)                :: description
     character(len=200), dimension(10) :: table_desc
     character(len=10)                 :: param
+    integer                           :: i
     integer                           :: colno
     logical                           :: finished
+    character(len=10)                 :: date
+    real(dp)                          :: value1
+    real(dp)                          :: value2
 
     type(odbc_database)               :: db
     type(odbc_statement)              :: stmt
@@ -1184,7 +1274,7 @@ program test_odbc
     success = .true.
 
     do while( success )
-        call odbc_get_table( db, next, table, table_desc, success )
+        call odbc_get_table_name( db, next, table, table_desc, success )
         if ( success ) then
             write(*,'(2a)') table, trim(table_desc(4))
         endif
@@ -1193,61 +1283,122 @@ program test_odbc
     enddo
 
     call odbc_close( db )
+!
+!   !
+!   ! Create a new table
+!   !
+!   call odbc_open( "measurements.mdb", odbc_msaccess, db )
+!   if ( odbc_error(db) ) then
+!       call odbc_errmsg( db )
+!   endif
+!
+!   call odbc_column_props( column(1), 'X', ODBC_CHAR, 10 )
+!   call odbc_column_props( column(2), 'Y', ODBC_CHAR, 10 )
+!   call odbc_column_props( column(3), 'Salinity', ODBC_REAL )
+!   call odbc_column_props( column(4), 'Temperature', ODBC_REAL )
+!
+!  !call odbc_create_table( db, 'measurements', column )
+!
+!   !
+!   ! Insert a few rows -- this does not work yet!
+!   !
+!   if ( .false. ) then
+!   call odbc_set_column( column(1), 'A' )
+!   call odbc_set_column( column(2), 'B' )
+!   call odbc_set_column( column(3), 10.0 )
+!   call odbc_set_column( column(3), 12.0 )
+!   call odbc_insert( db, 'measurements', column )
+!   if ( odbc_error(db) ) then
+!       call odbc_errmsg(db)
+!   endif
+!
+!   call odbc_set_column( column(1), 'C' )
+!   call odbc_set_column( column(2), 'D' )
+!   call odbc_set_column( column(3), 20.0 )
+!   call odbc_set_column( column(3), 3.0 )
+!   call odbc_insert( db, 'measurements', column )
+!   endif
+!
+!   call odbc_column_props( column(1), 'kolomnummer', ODBC_INT )
+!   call odbc_column_props( column(2), 'parameter', ODBC_CHAR, 10 )
+!
+!   p_columns => column(1:2)
+!   call odbc_prepare_select( db, 'KolomBetekenis', p_columns, stmt )
+!
+!   finished = .false.
+!   do while ( .not. finished )
+!       call odbc_next_row( stmt, p_columns, finished )
+!
+!       if ( .not. finished ) then
+!           call odbc_get_column( p_columns(1), colno )
+!           call odbc_get_column( p_columns(2), param )
+!
+!           write(*,*) colno, param
+!       endif
+!   enddo
 
-    !
-    ! Create a new table
-    !
-    call odbc_open( "measurements.mdb", odbc_msaccess, db )
+    write(*,*) 'Data:'
+
+    call odbc_open( "example.mdb", odbc_msaccess, db )
     if ( odbc_error(db) ) then
         call odbc_errmsg( db )
     endif
 
-    call odbc_column_props( column(1), 'X', ODBC_CHAR, 10 )
-    call odbc_column_props( column(2), 'Y', ODBC_CHAR, 10 )
-    call odbc_column_props( column(3), 'Salinity', ODBC_REAL )
-    call odbc_column_props( column(4), 'Temperature', ODBC_REAL )
+    write(*,*) 'Columns of table "example"'
+    p_columns => null()
+    call odbc_query_table( db, 'example', p_columns )
+    do i = 1,size(p_columns)
+        write(*,'(1x,a20,a,a20)') p_columns(i)%name, ' -- ', p_columns(i)%type
+    enddo
 
-   !call odbc_create_table( db, 'measurements', column )
+    deallocate( p_columns )
 
-    !
-    ! Insert a few rows -- this does not work yet!
-    !
-    if ( .false. ) then
-    call odbc_set_column( column(1), 'A' )
-    call odbc_set_column( column(2), 'B' )
-    call odbc_set_column( column(3), 10.0 )
-    call odbc_set_column( column(3), 12.0 )
-    call odbc_insert( db, 'measurements', column )
-    if ( odbc_error(db) ) then
-        call odbc_errmsg(db)
-    endif
+    call odbc_column_props( column(1), 'date', ODBC_CHAR, 10 )
+    call odbc_column_props( column(2), 'value', ODBC_DOUBLE )
+    call odbc_column_props( column(3), 'another', ODBC_DOUBLE )
 
-    call odbc_set_column( column(1), 'C' )
-    call odbc_set_column( column(2), 'D' )
-    call odbc_set_column( column(3), 20.0 )
-    call odbc_set_column( column(3), 3.0 )
-    call odbc_insert( db, 'measurements', column )
-    endif
-
-    call odbc_column_props( column(1), 'kolomnummer', ODBC_INT )
-    call odbc_column_props( column(2), 'parameter', ODBC_CHAR, 10 )
-
-    p_columns => column(1:2)
-    call odbc_prepare_select( db, 'KolomBetekenis', p_columns, stmt )
+    p_columns => column(1:3)
+    call odbc_prepare_select( db, 'example', p_columns, stmt )
 
     finished = .false.
     do while ( .not. finished )
         call odbc_next_row( stmt, p_columns, finished )
 
         if ( .not. finished ) then
-            call odbc_get_column( p_columns(1), colno )
-            call odbc_get_column( p_columns(2), param )
+            call odbc_get_column( p_columns(1), date )
+            call odbc_get_column( p_columns(2), value1 )
+            call odbc_get_column( p_columns(3), value2 )
 
-            write(*,*) colno, param
+            write(*,*) date, value1, value2
         endif
     enddo
 
     call odbc_finalize( stmt )
     call odbc_close( db )
 
+    !
+    ! Getting information from an MS Excel file
+    !
+
+    write(*,'(a)')   'Example with MS Excel:'
+    write(*,'(a)')   'List of tables:'
+
+    call odbc_open( "example.xls", odbc_msexcel, db )
+    if ( odbc_error(db) ) then
+        call odbc_errmsg( db )
+    endif
+
+    next    = .false.
+    success = .true.
+
+    do while( success )
+        call odbc_get_table_name( db, next, table, table_desc, success )
+        if ( success ) then
+            write(*,'(2a)') table, trim(table_desc(4))
+        endif
+
+        next = .true.
+    enddo
+
+    call odbc_close( db )
 end program test_odbc
