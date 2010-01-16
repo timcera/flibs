@@ -31,6 +31,9 @@
 #define odbc_bind_null_c_           ODBC_BIND_NULL_C
 #define odbc_bind_double_c_         ODBC_BIND_DOUBLE_C
 #define odbc_bind_text_c_           ODBC_BIND_TEXT_C
+#define odbc_bind_param_int_c_      ODBC_BIND_PARAM_INT_C
+#define odbc_bind_param_double_c_   ODBC_BIND_PARAM_DOUBLE_C
+#define odbc_bind_param_text_c_     ODBC_BIND_PARAM_TEXT_C
 #define odbc_column_int_c_          ODBC_COLUMN_INT_C
 #define odbc_column_double_c_       ODBC_COLUMN_DOUBLE_C
 #define odbc_column_text_c_         ODBC_COLUMN_TEXT_C
@@ -64,6 +67,9 @@
 #define odbc_bind_null_c_           odbc_bind_null_c__
 #define odbc_bind_double_c_         odbc_bind_double_c__
 #define odbc_bind_text_c_           odbc_bind_text_c__
+#define odbc_bind_param_int_c_      odbc_bind_param_int_c__
+#define odbc_bind_param_double_c_   odbc_bind_param_double_c__
+#define odbc_bind_param_text_c_     odbc_bind_param_text_c__
 #define odbc_column_int_c_          odbc_column_int_c__
 #define odbc_column_double_c_       odbc_column_double_c__
 #define odbc_column_text_c_         odbc_column_text_c__
@@ -534,6 +540,66 @@ int FTNCALL odbc_bind_text_c_(
     } else {
         return rc;
     }
+}
+
+/* ODBC distinguishes columns in a result set and parameters in a general SQL statement.
+   These functions are used for the insert statement.
+*/
+int FTNCALL odbc_bind_param_int_c_(
+       SQLHSTMT *stmt,
+       int      *colidx,
+       long     *value,
+       int      *indicator
+      )
+{
+   int   rc   ;
+
+   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_INTEGER, SQL_INTEGER, 0, 0, value, 0, indicator ) ;
+   if ( SQL_SUCCEEDED(rc) ) {
+       return 0;
+   } else {
+       return rc;
+   }
+}
+
+int FTNCALL odbc_bind_param_double_c_(
+       SQLHSTMT *stmt,
+       int      *colidx,
+       double   *value,
+       int      *indicator
+      )
+{
+   int   rc   ;
+
+   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_DOUBLE, SQL_DOUBLE, 0, 0, value, 0, indicator ) ;
+   if ( SQL_SUCCEEDED(rc) ) {
+       return 0;
+   } else {
+       return rc;
+   }
+}
+
+int FTNCALL odbc_bind_param_text_c_(
+       SQLHSTMT *stmt,
+       int      *colidx,
+       char     *text,
+#ifdef INBETWEEN
+       int       len_text,
+#endif
+       int      *indicator
+#ifndef INBETWEEN
+      ,int       len_text
+#endif
+      )
+{
+   int   rc   ;
+
+   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_CHAR, SQL_CHAR, len_text, 0, text, len_text, indicator ) ;
+   if ( SQL_SUCCEEDED(rc) ) {
+       return 0;
+   } else {
+       return rc;
+   }
 }
 
 int FTNCALL odbc_column_int_c_(

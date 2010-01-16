@@ -931,31 +931,31 @@ subroutine odbc_insert( db, tablename, columns )
     end interface
 
     interface
-        integer function odbc_bind_int_c( handle, colidx, value, indicator )
+        integer function odbc_bind_param_int_c( handle, colidx, value, indicator )
             integer, dimension(*) :: handle
             integer               :: colidx
             integer               :: value
             integer               :: indicator
-        end function odbc_bind_int_c
+        end function odbc_bind_param_int_c
     end interface
 
     interface
-        integer function odbc_bind_double_c( handle, colidx, value, indicator )
+        integer function odbc_bind_param_double_c( handle, colidx, value, indicator )
             use odbc_types
             integer, dimension(*) :: handle
             integer               :: colidx
             real(kind=dp)         :: value
             integer               :: indicator
-        end function odbc_bind_double_c
+        end function odbc_bind_param_double_c
     end interface
 
     interface
-        integer function odbc_bind_text_c( handle, colidx, value, indicator )
+        integer function odbc_bind_param_text_c( handle, colidx, value, indicator )
             integer, dimension(*) :: handle
             integer               :: colidx
             character(len=*)      :: value
             integer               :: indicator
-        end function odbc_bind_text_c
+        end function odbc_bind_param_text_c
     end interface
 
     interface
@@ -982,11 +982,11 @@ subroutine odbc_insert( db, tablename, columns )
 
        select case (columns(i)%type_set)
            case (ODBC_INT)
-               rc = odbc_bind_int_c( stmt%stmt_handle, i, columns(i)%int_value, indicator )
+               rc = odbc_bind_param_int_c( stmt%stmt_handle, i, columns(i)%int_value, indicator )
            case (ODBC_REAL, ODBC_DOUBLE)
-               rc = odbc_bind_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator )
+               rc = odbc_bind_param_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator )
            case (ODBC_CHAR)
-               rc = odbc_bind_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator )
+               rc = odbc_bind_param_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator )
         end select
         if ( rc .ne. 0 ) then
            db%error = rc
@@ -1283,59 +1283,59 @@ program test_odbc
     enddo
 
     call odbc_close( db )
-!
-!   !
-!   ! Create a new table
-!   !
-!   call odbc_open( "measurements.mdb", odbc_msaccess, db )
-!   if ( odbc_error(db) ) then
-!       call odbc_errmsg( db )
-!   endif
-!
-!   call odbc_column_props( column(1), 'X', ODBC_CHAR, 10 )
-!   call odbc_column_props( column(2), 'Y', ODBC_CHAR, 10 )
-!   call odbc_column_props( column(3), 'Salinity', ODBC_REAL )
-!   call odbc_column_props( column(4), 'Temperature', ODBC_REAL )
-!
-!  !call odbc_create_table( db, 'measurements', column )
-!
-!   !
-!   ! Insert a few rows -- this does not work yet!
-!   !
-!   if ( .false. ) then
-!   call odbc_set_column( column(1), 'A' )
-!   call odbc_set_column( column(2), 'B' )
-!   call odbc_set_column( column(3), 10.0 )
-!   call odbc_set_column( column(3), 12.0 )
-!   call odbc_insert( db, 'measurements', column )
-!   if ( odbc_error(db) ) then
-!       call odbc_errmsg(db)
-!   endif
-!
-!   call odbc_set_column( column(1), 'C' )
-!   call odbc_set_column( column(2), 'D' )
-!   call odbc_set_column( column(3), 20.0 )
-!   call odbc_set_column( column(3), 3.0 )
-!   call odbc_insert( db, 'measurements', column )
-!   endif
-!
-!   call odbc_column_props( column(1), 'kolomnummer', ODBC_INT )
-!   call odbc_column_props( column(2), 'parameter', ODBC_CHAR, 10 )
-!
-!   p_columns => column(1:2)
-!   call odbc_prepare_select( db, 'KolomBetekenis', p_columns, stmt )
-!
-!   finished = .false.
-!   do while ( .not. finished )
-!       call odbc_next_row( stmt, p_columns, finished )
-!
-!       if ( .not. finished ) then
-!           call odbc_get_column( p_columns(1), colno )
-!           call odbc_get_column( p_columns(2), param )
-!
-!           write(*,*) colno, param
-!       endif
-!   enddo
+
+    !
+    ! Create a new table
+    !
+    call odbc_open( "measurements.mdb", odbc_msaccess, db )
+    if ( odbc_error(db) ) then
+        call odbc_errmsg( db )
+    endif
+
+    call odbc_column_props( column(1), 'X', ODBC_CHAR, 10 )
+    call odbc_column_props( column(2), 'Y', ODBC_CHAR, 10 )
+    call odbc_column_props( column(3), 'Salinity', ODBC_REAL )
+    call odbc_column_props( column(4), 'Temperature', ODBC_REAL )
+
+    call odbc_create_table( db, 'measurements', column )
+
+    !
+    ! Insert a few rows -- this does not work yet!
+    !
+    if ( .true. ) then
+    call odbc_set_column( column(1), 'A' )
+    call odbc_set_column( column(2), 'B' )
+    call odbc_set_column( column(3), 10.0 )
+    call odbc_set_column( column(4), 12.0 )
+    call odbc_insert( db, 'measurements', column )
+    if ( odbc_error(db) ) then
+        call odbc_errmsg(db)
+    endif
+
+    call odbc_set_column( column(1), 'C' )
+    call odbc_set_column( column(2), 'D' )
+    call odbc_set_column( column(3), 20.0 )
+    call odbc_set_column( column(3), 3.0 )
+    call odbc_insert( db, 'measurements', column )
+    endif
+
+    call odbc_column_props( column(1), 'kolomnummer', ODBC_INT )
+    call odbc_column_props( column(2), 'parameter', ODBC_CHAR, 10 )
+
+    p_columns => column(1:2)
+    call odbc_prepare_select( db, 'KolomBetekenis', p_columns, stmt )
+
+    finished = .false.
+    do while ( .not. finished )
+        call odbc_next_row( stmt, p_columns, finished )
+
+        if ( .not. finished ) then
+            call odbc_get_column( p_columns(1), colno )
+            call odbc_get_column( p_columns(2), param )
+
+            write(*,*) colno, param
+        endif
+    enddo
 
     write(*,*) 'Data:'
 
