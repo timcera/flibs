@@ -986,7 +986,10 @@ subroutine odbc_insert( db, tablename, columns )
            case (ODBC_REAL, ODBC_DOUBLE)
                rc = odbc_bind_param_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator )
            case (ODBC_CHAR)
-               rc = odbc_bind_param_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator )
+               call stringtoc( columns(i)%char_value )
+               columns(i)%int_value = len_trim(columns(i)%char_value)
+               rc = odbc_bind_param_text_c( stmt%stmt_handle, i, columns(i)%char_value, &
+                        columns(i)%int_value )
         end select
         if ( rc .ne. 0 ) then
            db%error = rc
@@ -1315,7 +1318,7 @@ program test_odbc
     call odbc_set_column( column(1), 'C' )
     call odbc_set_column( column(2), 'D' )
     call odbc_set_column( column(3), 20.0 )
-    call odbc_set_column( column(3), 3.0 )
+    call odbc_set_column( column(4), 3.3 )
     call odbc_insert( db, 'measurements', column )
     endif
 
@@ -1336,6 +1339,7 @@ program test_odbc
             write(*,*) colno, param
         endif
     enddo
+    call odbc_close( db )
 
     write(*,*) 'Data:'
 

@@ -586,7 +586,7 @@ int FTNCALL odbc_bind_param_text_c_(
 #ifdef INBETWEEN
        int       len_text,
 #endif
-       int      *indicator
+       int      *actual_length
 #ifndef INBETWEEN
       ,int       len_text
 #endif
@@ -594,7 +594,8 @@ int FTNCALL odbc_bind_param_text_c_(
 {
    int   rc   ;
 
-   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_CHAR, SQL_CHAR, len_text, 0, text, len_text, indicator ) ;
+   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
+            strlen(text)+1, 0, text, 0, actual_length ) ;
    if ( SQL_SUCCEEDED(rc) ) {
        return 0;
    } else {
