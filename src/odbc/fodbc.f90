@@ -69,6 +69,11 @@ module odbc
         module procedure odbc_errmsg_stmt
     end interface
 
+    interface odbc_errmsg_print
+        module procedure odbc_errmsg_print_db
+        module procedure odbc_errmsg_print_stmt
+    end interface
+
    !
    ! Convenient interfaces
    !
@@ -449,13 +454,15 @@ logical function odbc_error( db )
 end function odbc_error
 
 
-! odbc_errmsg_db --
-!    Print the last error message (TODO)
+! odbc_errmsg_print_db --
+!    Print the last error message(s)
 ! Arguments:
 !    db            Connection to the database
+!    lun           (Optional) LU-number to write to
 !
-subroutine odbc_errmsg_db( db )
-   type(odbc_database) :: db
+subroutine odbc_errmsg_print_db( db, lun )
+    type(odbc_database) :: db
+    integer, optional   :: lun
 
     interface
         integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
@@ -480,19 +487,25 @@ subroutine odbc_errmsg_db( db )
         call stringtof( state )
         call stringtof( text )
 
-        write(*,*) state, trim(text)
+        if ( present(lun) ) then
+            write( lun, *) state, trim(text)
+        else
+            write(*,*) state, trim(text)
+        endif
     enddo
 
-end subroutine odbc_errmsg_db
+end subroutine odbc_errmsg_print_db
 
 
-! odbc_errmsg_stmt --
+! odbc_errmsg_print_stmt --
 !    Print the last error message (TODO)
 ! Arguments:
 !    stmt          Prepared statement
+!    lun           (Optional) LU-number to write to
 !
-subroutine odbc_errmsg_stmt( stmt )
-   type(odbc_statement) :: stmt
+subroutine odbc_errmsg_print_stmt( stmt, lun )
+    type(odbc_statement) :: stmt
+    integer, optional   :: lun
 
     interface
         integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
@@ -517,8 +530,77 @@ subroutine odbc_errmsg_stmt( stmt )
         call stringtof( state )
         call stringtof( text )
 
-        write(*,*) state, trim(text)
+        if ( present(lun) ) then
+            write( lun, *) state, trim(text)
+        else
+            write(*,*) state, trim(text)
+        endif
     enddo
+
+end subroutine odbc_errmsg_print_stmt
+
+
+! odbc_errmsg_db --
+!    Return the last error message
+! Arguments:
+!    db            Connection to the database
+!    text          Error message
+!
+subroutine odbc_errmsg_db( db, text )
+    type(odbc_database) :: db
+    character(len=*)    :: text
+
+    interface
+        integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
+            integer, dimension(*) :: handle
+            integer               :: type
+            integer               :: idx
+            character(len=*)      :: state
+            character(len=*)      :: text
+        end function odbc_get_diagnostics_c
+    end interface
+
+    integer           :: rc
+    integer           :: i
+    character(len=10) :: state
+
+    if ( db%errmsg /= ' ' ) then
+        text = db%errmsg
+        return
+    else
+        rc = odbc_get_diagnostics_c( db%db_handle, 0, 1, state, text )
+        call stringtof( text )
+    endif
+
+end subroutine odbc_errmsg_db
+
+
+! odbc_errmsg_stmt --
+!    Return the last error message
+! Arguments:
+!    stmt          Prepared statement
+!    text          Error message
+!
+subroutine odbc_errmsg_stmt( stmt, text )
+    type(odbc_statement) :: stmt
+    character(len=*)     :: text
+
+    interface
+        integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
+            integer, dimension(*) :: handle
+            integer               :: type
+            integer               :: idx
+            character(len=*)      :: state
+            character(len=*)      :: text
+        end function odbc_get_diagnostics_c
+    end interface
+
+    integer           :: rc
+    integer           :: i
+    character(len=10) :: state
+
+    rc = odbc_get_diagnostics_c( stmt%stmt_handle, 1, i, state, text )
+    call stringtof( text )
 
 end subroutine odbc_errmsg_stmt
 
@@ -1003,9 +1085,8 @@ subroutine odbc_insert( db, tablename, columns )
     !
     call odbc_exec_c( stmt%stmt_handle, rc )
 
-    ! AD HOC
     if ( rc /= 0 ) then
-        call odbc_errmsg_stmt( stmt )
+        call odbc_errmsg_stmt( stmt, db%errmsg )
     endif
     db%error = rc
     call odbc_finalize( stmt )
@@ -1196,213 +1277,6 @@ subroutine odbc_step( stmt, completion )
 
    call odbc_step_c( stmt%stmt_handle, completion )
 
-   ! AD HOC
-   if ( completion == 999 ) then
-       call odbc_errmsg_stmt( stmt )
-   endif
-
 end subroutine odbc_step
 
 end module
-
-
-! test_odbc
-!     Main program to test the ODBC interface
-!
-program test_odbc
-
-    use odbc
-
-    implicit none
-
-    logical                           :: next
-    logical                           :: success
-    character(len=40)                 :: driver
-    character(len=40)                 :: dsnname
-    character(len=40)                 :: table
-    character(len=200)                :: description
-    character(len=200), dimension(10) :: table_desc
-    character(len=10)                 :: param
-    integer                           :: i
-    integer                           :: colno
-    logical                           :: finished
-    character(len=10)                 :: date
-    real(dp)                          :: value1
-    real(dp)                          :: value2
-
-    type(odbc_database)               :: db
-    type(odbc_statement)              :: stmt
-    type(odbc_column), dimension(4), target  :: column
-    type(odbc_column), dimension(:), pointer :: p_columns
-    !
-    ! First, simple step: check what data sources we have
-    !
-
-    next    = .false.
-    success = .true.
-
-    write(*,'(a,/)') 'Overview of installed drivers:'
-    do while( success )
-        call odbc_get_driver( next, driver, description, success )
-        if ( success ) then
-            write(*,'(2a)') driver, trim(description)
-        endif
-
-        next = .true.
-    enddo
-
-    next    = .false.
-    success = .true.
-
-    write(*,'(/,a,/)') 'Overview of data sources:'
-    do while( success )
-        call odbc_get_data_source( next, dsnname, description, success )
-        if ( success ) then
-            write(*,'(2a)') dsnname, trim(description)
-        endif
-
-        next = .true.
-    enddo
-
-    write(*,'(/,a)') 'Opening a particular database file:'
-    write(*,'(a)')   'List of tables:'
-
-    call odbc_open( "rand.mdb", odbc_msaccess, db )
-!   call odbc_open( "randdb", db )
-    if ( odbc_error(db) ) then
-        call odbc_errmsg( db )
-    endif
-
-    next    = .false.
-    success = .true.
-
-    do while( success )
-        call odbc_get_table_name( db, next, table, table_desc, success )
-        if ( success ) then
-            write(*,'(2a)') table, trim(table_desc(4))
-        endif
-
-        next = .true.
-    enddo
-
-    call odbc_close( db )
-
-    !
-    ! Create a new table
-    !
-    call odbc_open( "measurements.mdb", odbc_msaccess, db )
-    if ( odbc_error(db) ) then
-        call odbc_errmsg( db )
-    endif
-
-    call odbc_column_props( column(1), 'X', ODBC_CHAR, 10 )
-    call odbc_column_props( column(2), 'Y', ODBC_CHAR, 10 )
-    call odbc_column_props( column(3), 'Salinity', ODBC_REAL )
-    call odbc_column_props( column(4), 'Temperature', ODBC_REAL )
-
-    call odbc_create_table( db, 'measurements', column )
-
-    !
-    ! Insert a few rows -- this does not work yet!
-    !
-    if ( .true. ) then
-    call odbc_set_column( column(1), 'A' )
-    call odbc_set_column( column(2), 'B' )
-    call odbc_set_column( column(3), 10.0 )
-    call odbc_set_column( column(4), 12.0 )
-    call odbc_insert( db, 'measurements', column )
-    if ( odbc_error(db) ) then
-        call odbc_errmsg(db)
-    endif
-
-    call odbc_set_column( column(1), 'C' )
-    call odbc_set_column( column(2), 'D' )
-    call odbc_set_column( column(3), 20.0 )
-    call odbc_set_column( column(4), 3.3 )
-    call odbc_insert( db, 'measurements', column )
-    endif
-
-    call odbc_column_props( column(1), 'kolomnummer', ODBC_INT )
-    call odbc_column_props( column(2), 'parameter', ODBC_CHAR, 10 )
-
-    p_columns => column(1:2)
-    call odbc_prepare_select( db, 'KolomBetekenis', p_columns, stmt )
-
-    finished = .false.
-    do while ( .not. finished )
-        call odbc_next_row( stmt, p_columns, finished )
-
-        if ( .not. finished ) then
-            call odbc_get_column( p_columns(1), colno )
-            call odbc_get_column( p_columns(2), param )
-
-            write(*,*) colno, param
-        endif
-    enddo
-    call odbc_close( db )
-
-    write(*,*) 'Data:'
-
-    call odbc_open( "example.mdb", odbc_msaccess, db )
-    if ( odbc_error(db) ) then
-        call odbc_errmsg( db )
-    endif
-
-    write(*,*) 'Columns of table "example"'
-    p_columns => null()
-    call odbc_query_table( db, 'example', p_columns )
-    do i = 1,size(p_columns)
-        write(*,'(1x,a20,a,a20)') p_columns(i)%name, ' -- ', p_columns(i)%type
-    enddo
-
-    deallocate( p_columns )
-
-    call odbc_column_props( column(1), 'date', ODBC_CHAR, 10 )
-    call odbc_column_props( column(2), 'value', ODBC_DOUBLE )
-    call odbc_column_props( column(3), 'another', ODBC_DOUBLE )
-
-    p_columns => column(1:3)
-    call odbc_prepare_select( db, 'example', p_columns, stmt )
-
-    finished = .false.
-    do while ( .not. finished )
-        call odbc_next_row( stmt, p_columns, finished )
-
-        if ( .not. finished ) then
-            call odbc_get_column( p_columns(1), date )
-            call odbc_get_column( p_columns(2), value1 )
-            call odbc_get_column( p_columns(3), value2 )
-
-            write(*,*) date, value1, value2
-        endif
-    enddo
-
-    call odbc_finalize( stmt )
-    call odbc_close( db )
-
-    !
-    ! Getting information from an MS Excel file
-    !
-
-    write(*,'(a)')   'Example with MS Excel:'
-    write(*,'(a)')   'List of tables:'
-
-    call odbc_open( "example.xls", odbc_msexcel, db )
-    if ( odbc_error(db) ) then
-        call odbc_errmsg( db )
-    endif
-
-    next    = .false.
-    success = .true.
-
-    do while( success )
-        call odbc_get_table_name( db, next, table, table_desc, success )
-        if ( success ) then
-            write(*,'(2a)') table, trim(table_desc(4))
-        endif
-
-        next = .true.
-    enddo
-
-    call odbc_close( db )
-end program test_odbc

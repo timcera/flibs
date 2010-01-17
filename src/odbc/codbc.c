@@ -439,8 +439,7 @@ void FTNCALL odbc_column_name_type_c_(
        int       len_type
       )
 {
-    int          rc   ;
-    char        *pstr ;
+    int          rc            ;
     SQLSMALLINT  actual_length ;
     SQLSMALLINT  data_type     ;
     SQLSMALLINT  column_size   ;
