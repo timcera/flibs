@@ -544,11 +544,10 @@ end subroutine odbc_errmsg_print_stmt
 !    Return the last error message
 ! Arguments:
 !    db            Connection to the database
-!    text          Error message
 !
-subroutine odbc_errmsg_db( db, text )
+function odbc_errmsg_db( db ) result( text )
     type(odbc_database) :: db
-    character(len=*)    :: text
+    character(len=80)   :: text
 
     interface
         integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
@@ -572,18 +571,17 @@ subroutine odbc_errmsg_db( db, text )
         call stringtof( text )
     endif
 
-end subroutine odbc_errmsg_db
+end function odbc_errmsg_db
 
 
 ! odbc_errmsg_stmt --
 !    Return the last error message
 ! Arguments:
 !    stmt          Prepared statement
-!    text          Error message
 !
-subroutine odbc_errmsg_stmt( stmt, text )
+function odbc_errmsg_stmt( stmt ) result( text )
     type(odbc_statement) :: stmt
-    character(len=*)     :: text
+    character(len=80)    :: text
 
     interface
         integer function odbc_get_diagnostics_c( handle, type, idx, state, text )
@@ -602,7 +600,7 @@ subroutine odbc_errmsg_stmt( stmt, text )
     rc = odbc_get_diagnostics_c( stmt%stmt_handle, 1, i, state, text )
     call stringtof( text )
 
-end subroutine odbc_errmsg_stmt
+end function odbc_errmsg_stmt
 
 
 ! odbc_get_data_source --
@@ -1086,7 +1084,7 @@ subroutine odbc_insert( db, tablename, columns )
     call odbc_exec_c( stmt%stmt_handle, rc )
 
     if ( rc /= 0 ) then
-        call odbc_errmsg_stmt( stmt, db%errmsg )
+        db%errmsg = odbc_errmsg_stmt( stmt )
     endif
     db%error = rc
     call odbc_finalize( stmt )
