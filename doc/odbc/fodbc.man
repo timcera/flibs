@@ -1,6 +1,6 @@
 [comment {-*- flibs -*- doctools manpage}]
 [manpage_begin flibs/odbc n 1.0]
-[copyright {2005 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[copyright {2010 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [moddesc flibs]
 [titledesc {Interface to ODBC}]
 
