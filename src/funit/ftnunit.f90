@@ -322,10 +322,8 @@ subroutine assert_equal_int1d( array1, array2, text )
     integer                           :: i
     integer                           :: count
     logical                           :: addtext
-    logical                           :: header
 
     addtext = .false.
-    header  = .true.
 
     if ( size(array1) /= size(array2) ) then
         nofails = nofails + 1
@@ -338,19 +336,16 @@ subroutine assert_equal_int1d( array1, array2, text )
             do i = 1,size(array1)
                 if ( array1(i) /= array2(i) ) then
                     count = count + 1
-                    if ( header ) then
-                        write(*,'(3a10)')    '    Index', '     First', '    Second'
-                        header = .false.
-                    endif
-                    if ( count <= 50 ) then
+                    write(*,'(3a10)')    '    Index', '     First', '    Second'
+                    if ( count < 50 ) then
                         write(*,'(3i10)')    i, array1(i), array2(i)
                         call ftnunit_write_html_failed_int1d( &
                             text, i, array1(i), array2(i), addtext )
                         addtext = .false.
                     endif
+                    write(*,*) 'Number of differences: ', count
                 endif
             enddo
-            write(*,*) 'Number of differences: ', count
         endif
     endif
 end subroutine assert_equal_int1d
@@ -398,10 +393,8 @@ subroutine assert_comparable_real1d( array1, array2, margin, text )
 
     integer                           :: i
     integer                           :: count
-    logical                           :: header
     logical                           :: addtext
 
-    header  = .true.
     addtext = .false.
 
     if ( size(array1) /= size(array2) ) then
@@ -416,19 +409,16 @@ subroutine assert_comparable_real1d( array1, array2, margin, text )
                 if ( abs(array1(i)-array2(i)) > &
                          0.5 * margin * (abs(array1(i))+abs(array2(i))) ) then
                     count = count + 1
-                    if ( header ) then
-                        write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
-                        header = .false.
-                    endif
-                    if ( count <= 50 ) then
-                        write(*,'(i10,2e15.5)')    i, array1(i), array2(i)
+                    write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                    if ( count < 50 ) then
+                        write(*,'(i10,e15.5)')    i, array1(i), array2(i)
                         call ftnunit_write_html_failed_real1d( &
                             text, i, array1(i), array2(i), addtext )
                         addtext = .false.
                     endif
+                    write(*,*) 'Number of differences: ', count
                 endif
             enddo
-            write(*,*) 'Number of differences: ', count
         endif
     endif
 end subroutine assert_comparable_real1d
@@ -808,6 +798,7 @@ subroutine ftnunit_write_html_test_begin( text )
     call ftnunit_get_lun( lun )
     open( lun, file = html_file, position = 'append' )
 
+    write(*,*) 'test begin: ', previous
     if ( previous ) then
         if ( failed_asserts == 0 ) then
             write( lun, '(a)' ) &
@@ -864,6 +855,7 @@ end subroutine ftnunit_write_html_previous_failed
 subroutine ftnunit_write_html_close_row( lun )
     integer           :: lun
 
+    write(*,*) 'Close row: ', failed_asserts
     if ( failed_asserts > 0 ) then
         if ( failed_asserts == 1 ) then
             write( lun, '(a)' ) &
@@ -1077,31 +1069,6 @@ subroutine ftnunit_write_html_failed_real1d( text, idx, value1, value2, addtext 
     real              :: value1
     real              :: value2
     logical           :: addtext
-
-    integer           :: lun
-
-    call ftnunit_get_lun( lun )
-    open( lun, file = html_file, position = 'append' )
-
-    failed_asserts = failed_asserts + 1
-
-    call ftnunit_write_html_close_row( lun )
-
-    if ( addtext ) then
-        write( lun, '(a)' ) &
-            '<td><span class="indent">', trim(text), '</span></td>'
-    else
-        write( lun, '(a)' ) &
-            '<td></td>'
-    endif
-
-    write( lun, '(a)' ) &
-        '<td>Values at index: '
-    write( lun, '(i0,a,e12.5,a,e12.5,a)' ) &
-        idx, ':', &
-        value1, ' -- ', value2, '</td>'
-    close( lun )
-
 end subroutine ftnunit_write_html_failed_real1d
 
 

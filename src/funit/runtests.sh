@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 # runtests.sh --
 #    Bourne shell script to control a program that uses funit
 #    Name of the program: first argument
