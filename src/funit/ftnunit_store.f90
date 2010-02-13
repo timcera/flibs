@@ -21,7 +21,7 @@ module ftnunit_store
 
     private
     integer, parameter :: single = kind(1.0)
-    integer, parameter :: double = kind(1.0d)
+    integer, parameter :: double = kind(1.0d0)
 
     character(len=40), parameter :: ftnunit_header    = 'FTNUNIT 1.0'
     character(len=10), parameter :: ftnunit_integer   = 'INTEGER'
@@ -32,19 +32,57 @@ module ftnunit_store
     character(len=10), parameter :: ftnunit_complex   = 'COMPLEX'
 
     interface test_retrieve_data
-        module procedure test_retrieve_data_int
-        module procedure test_retrieve_data_int1d
-        module procedure test_retrieve_data_int2d
-        module procedure test_retrieve_data_int3d
-        ! ...
+        module procedure test_retrieve_data_integer
+        module procedure test_retrieve_data_integer1d
+        module procedure test_retrieve_data_integer2d
+        module procedure test_retrieve_data_integer3d
+        module procedure test_retrieve_data_real
+        module procedure test_retrieve_data_real1d
+        module procedure test_retrieve_data_real2d
+        module procedure test_retrieve_data_real3d
+        module procedure test_retrieve_data_double
+        module procedure test_retrieve_data_double1d
+        module procedure test_retrieve_data_double2d
+        module procedure test_retrieve_data_double3d
+        module procedure test_retrieve_data_complex
+        module procedure test_retrieve_data_complex1d
+        module procedure test_retrieve_data_complex2d
+        module procedure test_retrieve_data_complex3d
+        module procedure test_retrieve_data_logical
+        module procedure test_retrieve_data_logical1d
+        module procedure test_retrieve_data_logical2d
+        module procedure test_retrieve_data_logical3d
+        module procedure test_retrieve_data_character
+        module procedure test_retrieve_data_character1d
+        module procedure test_retrieve_data_character2d
+        module procedure test_retrieve_data_character3d
     end interface
 
     interface test_store_data
-        module procedure test_store_data_int
-        module procedure test_store_data_int1d
-        module procedure test_store_data_int2d
-        module procedure test_store_data_int3d
-        ! ...
+        module procedure test_store_data_integer
+        module procedure test_store_data_integer1d
+        module procedure test_store_data_integer2d
+        module procedure test_store_data_integer3d
+        module procedure test_store_data_real
+        module procedure test_store_data_real1d
+        module procedure test_store_data_real2d
+        module procedure test_store_data_real3d
+        module procedure test_store_data_double
+        module procedure test_store_data_double1d
+        module procedure test_store_data_double2d
+        module procedure test_store_data_double3d
+        module procedure test_store_data_complex
+        module procedure test_store_data_complex1d
+        module procedure test_store_data_complex2d
+        module procedure test_store_data_complex3d
+        module procedure test_store_data_logical
+        module procedure test_store_data_logical1d
+        module procedure test_store_data_logical2d
+        module procedure test_store_data_logical3d
+        module procedure test_store_data_character
+        module procedure test_store_data_character1d
+        module procedure test_store_data_character2d
+        module procedure test_store_data_character3d
     end interface
 
     public :: test_retrieve_data, test_store_data
@@ -169,7 +207,7 @@ end subroutine test_close_storage_file
 subroutine test_store_data_integer( lun, data, desc )
     integer, intent(in)             :: lun
     integer, intent(in)             :: data
-    character(len=*)                :: desc
+    character(len=*), intent(in)    :: desc
 
     character(len=40)               :: desc_
     integer, dimension(10)          :: dimensions
@@ -181,14 +219,13 @@ subroutine test_store_data_integer( lun, data, desc )
     write( lun ) ftnunit_integer, 0, 0, dimensions, desc_
     write( lun ) data
 
-    close( lun )
-
 end subroutine test_store_data_integer
+
 
 subroutine test_store_data_integer1d( lun, data, desc )
     integer, intent(in)               :: lun
     integer, intent(in), dimension(:) :: data
-    character(len=*)                  :: desc
+    character(len=*), intent(in)      :: desc
 
     character(len=40)                 :: desc_
     integer, dimension(10)            :: dimensions
@@ -200,14 +237,13 @@ subroutine test_store_data_integer1d( lun, data, desc )
     write( lun ) ftnunit_integer, 0, 1, dimensions, desc_
     write( lun ) data
 
-    close( lun )
-
 end subroutine test_store_data_integer1d
+
 
 subroutine test_store_data_integer2d( lun, data, desc )
     integer, intent(in)                 :: lun
     integer, intent(in), dimension(:,:) :: data
-    character(len=*)                    :: desc
+    character(len=*), intent(in)        :: desc
 
     character(len=40)                   :: desc_
     integer, dimension(10)              :: dimensions
@@ -219,14 +255,13 @@ subroutine test_store_data_integer2d( lun, data, desc )
     write( lun ) ftnunit_integer, 0, 2, dimensions, desc_
     write( lun ) data
 
-    close( lun )
-
 end subroutine test_store_data_integer2d
+
 
 subroutine test_store_data_integer3d( lun, data, desc )
     integer, intent(in)                   :: lun
     integer, intent(in), dimension(:,:,:) :: data
-    character(len=*)                      :: desc
+    character(len=*), intent(in)          :: desc
 
     character(len=40)                     :: desc_
     integer, dimension(10)                :: dimensions
@@ -238,9 +273,1430 @@ subroutine test_store_data_integer3d( lun, data, desc )
     write( lun ) ftnunit_integer, 0, 3, dimensions, desc_
     write( lun ) data
 
-    close( lun )
-
 end subroutine test_store_data_integer3d
 
 
-end module ftnunit_storage
+! test_retrieve_data_integer* -
+!     Retrieve integer data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_retrieve_data_integer( lun, data, desc )
+    integer, intent(in)             :: lun
+    integer, intent(out)            :: data
+    character(len=*), intent(out)   :: desc
+
+    character(len=10)               :: type
+    character(len=40)               :: desc_
+    integer, dimension(10)          :: dimensions
+    integer                         :: ierr
+    integer                         :: char_length
+    integer                         :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving integer data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_integer ) then
+        write(*,*) 'FTNUNIT: expected integer data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 0 ) then
+        write(*,*) 'FTNUNIT: expected scalar integer data - got array instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_integer
+
+
+subroutine test_retrieve_data_integer1d( lun, data, desc )
+    integer, intent(in)               :: lun
+    integer, pointer, dimension(:)    :: data
+    character(len=*)                  :: desc
+
+    character(len=10)                 :: type
+    character(len=40)                 :: desc_
+    integer, dimension(10)            :: dimensions
+    integer                           :: ierr
+    integer                           :: char_length
+    integer                           :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving integer data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_integer ) then
+        write(*,*) 'FTNUNIT: expected integer data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 1 ) then
+        write(*,*) 'FTNUNIT: expected one-dimensional integer array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_integer1d
+
+
+subroutine test_retrieve_data_integer2d( lun, data, desc )
+    integer, intent(in)               :: lun
+    integer, pointer, dimension(:,:)  :: data
+    character(len=*)                  :: desc
+
+    character(len=10)                 :: type
+    character(len=40)                 :: desc_
+    integer, dimension(10)            :: dimensions
+    integer                           :: ierr
+    integer                           :: char_length
+    integer                           :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving integer data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_integer ) then
+        write(*,*) 'FTNUNIT: expected integer data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 2 ) then
+        write(*,*) 'FTNUNIT: expected two-dimensional integer array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_integer2d
+
+
+subroutine test_retrieve_data_integer3d( lun, data, desc )
+    integer, intent(in)                :: lun
+    integer, pointer, dimension(:,:,:) :: data
+    character(len=*)                   :: desc
+
+    character(len=10)                  :: type
+    character(len=40)                  :: desc_
+    integer, dimension(10)             :: dimensions
+    integer                            :: ierr
+    integer                            :: char_length
+    integer                            :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving integer data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_integer ) then
+        write(*,*) 'FTNUNIT: expected integer data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 3 ) then
+        write(*,*) 'FTNUNIT: expected three-dimensional integer array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2), dimensions(3)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_integer3d
+
+
+! test_store_data_real* -
+!     Store real data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_store_data_real( lun, data, desc )
+    integer, intent(in)          :: lun
+    real, intent(in)             :: data
+    character(len=*), intent(in) :: desc
+
+    character(len=40)            :: desc_
+    integer, dimension(10)       :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+
+    write( lun ) ftnunit_real, 0, 0, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_real
+
+
+subroutine test_store_data_real1d( lun, data, desc )
+    integer, intent(in)            :: lun
+    real, intent(in), dimension(:) :: data
+    character(len=*), intent(in)   :: desc
+
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:1) = shape(data)
+
+    write( lun ) ftnunit_real, 0, 1, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_real1d
+
+
+subroutine test_store_data_real2d( lun, data, desc )
+    integer, intent(in)              :: lun
+    real, intent(in), dimension(:,:) :: data
+    character(len=*), intent(in)     :: desc
+
+    character(len=40)                :: desc_
+    integer, dimension(10)           :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:2) = shape(data)
+
+    write( lun ) ftnunit_real, 0, 2, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_real2d
+
+
+subroutine test_store_data_real3d( lun, data, desc )
+    integer, intent(in)                :: lun
+    real, intent(in), dimension(:,:,:) :: data
+    character(len=*), intent(in)       :: desc
+
+    character(len=40)                  :: desc_
+    real, dimension(10)                :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:3) = shape(data)
+
+    write( lun ) ftnunit_real, 0, 3, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_real3d
+
+
+! test_retrieve_data_real* -
+!     Retrieve real data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_retrieve_data_real( lun, data, desc )
+    integer, intent(in)           :: lun
+    real, intent(out)             :: data
+    character(len=*), intent(out) :: desc
+
+    character(len=10)             :: type
+    character(len=40)             :: desc_
+    integer, dimension(10)        :: dimensions
+    integer                       :: ierr
+    integer                       :: char_length
+    integer                       :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving real data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_real ) then
+        write(*,*) 'FTNUNIT: expected real data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 0 ) then
+        write(*,*) 'FTNUNIT: expected scalar real data - got array instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_real
+
+
+subroutine test_retrieve_data_real1d( lun, data, desc )
+    integer, intent(in)            :: lun
+    real, pointer, dimension(:)    :: data
+    character(len=*)               :: desc
+
+    character(len=10)              :: type
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+    integer                        :: ierr
+    integer                        :: char_length
+    integer                        :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving real data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_real ) then
+        write(*,*) 'FTNUNIT: expected real data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 1 ) then
+        write(*,*) 'FTNUNIT: expected one-dimensional real array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_real1d
+
+
+subroutine test_retrieve_data_real2d( lun, data, desc )
+    integer, intent(in)            :: lun
+    real, pointer, dimension(:,:)  :: data
+    character(len=*)               :: desc
+
+    character(len=10)              :: type
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+    integer                        :: ierr
+    integer                        :: char_length
+    integer                        :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving real data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_real ) then
+        write(*,*) 'FTNUNIT: expected real data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 2 ) then
+        write(*,*) 'FTNUNIT: expected two-dimensional real array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_real2d
+
+
+subroutine test_retrieve_data_real3d( lun, data, desc )
+    integer, intent(in)             :: lun
+    real, pointer, dimension(:,:,:) :: data
+    character(len=*)                :: desc
+
+    character(len=10)               :: type
+    character(len=40)               :: desc_
+    integer, dimension(10)          :: dimensions
+    integer                         :: ierr
+    integer                         :: char_length
+    integer                         :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving real data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_real ) then
+        write(*,*) 'FTNUNIT: expected real data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 3 ) then
+        write(*,*) 'FTNUNIT: expected three-dimensional real array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2), dimensions(3)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_real3d
+
+
+! test_store_data_double* -
+!     Store double data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_store_data_double( lun, data, desc )
+    integer, intent(in)            :: lun
+    real(kind=double), intent(in)  :: data
+    character(len=*), intent(in)   :: desc
+
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+
+    write( lun ) ftnunit_double, 0, 0, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_double
+
+
+subroutine test_store_data_double1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    real(kind=double), intent(in), dimension(:) :: data
+    character(len=*), intent(in)                :: desc
+
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:1) = shape(data)
+
+    write( lun ) ftnunit_double, 0, 1, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_double1d
+
+
+subroutine test_store_data_double2d( lun, data, desc )
+    integer, intent(in)                           :: lun
+    real(kind=double), intent(in), dimension(:,:) :: data
+    character(len=*), intent(in)                  :: desc
+
+    character(len=40)                             :: desc_
+    integer, dimension(10)                        :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:2) = shape(data)
+
+    write( lun ) ftnunit_double, 0, 2, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_double2d
+
+
+subroutine test_store_data_double3d( lun, data, desc )
+    integer, intent(in)                             :: lun
+    real(kind=double), intent(in), dimension(:,:,:) :: data
+    character(len=*), intent(in)                    :: desc
+
+    character(len=40)                               :: desc_
+    integer, dimension(10)                          :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:3) = shape(data)
+
+    write( lun ) ftnunit_double, 0, 3, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_double3d
+
+
+! test_retrieve_data_double* -
+!     Retrieve double data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_retrieve_data_double( lun, data, desc )
+    integer, intent(in)                        :: lun
+    real(kind=double), intent(out)             :: data
+    character(len=*), intent(out)              :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                    :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving double data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_double ) then
+        write(*,*) 'FTNUNIT: expected double data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 0 ) then
+        write(*,*) 'FTNUNIT: expected scalar double data - got array instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_double
+
+
+subroutine test_retrieve_data_double1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    real(kind=double), pointer, dimension(:)    :: data
+    character(len=*)                            :: desc
+
+    character(len=10)                           :: type
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+    integer                                     :: ierr
+    integer                                     :: char_length
+    integer                                     :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving double data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_double ) then
+        write(*,*) 'FTNUNIT: expected double data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 1 ) then
+        write(*,*) 'FTNUNIT: expected one-dimensional double array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_double1d
+
+
+subroutine test_retrieve_data_double2d( lun, data, desc )
+    integer, intent(in)                        :: lun
+    real(kind=double), pointer, dimension(:,:)  :: data
+    character(len=*)                           :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                    :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving double data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_double ) then
+        write(*,*) 'FTNUNIT: expected double data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 2 ) then
+        write(*,*) 'FTNUNIT: expected two-dimensional double array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_double2d
+
+
+subroutine test_retrieve_data_double3d( lun, data, desc )
+    integer, intent(in)                          :: lun
+    real(kind=double), pointer, dimension(:,:,:) :: data
+    character(len=*)                             :: desc
+
+    character(len=10)                            :: type
+    character(len=40)                            :: desc_
+    integer, dimension(10)                       :: dimensions
+    integer                                      :: ierr
+    integer                                      :: char_length
+    integer                                      :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving double data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_double ) then
+        write(*,*) 'FTNUNIT: expected double data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 3 ) then
+        write(*,*) 'FTNUNIT: expected three-dimensional double array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2), dimensions(3)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_double3d
+
+
+! test_store_data_logical* -
+!     Store logical data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_store_data_logical( lun, data, desc )
+    integer, intent(in)            :: lun
+    logical, intent(in)            :: data
+    character(len=*), intent(in)   :: desc
+
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+
+    write( lun ) ftnunit_logical, 0, 0, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_logical
+
+
+subroutine test_store_data_logical1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    logical, intent(in), dimension(:)           :: data
+    character(len=*), intent(in)                :: desc
+
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:1) = shape(data)
+
+    write( lun ) ftnunit_logical, 0, 1, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_logical1d
+
+
+subroutine test_store_data_logical2d( lun, data, desc )
+    integer, intent(in)                           :: lun
+    logical, intent(in), dimension(:,:)           :: data
+    character(len=*), intent(in)                  :: desc
+
+    character(len=40)                             :: desc_
+    integer, dimension(10)                        :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:2) = shape(data)
+
+    write( lun ) ftnunit_logical, 0, 2, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_logical2d
+
+
+subroutine test_store_data_logical3d( lun, data, desc )
+    integer, intent(in)                             :: lun
+    logical, intent(in), dimension(:,:,:)           :: data
+    character(len=*), intent(in)                    :: desc
+
+    character(len=40)                               :: desc_
+    integer, dimension(10)                          :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:3) = shape(data)
+
+    write( lun ) ftnunit_logical, 0, 3, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_logical3d
+
+
+! test_retrieve_data_logical* -
+!     Retrieve logical data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_retrieve_data_logical( lun, data, desc )
+    integer, intent(in)                        :: lun
+    logical, intent(out)                       :: data
+    character(len=*), intent(out)              :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                     :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving logical data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_logical ) then
+        write(*,*) 'FTNUNIT: expected logical data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 0 ) then
+        write(*,*) 'FTNUNIT: expected scalar logical data - got array instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_logical
+
+
+subroutine test_retrieve_data_logical1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    logical, pointer, dimension(:)              :: data
+    character(len=*)                            :: desc
+
+    character(len=10)                           :: type
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+    integer                                     :: ierr
+    integer                                     :: char_length
+    integer                                     :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving logical data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_logical ) then
+        write(*,*) 'FTNUNIT: expected logical data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 1 ) then
+        write(*,*) 'FTNUNIT: expected one-dimensional logical array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_logical1d
+
+
+subroutine test_retrieve_data_logical2d( lun, data, desc )
+    integer, intent(in)                        :: lun
+    logical, pointer, dimension(:,:)           :: data
+    character(len=*)                           :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                    :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving logical data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_logical ) then
+        write(*,*) 'FTNUNIT: expected logical data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 2 ) then
+        write(*,*) 'FTNUNIT: expected two-dimensional logical array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_logical2d
+
+
+subroutine test_retrieve_data_logical3d( lun, data, desc )
+    integer, intent(in)                          :: lun
+    logical, pointer, dimension(:,:,:)           :: data
+    character(len=*)                             :: desc
+
+    character(len=10)                            :: type
+    character(len=40)                            :: desc_
+    integer, dimension(10)                       :: dimensions
+    integer                                      :: ierr
+    integer                                      :: char_length
+    integer                                      :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving logical data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_logical ) then
+        write(*,*) 'FTNUNIT: expected logical data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 3 ) then
+        write(*,*) 'FTNUNIT: expected three-dimensional logical array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2), dimensions(3)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_logical3d
+
+
+! test_store_data_complex* -
+!     Store complex data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_store_data_complex( lun, data, desc )
+    integer, intent(in)            :: lun
+    complex, intent(in)            :: data
+    character(len=*), intent(in)   :: desc
+
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+
+    write( lun ) ftnunit_complex, 0, 0, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_complex
+
+
+subroutine test_store_data_complex1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    complex, intent(in), dimension(:)           :: data
+    character(len=*), intent(in)                :: desc
+
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:1) = shape(data)
+
+    write( lun ) ftnunit_complex, 0, 1, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_complex1d
+
+
+subroutine test_store_data_complex2d( lun, data, desc )
+    integer, intent(in)                           :: lun
+    complex, intent(in), dimension(:,:)           :: data
+    character(len=*), intent(in)                  :: desc
+
+    character(len=40)                             :: desc_
+    integer, dimension(10)                        :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:2) = shape(data)
+
+    write( lun ) ftnunit_complex, 0, 2, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_complex2d
+
+
+subroutine test_store_data_complex3d( lun, data, desc )
+    integer, intent(in)                             :: lun
+    complex, intent(in), dimension(:,:,:)           :: data
+    character(len=*), intent(in)                    :: desc
+
+    character(len=40)                               :: desc_
+    integer, dimension(10)                          :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:3) = shape(data)
+
+    write( lun ) ftnunit_complex, 0, 3, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_complex3d
+
+
+! test_retrieve_data_complex* -
+!     Retrieve complex data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_retrieve_data_complex( lun, data, desc )
+    integer, intent(in)                        :: lun
+    complex, intent(out)                       :: data
+    character(len=*), intent(out)              :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                    :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving complex data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_complex ) then
+        write(*,*) 'FTNUNIT: expected complex data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 0 ) then
+        write(*,*) 'FTNUNIT: expected scalar complex data - got array instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_complex
+
+
+subroutine test_retrieve_data_complex1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    complex, pointer, dimension(:)              :: data
+    character(len=*)                            :: desc
+
+    character(len=10)                           :: type
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+    integer                                     :: ierr
+    integer                                     :: char_length
+    integer                                     :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving complex data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_complex ) then
+        write(*,*) 'FTNUNIT: expected complex data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 1 ) then
+        write(*,*) 'FTNUNIT: expected one-dimensional complex array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_complex1d
+
+
+subroutine test_retrieve_data_complex2d( lun, data, desc )
+    integer, intent(in)                        :: lun
+    complex, pointer, dimension(:,:)           :: data
+    character(len=*)                           :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                    :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving complex data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_complex ) then
+        write(*,*) 'FTNUNIT: expected complex data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 2 ) then
+        write(*,*) 'FTNUNIT: expected two-dimensional complex array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_complex2d
+
+
+subroutine test_retrieve_data_complex3d( lun, data, desc )
+    integer, intent(in)                          :: lun
+    complex, pointer, dimension(:,:,:)           :: data
+    character(len=*)                             :: desc
+
+    character(len=10)                            :: type
+    character(len=40)                            :: desc_
+    integer, dimension(10)                       :: dimensions
+    integer                                      :: ierr
+    integer                                      :: char_length
+    integer                                      :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving complex data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_complex ) then
+        write(*,*) 'FTNUNIT: expected complex data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 3 ) then
+        write(*,*) 'FTNUNIT: expected three-dimensional complex array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2), dimensions(3)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_complex3d
+
+
+! test_store_data_character* -
+!     Store complex data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_store_data_character( lun, data, desc )
+    integer, intent(in)            :: lun
+    character(len=*), intent(in)   :: data
+    character(len=*), intent(in)   :: desc
+
+    character(len=40)              :: desc_
+    integer, dimension(10)         :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+
+    write( lun ) ftnunit_character, len(data), 0, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_character
+
+
+subroutine test_store_data_character1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    character(len=*), intent(in), dimension(:)  :: data
+    character(len=*), intent(in)                :: desc
+
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:1) = shape(data)
+
+    write( lun ) ftnunit_character, len(data(1)), 1, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_character1d
+
+
+subroutine test_store_data_character2d( lun, data, desc )
+    integer, intent(in)                           :: lun
+    character(len=*), intent(in), dimension(:,:)  :: data
+    character(len=*), intent(in)                  :: desc
+
+    character(len=40)                             :: desc_
+    integer, dimension(10)                        :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:2) = shape(data)
+
+    write( lun ) ftnunit_character, len(data(1,1)), 2, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_character2d
+
+
+subroutine test_store_data_character3d( lun, data, desc )
+    integer, intent(in)                             :: lun
+    character(len=*), intent(in), dimension(:,:,:)  :: data
+    character(len=*), intent(in)                    :: desc
+
+    character(len=40)                               :: desc_
+    integer, dimension(10)                          :: dimensions
+
+    desc_ = desc
+    dimensions = 0
+    dimensions(1:3) = shape(data)
+
+    write( lun ) ftnunit_character, len(data(1,1,1)), 3, dimensions, desc_
+    write( lun ) data
+
+end subroutine test_store_data_character3d
+
+
+! test_retrieve_data_character* -
+!     Retrieve complex data
+!
+! Arguments:
+!     lun            LU-number of the opened file
+!     data           Data to store
+!     desc           Short description (at most 40 long)
+!
+!
+subroutine test_retrieve_data_character( lun, data, desc )
+    integer, intent(in)                        :: lun
+    character(len=*), intent(out)              :: data
+    character(len=*), intent(out)              :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                     :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving character data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_character ) then
+        write(*,*) 'FTNUNIT: expected character data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( char_length /= len(data) ) then
+        write(*,*) 'FTNUNIT: expected character string of length ', len(data)
+        write(*,*) '    Actual length: ', char_length
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 0 ) then
+        write(*,*) 'FTNUNIT: expected scalar character data - got array instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_character
+
+
+subroutine test_retrieve_data_character1d( lun, data, desc )
+    integer, intent(in)                         :: lun
+    character(len=*), pointer, dimension(:)     :: data
+    character(len=*)                            :: desc
+
+    character(len=10)                           :: type
+    character(len=40)                           :: desc_
+    integer, dimension(10)                      :: dimensions
+    integer                                     :: ierr
+    integer                                     :: char_length
+    integer                                     :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving character data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_character ) then
+        write(*,*) 'FTNUNIT: expected character data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 1 ) then
+        write(*,*) 'FTNUNIT: expected one-dimensional character array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( char_length /= len(data(1)) ) then
+        write(*,*) 'FTNUNIT: expected character string of length ', len(data(1))
+        write(*,*) '    Actual length: ', char_length
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_character1d
+
+
+subroutine test_retrieve_data_character2d( lun, data, desc )
+    integer, intent(in)                        :: lun
+    character(len=*), pointer, dimension(:,:)  :: data
+    character(len=*)                           :: desc
+
+    character(len=10)                          :: type
+    character(len=40)                          :: desc_
+    integer, dimension(10)                     :: dimensions
+    integer                                    :: ierr
+    integer                                    :: char_length
+    integer                                    :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving character data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_character ) then
+        write(*,*) 'FTNUNIT: expected complex data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 2 ) then
+        write(*,*) 'FTNUNIT: expected two-dimensional character array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( char_length /= len(data(1,1)) ) then
+        write(*,*) 'FTNUNIT: expected character string of length ', len(data(1,1))
+        write(*,*) '    Actual length: ', char_length
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_character2d
+
+
+subroutine test_retrieve_data_character3d( lun, data, desc )
+    integer, intent(in)                          :: lun
+    character(len=*), pointer, dimension(:,:,:)  :: data
+    character(len=*)                             :: desc
+
+    character(len=10)                            :: type
+    character(len=40)                            :: desc_
+    integer, dimension(10)                       :: dimensions
+    integer                                      :: ierr
+    integer                                      :: char_length
+    integer                                      :: number_dims
+
+    read( lun, iostat = ierr ) type, char_length, number_dims, dimensions, desc_
+
+    if ( ierr /= 0 ) then
+        write(*,*) 'FTNUNIT: read error retrieving complex data - please check'
+        stop
+    endif
+
+    if ( type /= ftnunit_character ) then
+        write(*,*) 'FTNUNIT: expected character data - got ' // trim(type) // ' instead - please check'
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( number_dims /= 3 ) then
+        write(*,*) 'FTNUNIT: expected three-dimensional character array - please check'
+        write(*,*) '    Actual dimension: ', number_dims
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    if ( char_length /= len(data(1,1,1)) ) then
+        write(*,*) 'FTNUNIT: expected character string of length ', len(data(1,1,1))
+        write(*,*) '    Actual length: ', char_length
+        write(*,*) '    Description of the record: ' // trim(desc_)
+        stop
+    endif
+
+    allocate( data(dimensions(1), dimensions(2), dimensions(3)) )
+
+    read( lun ) data
+    desc = desc_
+
+end subroutine test_retrieve_data_character3d
+
+end module ftnunit_store
