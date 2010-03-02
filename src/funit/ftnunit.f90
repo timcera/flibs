@@ -17,11 +17,55 @@
 !
 !     TODO:
 !     - Test the various assertion failures
-!     - Add comparison of files
 !
 !     $Id$
 !
+
+! ftnunit_utilities
+!     Auxiliary routines (also used in ftnunit_store)
+!
+module ftnunit_utilities
+
+contains
+
+! ftnunit_get_lun --
+!     Auxiliary subroutine to get a free LU-number
+! Arguments:
+!     lun           The value that can be used
+!
+subroutine ftnunit_get_lun( lun )
+    integer, intent(out) :: lun
+
+    logical       :: opend
+    integer, save :: prevlun = 0
+
+    if ( prevlun /= 0 ) then
+        inquire( unit = lun, opened = opend )
+        if ( .not. opend ) then
+            lun = prevlun
+            return
+        endif
+    endif
+
+    do prevlun = 10,99
+        inquire( unit = prevlun, opened = opend )
+        if ( .not. opend ) then
+            lun = prevlun
+            return
+        endif
+    enddo
+
+end subroutine ftnunit_get_lun
+
+end module ftnunit_utilities
+
+
+! ftnunit --
+!     Core module for ftnunit
+!
 module ftnunit
+    use ftnunit_utilities
+
     implicit none
 
     integer, private, save :: last_test           ! Last test that was started
@@ -639,35 +683,6 @@ logical function ftnunit_file_exists( filename )
 
     inquire( file = filename, exist = ftnunit_file_exists )
 end function ftnunit_file_exists
-
-! ftnunit_get_lun --
-!     Auxiliary subroutine to get a free LU-number
-! Arguments:
-!     lun           The value that can be used
-!
-subroutine ftnunit_get_lun( lun )
-    integer, intent(out) :: lun
-
-    logical       :: opend
-    integer, save :: prevlun = 0
-
-    if ( prevlun /= 0 ) then
-        inquire( unit = lun, opened = opend )
-        if ( .not. opend ) then
-            lun = prevlun
-            return
-        endif
-    endif
-
-    do prevlun = 10,99
-        inquire( unit = prevlun, opened = opend )
-        if ( .not. opend ) then
-            lun = prevlun
-            return
-        endif
-    enddo
-
-end subroutine ftnunit_get_lun
 
 ! ftnunit_remove_file --
 !     Auxiliary subroutine to remove a file
