@@ -10,9 +10,9 @@ module tuplespaces
     implicit none
 
     type tuple_connection
-        private
         type(ipc_comm)    :: comm
         character(len=40) :: space
+        logical           :: active
     end type tuple_connection
 
     type tuple_elem
@@ -30,7 +30,7 @@ module tuplespaces
     end type tuple_elem
 
     type tuple_data
-        type(tuple_elem), dimension(:), pointer :: elem
+        type(tuple_elem), dimension(:), pointer :: elem => null()
     end type tuple_data
 
     type(tuple_elem), parameter :: elem_any = tuple_elem(0,0,.false.,0.0,0.0d0,'',null(),null(),null(),null())
@@ -60,13 +60,127 @@ module tuplespaces
         module procedure tuple_assign
     end interface
 
+    character(len=1) :: ipc_any_tag = '*'
+    integer          :: ipc_any_id  = -1
+
     private :: tuple_read_in_tuple
     private :: tuple_read_elem
     private :: tuple_write_elem
 
 contains
 
-!!subroutine tuple_open(...)
+! tuple_connect --
+!     Connect to the server (used by client)
+!
+! Arguments:
+!     comm             Connection information (filled)
+!     server           Name of the server
+!     location         Location string (directory for instance)
+!     space            Name of the tuple space
+!     success          Whether connection was established or not
+!
+subroutine tuple_connect( comm, server, location, space, success )
+
+    type(tuple_connection), intent(inout) :: comm
+    character(len=*), intent(in)          :: server
+    character(len=*), intent(in)          :: location
+    character(len=*), intent(in)          :: space
+    logical, intent(out)                  :: success
+
+    integer                               :: i
+    character(len=10)                     :: time_string
+    character(len=40)                     :: space_name
+
+    call date_and_time( time = time_string )
+    time_string(7:7) = '_'
+
+    space_name = space ! Strict check on lengths
+
+    !
+    ! Try for at most ten seconds
+    !
+    success = .false.
+    do i = 1,1000
+        call ipc_try_connect( comm%comm, server, location, time_string, space_name, success )
+
+        if ( .not. success ) then
+            call ipc_sleep( 10 )
+        else
+            exit
+        endif
+    enddo
+
+    if ( .not. success ) then
+        write(*,*) 'Could not connect to server - giving up'
+        return
+    endif
+
+    comm%space    = space
+
+end subroutine tuple_connect
+
+! tuple_server_connect --
+!     Connect to a client
+!
+! Arguments:
+!     comm             Connection information (filled)
+!     server           Name of the server
+!     location         Location string (directory for instance)
+!     space            Name of the tuple space
+!     success          Success or not
+!
+subroutine tuple_server_connect( comm, server, location, space, success )
+
+    type(tuple_connection), intent(inout) :: comm
+    character(len=*), intent(in)          :: server
+    character(len=*), intent(in)          :: location
+    character(len=*), intent(out)         :: space
+    logical, intent(out)                  :: success
+
+    integer                               :: i
+    integer                               :: id
+    character(len=10)                     :: tag
+    character(len=10)                     :: idstring
+    logical                               :: error
+    type(tuple_connection)                :: receive_comm
+
+    success = .false.
+
+    call ipc_check_connect( comm%comm, server, location, success )
+
+    if ( .not. success ) then
+        return
+    else
+        id  = 0
+        tag = 'CONNECT'
+        call ipc_receive_start( comm%comm, 'client', tag, id )
+        call ipc_receive_data( comm%comm, idstring, error )
+        call ipc_receive_data( comm%comm, space, error )
+        call ipc_receive_finish( comm%comm )
+
+        if ( error ) then
+            success = .false.
+            return
+        endif
+
+        receive_comm = comm
+
+        call ipc_send_start( comm%comm, 'client', idstring, id )
+        call ipc_send_data( comm%comm, idstring, error )
+        call ipc_send_finish( comm%comm )
+
+        if ( error ) then
+            success = .false.
+            return
+        endif
+
+        call ipc_cleanup( receive_comm%comm )
+        call ipc_cleanup( comm%comm         )
+
+        comm%comm%connection = idstring
+    endif
+
+end subroutine tuple_server_connect
 
 ! tuple_assign --
 !     Short-hand for creating a tuple from an array of elements
@@ -231,6 +345,29 @@ logical function tuple_match( pattern, tuple )
 
 end function tuple_match
 
+! tuple_free --
+!     Free any data held in the tuple
+!
+! Arguments:
+!     tuple            Tuple in question
+!
+subroutine tuple_free( tuple )
+    type(tuple_data), intent(inout) :: tuple
+
+    integer                         :: i
+
+    if ( associated(tuple%elem) ) then
+        do i = 1,size(tuple%elem)
+            if ( associated(tuple%elem(i)%iarray) ) deallocate( tuple%elem(i)%iarray )
+            if ( associated(tuple%elem(i)%rarray) ) deallocate( tuple%elem(i)%rarray )
+            if ( associated(tuple%elem(i)%darray) ) deallocate( tuple%elem(i)%darray )
+            if ( associated(tuple%elem(i)%larray) ) deallocate( tuple%elem(i)%larray )
+        enddo
+        deallocate( tuple%elem )
+    endif
+
+end subroutine tuple_free
+
 ! tuple_empty --
 !     Is the tuple empty or not?
 !
@@ -265,10 +402,11 @@ subroutine tuple_out_tuple( server, tuple )
     type(tuple_data), intent(in)           :: tuple
 
     integer                                :: i
+    logical                                :: error
 
     call ipc_send_start( server%comm, server%space, "OUT", 0 )
 
-    call ipc_send_data( server%comm, size(tuple%elem) )
+    call ipc_send_data( server%comm, size(tuple%elem), error )  ! Ignore errors ...
     do i = 1,size(tuple%elem)
         call tuple_write_elem( server%comm, tuple%elem(i) )
     enddo
@@ -349,7 +487,7 @@ end subroutine tuple_read_tuple
 !     operation        Keyword defining the operation
 !     wait             Wait for the right tuple or not
 !
-subroutine tuple_read_in_tuple( server, pattern_array, tuple, operation, wait )
+subroutine tuple_read_in_tuple( server, pattern, tuple, operation, wait )
     type(tuple_connection), intent(in)     :: server
     type(tuple_data), intent(in)           :: pattern
     type(tuple_data), intent(out)          :: tuple
@@ -357,8 +495,10 @@ subroutine tuple_read_in_tuple( server, pattern_array, tuple, operation, wait )
     logical, intent(in)                    :: wait
 
     character(len=40)                      :: tag
+    integer                                :: i
     integer                                :: id
     integer                                :: noelem
+    logical                                :: error
 
     call tuple_free( tuple )
 
@@ -368,7 +508,7 @@ subroutine tuple_read_in_tuple( server, pattern_array, tuple, operation, wait )
         call ipc_send_start( server%comm, server%space, operation, 0 )
     endif
 
-    call ipc_send_data( server%comm, size(pattern%elem) )
+    call ipc_send_data( server%comm, size(pattern%elem), error )
 
     do i = 1,size(tuple%elem)
         call tuple_write_elem( server%comm, tuple%elem(i) )
@@ -389,7 +529,7 @@ subroutine tuple_read_in_tuple( server, pattern_array, tuple, operation, wait )
                 cycle
             endif
         else
-            call ipc_receive_data( server%comm, noelem )
+            call ipc_receive_data( server%comm, noelem, error ) ! Ignore errors
 
             allocate( tuple%elem(noelem) )
 
@@ -415,30 +555,32 @@ subroutine tuple_write_elem( comm, elem )
     type(ipc_comm), intent(in)             :: comm
     type(tuple_elem), intent(in)           :: elem
 
-    call ipc_send_data( comm, elem%elem_type )
+    logical                                :: error
+
+    call ipc_send_data( comm, elem%elem_type, error )
     select case ( elem%elem_type )
         case( 1 )
-            call ipc_send_data( comm, elem%ivalue )
+            call ipc_send_data( comm, elem%ivalue, error )
         case( 2 )
-            call ipc_send_data( comm, elem%lvalue )
+            call ipc_send_data( comm, elem%lvalue, error )
         case( 3 )
-            call ipc_send_data( comm, elem%rvalue )
+            call ipc_send_data( comm, elem%rvalue, error )
         case( 4 )
-            call ipc_send_data( comm, elem%dvalue )
+            call ipc_send_data( comm, elem%dvalue, error )
         case( 5 )
-            call ipc_send_data( comm, elem%svalue )
+            call ipc_send_data( comm, elem%svalue, error )
         case( 6 )
-            call ipc_send_data( comm, size(elem%iarray) )
-            call ipc_send_data( comm, elem%iarray )
+            call ipc_send_data( comm, size(elem%iarray), error )
+            call ipc_send_data( comm, elem%iarray, error )
         case( 7 )
-            call ipc_send_data( comm, size(elem%larray) )
-            call ipc_send_data( comm, elem%larray )
+            call ipc_send_data( comm, size(elem%larray), error )
+            call ipc_send_data( comm, elem%larray, error )
         case( 8 )
-            call ipc_send_data( comm, size(elem%rarray) )
-            call ipc_send_data( comm, elem%rarray )
+            call ipc_send_data( comm, size(elem%rarray), error )
+            call ipc_send_data( comm, elem%rarray, error )
         case( 9 )
-            call ipc_send_data( comm, size(elem%darray) )
-            call ipc_send_data( comm, elem%darray )
+            call ipc_send_data( comm, size(elem%darray), error )
+            call ipc_send_data( comm, elem%darray, error )
         case default
             ! Ignore!
     end select
@@ -452,40 +594,41 @@ end subroutine tuple_write_elem
 !     comm             Connection information
 !     elem             Element to be read
 !
-subroutine tuple_write_elem( comm, elem )
+subroutine tuple_read_elem( comm, elem )
     type(ipc_comm), intent(in)             :: comm
     type(tuple_elem), intent(out)          :: elem
 
     integer                                :: nodata
+    logical                                :: error
 
-    call ipc_receive_data( comm, elem%elem_type )
+    call ipc_receive_data( comm, elem%elem_type, error )
     select case ( elem%elem_type )
         case( 1 )
-            call ipc_receive_data( comm, elem%ivalue )
+            call ipc_receive_data( comm, elem%ivalue, error )
         case( 2 )
-            call ipc_receive_data( comm, elem%lvalue )
+            call ipc_receive_data( comm, elem%lvalue, error )
         case( 3 )
-            call ipc_receive_data( comm, elem%rvalue )
+            call ipc_receive_data( comm, elem%rvalue, error )
         case( 4 )
-            call ipc_receive_data( comm, elem%dvalue )
+            call ipc_receive_data( comm, elem%dvalue, error )
         case( 5 )
-            call ipc_receive_data( comm, elem%svalue )
+            call ipc_receive_data( comm, elem%svalue, error )
         case( 6 )
-            call ipc_receive_data( comm, nodata )
+            call ipc_receive_data( comm, nodata, error )
             allocate( elem%iarray(nodata) )
-            call ipc_receive_data( comm, elem%iarray )
+            call ipc_receive_data( comm, elem%iarray, error )
         case( 7 )
-            call ipc_receive_data( comm, nodata )
+            call ipc_receive_data( comm, nodata, error )
             allocate( elem%larray(nodata) )
-            call ipc_receive_data( comm, elem%larray )
+            call ipc_receive_data( comm, elem%larray, error )
         case( 8 )
-            call ipc_receive_data( comm, nodata )
+            call ipc_receive_data( comm, nodata, error )
             allocate( elem%rarray(nodata) )
-            call ipc_receive_data( comm, elem%rarray )
+            call ipc_receive_data( comm, elem%rarray, error )
         case( 9 )
-            call ipc_receive_data( comm, nodata )
+            call ipc_receive_data( comm, nodata, error )
             allocate( elem%darray(nodata) )
-            call ipc_receive_data( comm, elem%darray )
+            call ipc_receive_data( comm, elem%darray, error )
         case default
             ! Ignore!
     end select
@@ -497,32 +640,32 @@ end module
 ! test program
 !     - Test the matching routine
 !
-program test_tuple
-    use tuplespaces
-
-    type(tuple_data)  :: pattern
-    type(tuple_data)  :: tuple
-
-    pattern = (/ elem_any, elem_integer, elem(1) /)
-    tuple   = (/ elem(1.0), elem(1), elem(1) /)
-
-    write(*,*) 'Tuple should match: ', tuple_match( pattern, tuple )
-
-
-    tuple   = (/ elem(1.0), elem(1.0), elem(1) /)
-                            ! Real!
-    write(*,*) 'Tuple should NOT match: ', tuple_match( pattern, tuple )
-
-
-    tuple   = (/ elem(1.0), elem(1), elem(1), elem(2) /)
-                                               ! Too long
-    write(*,*) 'Tuple should NOT match: ', tuple_match( pattern, tuple )
-
-
-    pattern = (/ elem(1.0), elem_string, elem('abc') /)
-    tuple   = (/ elem(1.0), elem('abc'), elem('abc') /)
-
-    write(*,*) 'Tuple should match: ', tuple_match( pattern, tuple )
-
-    deallocate( pattern%elem, tuple%elem )
-end program test_tuple
+!program test_tuple
+!    use tuplespaces
+!
+!    type(tuple_data)  :: pattern
+!    type(tuple_data)  :: tuple
+!
+!    pattern = (/ elem_any, elem_integer, elem(1) /)
+!    tuple   = (/ elem(1.0), elem(1), elem(1) /)
+!
+!    write(*,*) 'Tuple should match: ', tuple_match( pattern, tuple )
+!
+!
+!    tuple   = (/ elem(1.0), elem(1.0), elem(1) /)
+!                            ! Real!
+!    write(*,*) 'Tuple should NOT match: ', tuple_match( pattern, tuple )
+!
+!
+!    tuple   = (/ elem(1.0), elem(1), elem(1), elem(2) /)
+!                                               ! Too long
+!    write(*,*) 'Tuple should NOT match: ', tuple_match( pattern, tuple )
+!
+!
+!    pattern = (/ elem(1.0), elem_string, elem('abc') /)
+!    tuple   = (/ elem(1.0), elem('abc'), elem('abc') /)
+!
+!    write(*,*) 'Tuple should match: ', tuple_match( pattern, tuple )
+!
+!    deallocate( pattern%elem, tuple%elem )
+!end program test_tuple
