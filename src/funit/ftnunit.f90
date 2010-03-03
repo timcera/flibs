@@ -762,7 +762,10 @@ subroutine ftnunit_write_html_header
         '<title>Results of unit tests</title>', &
         '<style type="text/css">', &
         'span.indent {', &
-        '   text-indent: 30;', &
+        '   padding-left: 30px;', &
+        '}', &
+        'span.dblindent {', &
+        '   padding-left: 60px;', &
         '}', &
         'span.red {', &
         '   background: red;', &
@@ -1040,10 +1043,10 @@ subroutine ftnunit_write_html_failed_int1d( text, idx, value1, value2, addtext )
     endif
 
     write( lun, '(a)' ) &
-        '<td>Values at index: '
+        '<td><span class="dblindent">Values at index: '
     write( lun, '(i0,a,i0,a,i0,a)' ) &
-        idx, ':', &
-        value1, ' -- ', value2, '</td>'
+        idx, ': ', &
+        value1, ' -- ', value2, '</span></td>'
     close( lun )
 
 end subroutine ftnunit_write_html_failed_int1d
@@ -1109,9 +1112,9 @@ subroutine ftnunit_write_html_failed_real1d( text, idx, value1, value2, addtext 
     endif
 
     write( lun, '(a)' ) &
-        '<td><span class="indent">Values at index: '
+        '<td><span class="dblindent">Values at index: '
     write( lun, '(i0,a,e12.5,a,e12.5,a)' ) &
-        idx, ':', &
+        idx, ': ', &
         value1, ' -- ', value2, '</span></td>'
     close( lun )
 
