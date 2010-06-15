@@ -288,7 +288,7 @@ CONTAINS
     IMPLICIT NONE
     TYPE(myfortran_result), INTENT(INOUT) :: res
     TYPE(myfortran_row), INTENT(OUT) :: row
-    INTEGER(C_INT), POINTER :: lenptr(:)
+    INTEGER(C_LONG), POINTER :: lenptr(:)
     TYPE(C_PTR) :: lengths
 
     ! Fetch the row data itself.
