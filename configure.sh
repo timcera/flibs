@@ -9,6 +9,7 @@ if test @$1 = "@-help" -o @$1 = "@-?" ;then
     echo Available compilers:
     echo - gfortran - Gnu\'s Fortran 95 compiler
     echo - g95      - Alternative Fortran 95 compiler
+    echo - ifort    - Intel Fortran compiler
     echo - f95      - generic Fortran 95 compiler
     echo ""
     echo Available build options:
@@ -56,6 +57,9 @@ fi
 if test @$1 == "@g95" -o @$2 == "@g95" ;then
     check=g95
 fi
+if test @$1 == "@ifort" -o @$2 == "@ifort" ;then
+    check=ifort
+fi
 if test @$1 == "@f95" -o @$2 == "@f95" ;then
     check=f95
 fi
@@ -83,6 +87,18 @@ if test $found -eq 0 -a \( "$check" == "" -o "$check" == "g95" \) ;then
     if test $? -eq 0 ;then
         found=1
         compiler=g95
+    fi
+fi
+
+# -------------------------------------------------------------------------
+# Compiler: ifort
+# -------------------------------------------------------------------------
+if test $found -eq 0 -a \( "$check" == "" -o "$check" == "ifort" \) ;then
+    echo Checking ifort ...
+    ifort idc.f90
+    if test $? -eq 0 ;then
+        found=1
+        compiler=ifort
     fi
 fi
 

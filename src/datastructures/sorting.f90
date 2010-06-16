@@ -145,3 +145,4 @@ integer function qsort_rand( lower, upper )
     qsort_rand =  lower + nint(r * (upper-lower))
 end function qsort_rand
 
+>>>>>>> 1.3
