@@ -25,6 +25,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#description">DESCRIPTION</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#output">OUTPUT</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#routines">ROUTINES</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#customisation">CUSTOMISATION</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#generating_tests_from_a_table">GENERATING TESTS FROM A TABLE</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#todo">TODO</a><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#related_work">RELATED WORK</a><br>
@@ -47,6 +48,10 @@
 <tr valign=top ><td ><a href="#14"><b class='cmd'>call ftnunit_get_lun( lun )</b> </a></td></tr>
 <tr valign=top ><td ><a href="#15"><b class='cmd'>call ftnunit_remove_file( filename )</b> </a></td></tr>
 <tr valign=top ><td ><a href="#16"><b class='cmd'>call ftnunit_make_empty_file( filename )</b> </a></td></tr>
+<tr valign=top ><td ><a href="#17">cmd call ftnunit_hook_test_start( text )</a></td></tr>
+<tr valign=top ><td ><a href="#18">cmd call ftnunit_hook_test_stop( text )</a></td></tr>
+<tr valign=top ><td ><a href="#19">cmd call ftnunit_hook_test_failure( text, assert_text, failure_text )</a></td></tr>
+<tr valign=top ><td ><a href="#20">cmd call ftnunit_hook_test_failure</a></td></tr>
 </table></td></tr></table>
 <h2><a name="description">DESCRIPTION</a></h2>
 <p>
@@ -494,6 +499,58 @@ Name of the file to be created
 
 </dl>
 
+
+<h2><a name="customisation">CUSTOMISATION</a></h2>
+<p>
+The module <em>ftnunit_hooks</em> can be used to customise the output
+of <em>ftnunit</em> to a certain extent. It provides four routines
+that you can easily adapt to your needs:
+
+<dl>
+<dt><a name="17">cmd call ftnunit_hook_test_start( text )</a><dd>
+]
+Routine to signal the start of a test.
+
+<br><br>
+<dl>
+<dt>string <i class='arg'>text</i><dd>
+The descriptive text passed to the routine <em>test</em>.
+</dl>
+
+<dt><a name="18">cmd call ftnunit_hook_test_stop( text )</a><dd>
+]
+Routine to signal the end of a test.
+
+<br><br>
+<dl>
+<dt>string <i class='arg'>text</i><dd>
+The descriptive text passed to the routine <em>test</em>.
+</dl>
+
+<dt><a name="19">cmd call ftnunit_hook_test_failure( text, assert_text, failure_text )</a><dd>
+]
+Routine to signal that an assertion has failed (and therefore the test).
+
+<br><br>
+<dl>
+<dt>string <i class='arg'>text</i><dd>
+The descriptive text passed to the routine <em>test</em>.
+<br><br>
+<dt>string <i class='arg'>assert_text</i><dd>
+Text describing the assertion
+<br><br>
+<dt>string <i class='arg'>failure_text</i><dd>
+The text describing the reason of the failure
+</dl>
+
+<dt><a name="20">cmd call ftnunit_hook_test_failure</a><dd>
+]
+Routine called after the tests have been run (for instance to start and
+Internet browser to view the HTML report).
+
+</dl>
+
+Note that the default implementation consists of empty routine.
 
 <h2><a name="generating_tests_from_a_table">GENERATING TESTS FROM A TABLE</a></h2>
 <p>

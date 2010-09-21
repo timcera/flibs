@@ -395,6 +395,48 @@ Name of the file to be created
 [list_end]
 
 
+[section "CUSTOMISATION"]
+The module [emph ftnunit_hooks] can be used to customise the output
+of [emph ftnunit] to a certain extent. It provides four routines
+that you can easily adapt to your needs:
+
+[list_begin definitions]
+[call cmd "call ftnunit_hook_test_start( text )"]]
+Routine to signal the start of a test.
+
+[list_begin arg]
+[arg_def string text]
+The descriptive text passed to the routine [emph test].
+[list_end]
+
+[call cmd "call ftnunit_hook_test_stop( text )"]]
+Routine to signal the end of a test.
+
+[list_begin arg]
+[arg_def string text]
+The descriptive text passed to the routine [emph test].
+[list_end]
+
+[call cmd "call ftnunit_hook_test_failure( text, assert_text, failure_text )"]]
+Routine to signal that an assertion has failed (and therefore the test).
+
+[list_begin arg]
+[arg_def string text]
+The descriptive text passed to the routine [emph test].
+[arg_def string assert_text]
+Text describing the assertion
+[arg_def string failure_text]
+The text describing the reason of the failure
+[list_end]
+
+[call cmd "call ftnunit_hook_test_failure"]]
+Routine called after the tests have been run (for instance to start and
+Internet browser to view the HTML report).
+
+[list_end]
+
+Note that the default implementation consists of empty routine.
+
 [section "GENERATING TESTS FROM A TABLE"]
 The Tcl program "gentabletest.tcl" reads the test specifications from an
 input file and generates a complete Fortran program. The ideas from
