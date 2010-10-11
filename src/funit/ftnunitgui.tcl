@@ -2,6 +2,12 @@
 #     Straightforward GUI for Ftnunit:
 #     - Select and run tests
 #
+#     TODO:
+#     Properly detect failure in test by examining
+#     the contents of ftnunit.lst. Current heuristic
+#     seems to do fine though.
+#
+#
 package require Tk 8.5
 
 # interrogateExecutable --
@@ -40,8 +46,10 @@ proc interrogateExecutable {executable} {
     }
 
     set items {}
+    set allCases [$tree insert {} end -text "All cases" -image $::notrun]
+    lappend items $allCases
     foreach case [split $cases \n] {
-        lappend items [$tree insert {} end -text $case -image $::notrun]
+        lappend items [$tree insert $allCases end -text $case -image $::notrun]
     }
 }
 
@@ -84,10 +92,15 @@ proc runSelectedTest {} {
     global output
     global selected
     global executable
+    global items
 
-    if { [info exists selected] } {
+    if { ! [info exists selected] } {
+        return
+    }
+    if { $selected != [lindex $items 0] } {
+        file delete -force "ftnunit.lst"
         set   outfile [open "ftnunit.run" w]
-        puts  $outfile [string trimleft [string range [$tree selection] 1 end] 0]
+        puts  $outfile [expr {[string trimleft [string range [$tree selection] 1 end] 0] - 1}]
         close $outfile
 
         $output delete 1.0 end
@@ -95,11 +108,50 @@ proc runSelectedTest {} {
 
         if { [catch {
             set result [exec $executable]
+            set img    $::okay
+            if { [string match "*ASSERTION FAILED*" $result] } {
+                set result [string map {"ASSERTION FAILED\n" ""} $result]
+                set img    $::failed
+            }
             $output insert end $result
-            $tree item $selected -image $::okay
+            $tree item $selected -image $img
         } msg] } {
-            $output insert end "Error: " error "\n$result"
+            $output insert end "Error: " error "\n$msg"
             $tree item $selected -image $::failed
+        }
+    } else {
+        $output delete 1.0 end
+        set success 1
+
+        foreach item [lrange $items 1 end] {
+            file delete -force "ftnunit.lst"
+            set   outfile [open "ftnunit.run" w]
+            puts  $outfile [expr {[string trimleft [string range $item 1 end] 0] - 1}]
+            close $outfile
+
+            $output insert end "Test case: [$tree item $item -text]\n\n" title
+
+            if { [catch {
+                set result [exec $executable]
+                set img    $::okay
+                if { [string match "*ASSERTION FAILED*" $result] } {
+                    set result [string map {"ASSERTION FAILED" ""} $result]
+                    set img    $::failed
+                }
+                $tree item $item -image $img
+                $output insert end $result
+            } msg] } {
+                $output insert end "Error: " error "\n$msg"
+                $tree item $item -image $::failed
+                set success 0
+            }
+            $output insert end "\n\n"
+        }
+
+        if { $success } {
+            $tree item [lindex $items 0] -image $::okay
+        } else {
+            $tree item [lindex $items 0] -image $::failed
         }
     }
 }
@@ -130,7 +182,7 @@ proc selectExecutable {{name {}}} {
     }
 
     if { $executable ne "" } {
-        wm title . "Ftnunit: [file root $executable]"
+        wm title . "Ftnunit: [file tail $executable]"
         interrogateExecutable $executable
     } else {
         wm title . "Ftnunit: -- select program to test --"
@@ -198,6 +250,9 @@ proc setupWindow {} {
     $tree heading #0 -text "Test cases"
 
     bind $tree <<TreeviewSelect>> [list setTestSelection %X %Y]
+
+    $output tag configure title -font       "Helvetica 12 bold"
+    $output tag configure error -foreground red
 
     menu .menu -tearoff 0
 
