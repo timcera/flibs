@@ -287,10 +287,13 @@ subroutine runtests_final( stop )
         if ( test_mode == mode_all ) then
             write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
             write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
-            call ftnunit_hook_test_completed
         endif
         call ftnunit_remove_file( "ftnunit.lst" )
         call ftnunit_write_html_footer
+
+        if ( test_mode == mode_all ) then
+            call ftnunit_hook_test_completed
+        endif
 
         if ( .not. present(stop) ) then
             stop
