@@ -41,7 +41,7 @@ subroutine ftnunit_get_lun( lun )
     integer, save :: prevlun = 0
 
     if ( prevlun /= 0 ) then
-        inquire( unit = lun, opened = opend )
+        inquire( unit = prevlun, opened = opend )
         if ( .not. opend ) then
             lun = prevlun
             return
@@ -108,6 +108,10 @@ module ftnunit
         module procedure assert_comparable_double
         module procedure assert_comparable_double1d
         module procedure assert_comparable_double2d
+    end interface
+    interface assert_inbetween
+        module procedure assert_inbetween_real
+        module procedure assert_inbetween_double
     end interface
 
 contains
@@ -242,52 +246,7 @@ subroutine runtests_init_priv
         endif
 
         close( lun )
-    endif
 
-end subroutine
-
-! runtests_final --
-!     Subroutine to report the overall statistics
-! Arguments:
-!     None
-! Note:
-!     Use in conjunction with runtests_init to enable multiple calls
-!     to the runtests subroutine. This makes it easier to run tests
-!     from different modules, as you have more than one subroutine to
-!     do the actual tests.
-!
-subroutine runtests_final
-    if ( ftnunit_file_exists("ftnunit.run") ) then
-        if ( test_mode == mode_all ) then
-            write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
-            write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
-            call ftnunit_hook_test_completed
-        endif
-        call ftnunit_remove_file( "ftnunit.lst" )
-        call ftnunit_write_html_footer
-        stop
-    endif
-end subroutine
-
-! runtests --
-!     Subroutine to run the tests if requested
-! Arguments:
-!     testproc      The test subroutine that actually runs the unit test
-!
-subroutine runtests( testproc )
-    interface
-        subroutine testproc
-        end subroutine testproc
-    end interface
-
-    integer :: lun
-    integer :: ierr
-
-    if ( .not. call_final ) then
-        call runtests_init_priv
-    endif
-
-    if ( ftnunit_file_exists("ftnunit.run") ) then
         if ( ftnunit_file_exists("ftnunit.lst") ) then
             call ftnunit_get_lun( lun )
             open( lun, file = "ftnunit.lst", iostat = ierr )
@@ -307,6 +266,61 @@ subroutine runtests( testproc )
         endif
 
         noruns = noruns + 1
+    endif
+
+end subroutine
+
+! runtests_final --
+!     Subroutine to report the overall statistics
+! Arguments:
+!     stop              (Optional) stop the program (default) or not
+! Note:
+!     Use in conjunction with runtests_init to enable multiple calls
+!     to the runtests subroutine. This makes it easier to run tests
+!     from different modules, as you have more than one subroutine to
+!     do the actual tests.
+!
+subroutine runtests_final( stop )
+    logical, optional, intent(in) :: stop
+
+    if ( ftnunit_file_exists("ftnunit.run") ) then
+        if ( test_mode == mode_all ) then
+            write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
+            write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
+            call ftnunit_hook_test_completed
+        endif
+        call ftnunit_remove_file( "ftnunit.lst" )
+        call ftnunit_write_html_footer
+
+        if ( .not. present(stop) ) then
+            stop
+        else
+            if ( stop ) then
+                stop
+            endif
+        endif
+    endif
+end subroutine
+
+! runtests --
+!     Subroutine to run the tests if requested
+! Arguments:
+!     testproc      The test subroutine that actually runs the unit test
+!
+subroutine runtests( testproc )
+    interface
+        subroutine testproc
+        end subroutine testproc
+    end interface
+
+    integer :: lun
+    integer :: ierr
+
+    if ( call_final ) then
+        call runtests_init_priv
+    endif
+
+    if ( ftnunit_file_exists("ftnunit.run") ) then
         if ( noruns == 1 .and. call_final ) then
             call ftnunit_write_html_header
         endif
@@ -850,6 +864,72 @@ subroutine assert_comparable_double2d( array1, array2, margin, text )
     endif
 end subroutine assert_comparable_double2d
 
+! assert_inbetween_real --
+!     Subroutine to check if a real number is contained in a given interval
+! Arguments:
+!     value         Value to check
+!     vmin          Minimum value
+!     vmax          Maximum value
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_inbetween_real( value, vmin, vmax, text )
+    real, intent(in)                    :: value
+    real, intent(in)                    :: vmin
+    real, intent(in)                    :: vmax
+    character(len=*), intent(in)        :: text
+
+    logical                             :: addtext
+
+    addtext = .false.
+
+    if ( value < vmin .or. value > vmax ) then
+        nofails = nofails + 1
+        write(*,'(3a)')      '    Value out of range: "',trim(text), '" - assertion failed'
+        write(*,'(a,g15.5)') '        Value:     ', value
+        write(*,'(a,g15.5)') '        Minimum:   ', vmin
+        write(*,'(a,g15.5)') '        Maximum:   ', vmax
+        call ftnunit_write_html_failed_inbetween_real( &
+                                text, value, vmin, vmax )
+        call ftnunit_hook_test_assertion_failed( testname, text, "Value out of range" )
+    endif
+end subroutine assert_inbetween_real
+
+! assert_inbetween_double --
+!     Subroutine to check if a double precision real number is contained in a given interval
+! Arguments:
+!     value         Value to check
+!     vmin          Minimum value
+!     vmax          Maximum value
+!     text          Text describing the assertion
+! Side effects:
+!     If the assertion fails, this is reported to standard
+!     output. Also, nofails is increased by one.
+!
+subroutine assert_inbetween_double( value, vmin, vmax, text )
+    real(kind=dp), intent(in)           :: value
+    real(kind=dp), intent(in)           :: vmin
+    real(kind=dp), intent(in)           :: vmax
+    character(len=*), intent(in)        :: text
+
+    logical                             :: addtext
+
+    addtext = .false.
+
+    if ( value < vmin .or. value > vmax ) then
+        nofails = nofails + 1
+        write(*,'(3a)')      '    Value out of range: "',trim(text), '" - assertion failed'
+        write(*,'(a,g21.12)') '        Value:     ', value
+        write(*,'(a,g21.12)') '        Minimum:   ', vmin
+        write(*,'(a,g21.12)') '        Maximum:   ', vmax
+        call ftnunit_write_html_failed_inbetween_double( &
+                                text, value, vmin, vmax )
+        call ftnunit_hook_test_assertion_failed( testname, text, "Value out of range" )
+    endif
+end subroutine assert_inbetween_double
+
 ! assert_files_comparable --
 !     Compare two files and establish whether they are equal or not
 !
@@ -1216,7 +1296,7 @@ subroutine ftnunit_write_html_test_begin( text )
 
     write( lun, '(a)' ) &
         '<tr>', &
-        '<td>', trim(text), '</td>'
+        '<td><b>', trim(text), '</b></td>'
     close( lun )
 
     previous = .true.
@@ -1461,7 +1541,7 @@ subroutine ftnunit_write_html_failed_int( text, value1, value2 )
     write( lun, '(a)' ) &
         '<td><span class="indent">', trim(text), '</span></td>', &
         '<td>Values: '
-    write( lun, '(a,i0,a,i0,a)' ) &
+    write( lun, '(i0,a,i0,a)' ) &
         value1, ' -- ', value2, '</td>'
     close( lun )
 
@@ -1534,7 +1614,7 @@ subroutine ftnunit_write_html_failed_real( text, value1, value2 )
     write( lun, '(a)' ) &
         '<td><span class="indent">', trim(text), '</span></td>', &
         '<td>Values: '
-    write( lun, '(a,e15.7,a,e15.7,a)' ) &
+    write( lun, '(e15.7,a,e15.7,a)' ) &
         value1, ' -- ', value2, '</td>'
     close( lun )
 
@@ -1648,7 +1728,7 @@ subroutine ftnunit_write_html_failed_double( text, value1, value2 )
     write( lun, '(a)' ) &
         '<td><span class="indent">', trim(text), '</span></td>', &
         '<td>Values: '
-    write( lun, '(a,e21.15,a,e21.15,a)' ) &
+    write( lun, '(e21.15,a,e21.15,a)' ) &
         value1, ' -- ', value2, '</td>'
     close( lun )
 
@@ -1738,6 +1818,78 @@ subroutine ftnunit_write_html_failed_double2d( text, idx1, idx2, value1, value2,
     close( lun )
 end subroutine ftnunit_write_html_failed_double2d
 
+! ftnunit_write_html_failed_inbetween_real --
+!     Auxiliary subroutine to write an out-of-range real assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     value        Value to be checked
+!     vmin         Minimum value
+!     vmax         Maximum value
+!     addtext      Add the text or not
+!
+subroutine ftnunit_write_html_failed_inbetween_real( text, value, vmin, vmax )
+    character(len=*)  :: text
+    real              :: value
+    real              :: vmin
+    real              :: vmax
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    failed_asserts = failed_asserts + 1
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(3a)' ) &
+        '<td><span class="indent">', trim(text), '</span></td>'
+    write( lun, '(a,g15.5,a,g15.5,a,g15.5)' ) &
+        '<td>Value: ', value, ' - expected range: ',vmin, ' -- ', vmax
+    close( lun )
+
+end subroutine ftnunit_write_html_failed_inbetween_real
+
+! ftnunit_write_html_failed_inbetween_real --
+!     Auxiliary subroutine to write an out-of-range real assertion to the HTML file
+! Arguments:
+!     text         Description of the test
+!     value        Value to be checked
+!     vmin         Minimum value
+!     vmax         Maximum value
+!     addtext      Add the text or not
+!
+subroutine ftnunit_write_html_failed_inbetween_double( text, value, vmin, vmax )
+    character(len=*)  :: text
+    real(kind=dp)     :: value
+    real(kind=dp)     :: vmin
+    real(kind=dp)     :: vmax
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    failed_asserts = failed_asserts + 1
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(3a)' ) &
+        '<td><span class="indent">', trim(text), '</span></td>'
+    write( lun, '(a,g21.12,a,g21.12,a,g21.12)' ) &
+        '<td>Value: ', value, ' - expected range: ',vmin, ' -- ', vmax
+    close( lun )
+
+end subroutine ftnunit_write_html_failed_inbetween_double
+
+! ftnunit_write_html_failed_files --
+!     Auxiliary subroutine to write information about file differences to the HTML file
+! Arguments:
+!     text         Description of the test
+!     string1      First string
+!     string2      Second string
+!     string3      Descriptive string
+!
 subroutine ftnunit_write_html_failed_files( text, string1, string2, string3 )
     character(len=*) :: text
     integer          :: type

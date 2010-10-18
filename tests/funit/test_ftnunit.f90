@@ -148,7 +148,8 @@ module dataproc_testing
     implicit none
     private                 ! This is needed to make sure we can easily
     public :: test_all      ! use several such modules. The only external
-                            ! name is "test_all"
+                            ! names are "test_all" and "test_extra"
+    public :: test_extra
 
     character(len=40) :: datafile
 contains
@@ -176,8 +177,12 @@ subroutine test_all
     call test( test_invalid_file, "Read an invalid file" )
     call test( test_ordinary_file, "Read an ordinary file" )
     call test( test_compare_files, "Comparing two files" )
-
 end subroutine test_all
+
+subroutine test_extra
+    call test( test_compare_reals, "Comparing real numbers" )
+
+end subroutine test_extra
 
 ! write_name --
 !     Small auxiliary routine (write the file with the file name)
@@ -317,6 +322,35 @@ subroutine test_compare_files
 
 end subroutine test_compare_files
 
+
+! test_compare_reals --
+!     Test: compare real values
+! Arguments:
+!     None
+!
+subroutine test_compare_reals
+    integer, parameter :: dp = kind(1.0d0)
+
+    real               :: value
+    real               :: vmin
+    real               :: vmax
+    real(kind=dp)      :: dvalue
+    real(kind=dp)      :: dvmin
+    real(kind=dp)      :: dvmax
+
+    vmin  = 1.0
+    vmax  = 1.01
+    value = 2.0
+    dvmin  = 1.0_dp
+    dvmax  = 1.01_dp
+    dvalue = 2.0_dp
+
+    call assert_inbetween( value,  vmin,  vmax,  "Value slightly larger than 1" )
+    call assert_inbetween( dvalue, dvmin, dvmax, "Double-precision value slightly larger than 1" )
+
+end subroutine test_compare_reals
+
+
 end module dataproc_testing
 
 ! program ---
@@ -343,6 +377,7 @@ program dataproc
 !
     call runtests_init
     call runtests( test_all )
+    call runtests( test_extra )
     call runtests_final
 
 !

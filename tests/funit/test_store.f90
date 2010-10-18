@@ -90,6 +90,9 @@ program test_store
     if ( .not. associated( int1d_retrieved ) ) then
         write(*,*) 'Not associated: 1D array'
     else
+        write(*,*) 'Associated:', associated(int1d_retrieved)
+        write(*,*) 'Shape:', Shape(int1d_retrieved)
+        write(*,*) 'Shape:', Shape(int1d)
         if ( any( shape(int1d_retrieved) /= shape(int1d) ) ) then
             write(*,*) 'Mismatch in shape: 1D array', shape(int1d_retrieved), ' -- ', shape(int1d)
         else

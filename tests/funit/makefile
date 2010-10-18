@@ -2,7 +2,7 @@
 #     Build the test_ftnunit program
 #
 F95 = gfortran
-FCOPTS = -c -I../../src/funit
+FCOPTS = -g -c -I../../src/funit
 EXEEXT = .exe
 OBJEXT = .o
 
@@ -15,7 +15,7 @@ test_tridiag$(EXEEXT):	ftnunit$(OBJEXT) ftnunit_hooks$(OBJEXT) test_tridiag$(OBJ
 	$(F95) -o test_tridiag$(EXEEXT) test_ftnunit$(OBJEXT) ftnunit$(OBJEXT) ftnunit_hooks$(OBJEXT)
 
 test_store$(EXEEXT):	test_store$(OBJEXT) ftnunit_store$(OBJEXT) ftnunit$(OBJEXT) ftnunit_hooks$(OBJEXT)
-	$(F95) -o test_store$(EXEEXT) test_store$(OBJEXT) ftnunit_store$(OBJEXT) ftnunit$(OBJEXT) ftnunit_hooks$(OBJEXT) 
+	$(F95) -g -o test_store$(EXEEXT) test_store$(OBJEXT) ftnunit_store$(OBJEXT) ftnunit$(OBJEXT) ftnunit_hooks$(OBJEXT) 
 
 test_ftnunit$(OBJEXT):	test_ftnunit.f90 ftnunit$(OBJEXT) ftnunit_hooks$(OBJEXT)
 	$(F95) $(FCOPTS) test_ftnunit.f90
