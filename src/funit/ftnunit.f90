@@ -17,7 +17,10 @@
 !
 !     TODO:
 !     - Test the various assertion failures
+!       - Check the output (especially the array assertions)
 !     - Split the source code in several files
+!     - Implement "expect_program_test"
+!
 !
 !     $Id$
 !
@@ -87,6 +90,8 @@ module ftnunit
     logical, private, save :: previous   = .false.   ! Previous test run?
     integer, private, save :: failed_asserts = 0
     logical, private, save :: has_run        = .false.
+    logical, private, save :: ignore_test    = .false.
+    logical, private, save :: ignore_previous_test    = .false.
     character(len=20), private, save :: html_file = 'ftnunit.html'
     character(len=80), private, save :: testname
 
@@ -122,12 +127,18 @@ contains
 !     proc          The subroutine implementing the unit test
 !     text          Text describing the test
 !
-subroutine test( proc, text )
-    external          :: proc
-    character(len=*)  :: text
+subroutine test( proc, text, ignore )
+    external                        :: proc
+    character(len=*)                :: text
+    logical, intent(in), optional   :: ignore
 
     integer           :: lun
     integer           :: ierr
+
+    ignore_test = .false.
+    if ( present(ignore) ) then
+        ignore_test = ignore
+    endif
 
     !
     ! Are we running in LIST mode?
@@ -160,27 +171,34 @@ subroutine test( proc, text )
     testname     = text
     nofails_prev = nofails
 
-    write( *, '(2a)' ) 'Test: ', trim(text)
+    write( *, '(/,2a)' ) 'Test: ', trim(text)
+
     call ftnunit_write_html_test_begin( text )
     call ftnunit_hook_test_start( text )
 
-    call proc
+    if ( .not. ignore_test ) then
 
-    !
-    ! No runtime error or premature end of
-    ! the program ...
-    !
-    previous = .true.
-    call ftnunit_get_lun( lun )
-    open( lun, file = 'ftnunit.lst' )
-    write( lun, * ) testno, nofails, noruns, ' ', .true.
-    close( lun )
+        call proc
 
-    if ( nofails /= nofails_prev .and. test_mode == mode_single ) then
-        write( *, '(a)' ) 'ASSERTION FAILED'
-    endif
+        !
+        ! No runtime error or premature end of
+        ! the program ...
+        !
+        previous = .true.
+        call ftnunit_get_lun( lun )
+        open( lun, file = 'ftnunit.lst' )
+        write( lun, * ) testno, nofails, noruns, ' ', .true.
+        close( lun )
+
+        if ( nofails /= nofails_prev .and. test_mode == mode_single ) then
+            write( *, '(a)' ) 'ASSERTION FAILED'
+        endif
+
+    end if
 
     call ftnunit_hook_test_stop( text )
+
+    ignore_previous_test = ignore_test
 
 end subroutine test
 
@@ -210,6 +228,7 @@ subroutine runtests_init_priv
     character(len=20) :: mode_string
     integer           :: ierr
     integer           :: lun
+    logical           :: stopped
 
     if ( .not. ftnunit_file_exists("ftnunit.lst") ) then
         call ftnunit_write_html_header
@@ -261,7 +280,24 @@ subroutine runtests_init_priv
                 close( lun )
             endif
             if ( previous ) then
-                call ftnunit_write_html_previous_failed
+                stopped = .false.
+                if ( ftnunit_file_exists("ftnunit.stop") ) then
+                    call ftnunit_get_lun( lun )
+                    open( lun, file = "ftnunit.stop", iostat = ierr )
+                    if ( ierr == 0 ) then
+                        read( lun, *, iostat = ierr ) stopped
+                        if ( ierr /= 0 ) then
+                            stopped = .false.
+                        endif
+                        close( lun )
+                    endif
+                endif
+                if ( .not. stopped ) then
+                    write( *, '(4x,a)' ) 'Note: the program crashed'
+                    call ftnunit_write_html_previous_failed
+                else
+                    write( *, '(4x,a)' ) 'Note: the program correctly stopped'
+                endif
             endif
         endif
 
@@ -337,6 +373,21 @@ subroutine runtests( testproc )
     endif
 
 end subroutine runtests
+
+! expect_program_stop --
+!     Indicate that the program is expected to stop in this test
+! Arguments:
+!     None
+! Side effects:
+!     A file "ftnunit.stop" is created to register this expectation
+!     and whether it was successful. A file is needed because the
+!     program has to be rerun.
+!
+subroutine expect_program_stop
+
+    ! TODO
+
+end subroutine expect_program_stop
 
 ! assert_true --
 !     Subroutine to check if a condition is true
@@ -440,7 +491,9 @@ subroutine assert_equal_logical1d( array1, array2, text )
             do i = 1,size(array1)
                 if ( array1(i) .neqv. array2(i) ) then
                     count = count + 1
-                    write(*,'(3a10)')    '    Index', '     First', '    Second'
+                    if ( count == 1 ) then
+                        write(*,'(3a10)')    '    Index', '     First', '    Second'
+                    endif
                     if ( count < 50 ) then
                         write(*,'(i10,2l10)')    i, array1(i), array2(i)
                         call ftnunit_write_html_failed_equivalent1d( &
@@ -587,7 +640,9 @@ subroutine assert_equal_int1d( array1, array2, text )
             do i = 1,size(array1)
                 if ( array1(i) /= array2(i) ) then
                     count = count + 1
-                    write(*,'(3a10)')    '    Index', '     First', '    Second'
+                    if ( count == 1 ) then
+                        write(*,'(3a10)')    '    Index', '     First', '    Second'
+                    endif
                     if ( count < 50 ) then
                         write(*,'(3i10)')    i, array1(i), array2(i)
                         call ftnunit_write_html_failed_int1d( &
@@ -663,7 +718,9 @@ subroutine assert_comparable_real1d( array1, array2, margin, text )
                 if ( abs(array1(i)-array2(i)) > &
                          0.5 * margin * (abs(array1(i))+abs(array2(i))) ) then
                     count = count + 1
-                    write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                    if ( count == 1 ) then
+                        write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                    endif
                     if ( count < 50 ) then
                         write(*,'(i10,2e15.5)')    i, array1(i), array2(i)
                         call ftnunit_write_html_failed_real1d( &
@@ -717,7 +774,9 @@ subroutine assert_comparable_real2d( array1, array2, margin, text )
                     if ( abs(array1(i,j)-array2(i,j)) > &
                              0.5 * margin * (abs(array1(i,j))+abs(array2(i,j))) ) then
                         count = count + 1
-                        write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                        if ( count == 1 ) then
+                            write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                        endif
                         if ( count < 50 ) then
                             write(*,'(2i5,2e15.5)')    i, j, array1(i,j), array2(i,j)
                             call ftnunit_write_html_failed_real2d( &
@@ -796,7 +855,9 @@ subroutine assert_comparable_double1d( array1, array2, margin, text )
                 if ( abs(array1(i)-array2(i)) > &
                          0.5 * margin * (abs(array1(i))+abs(array2(i))) ) then
                     count = count + 1
-                    write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                    if ( count == 1 ) then
+                        write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                    endif
                     if ( count < 50 ) then
                         write(*,'(i10,2e15.5)')    i, array1(i), array2(i)
                         call ftnunit_write_html_failed_double1d( &
@@ -850,7 +911,9 @@ subroutine assert_comparable_double2d( array1, array2, margin, text )
                     if ( abs(array1(i,j)-array2(i,j)) > &
                              0.5 * margin * (abs(array1(i,j))+abs(array2(i,j))) ) then
                         count = count + 1
-                        write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                        if ( count == 1 ) then
+                            write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
+                        endif
                         if ( count < 50 ) then
                             write(*,'(2i5,2e15.5)')    i, j, array1(i,j), array2(i,j)
                             call ftnunit_write_html_failed_double2d( &
@@ -1072,11 +1135,11 @@ subroutine assert_files_comparable( filename1, filename2, &
                         nofails = nofails + 1
                         call write_header
 
-                        write(*, '(a)' ) 'File 1: ' // trim(line1)
-                        write(*, '(a)' ) 'File 2: ' // trim(line2)
-                        write(*, '(a,i5,a,e12.4)' ) &
+                        write(*, '(4x,a)' ) 'File 1: ' // trim(line1)
+                        write(*, '(4x,a)' ) 'File 2: ' // trim(line2)
+                        write(*, '(4x,a,i5,a,e12.4)' ) &
                             'Difference in item ', i, ': ', abs(value1-value2)
-                        write(*, '(a,e12.4)' ) &
+                        write(*, '(4x,a,e12.4)' ) &
                             'Mean absolute value       : ', 0.5 * (abs(value1)+abs(value2))
 
                         differences = differences + 1
@@ -1095,9 +1158,9 @@ subroutine assert_files_comparable( filename1, filename2, &
                     nofails = nofails + 1
                     call write_header
 
-                    write(*, '(a)' ) 'File 1: ' // trim(line1)
-                    write(*, '(a)' ) 'File 2: ' // trim(line2)
-                    write(*, '(a,i5,a,e12.4)' ) &
+                    write(*, '(4x,a)' ) 'File 1: ' // trim(line1)
+                    write(*, '(4x,a)' ) 'File 2: ' // trim(line2)
+                    write(*, '(4x,a,i5,a,e12.4)' ) &
                         'Item ', i, ' is a number in one file and not in the other'
 
                     differences = differences + 1
@@ -1114,9 +1177,9 @@ subroutine assert_files_comparable( filename1, filename2, &
                     nofails = nofails + 1
                     call write_header
 
-                    write(*, '(a)' ) 'File 1: ' // trim(line1)
-                    write(*, '(a)' ) 'File 2: ' // trim(line2)
-                    write(*, '(a,i5,a,e12.4)' ) &
+                    write(*, '(4x,a)' ) 'File 1: ' // trim(line1)
+                    write(*, '(4x,a)' ) 'File 2: ' // trim(line2)
+                    write(*, '(4x,a,i5,a,e12.4)' ) &
                         'Item ', i, ' differs in the two lines'
                     differences = differences + 1
                     if ( differences == 1 ) then
@@ -1231,6 +1294,9 @@ subroutine ftnunit_write_html_header
         'span.green {', &
         '   background: green;', &
         '}', &
+        'span.yellow {', &
+        '   background: yellow;', &
+        '}', &
         '</style>', &
         '</header>', &
         '<body>', &
@@ -1256,7 +1322,7 @@ subroutine ftnunit_write_html_footer
     call ftnunit_get_lun( lun )
     open( lun, file = html_file, position = 'append' )
 
-    if ( has_run .and. failed_asserts == 0 ) then
+    if ( (has_run .or. ignore_test) .and. failed_asserts == 0 ) then
         call ftnunit_write_html_close_row( lun )
     endif
 
@@ -1286,7 +1352,10 @@ subroutine ftnunit_write_html_test_begin( text )
     open( lun, file = html_file, position = 'append' )
 
     if ( previous ) then
-        if ( failed_asserts == 0 ) then
+        if ( ignore_previous_test ) then
+            write( lun, '(a)' ) &
+                '<td><span class="yellow">Ignored</span></td></tr>'
+        else if ( failed_asserts == 0 ) then
             write( lun, '(a)' ) &
                 '<td><span class="green">OK</span></td></tr>'
         else
@@ -1341,7 +1410,10 @@ end subroutine ftnunit_write_html_previous_failed
 subroutine ftnunit_write_html_close_row( lun )
     integer           :: lun
 
-    if ( failed_asserts > 0 ) then
+    if ( ignore_previous_test ) then
+        write( lun, '(a)' ) &
+            '<td><span class="yellow">Ignored</span></td>'
+    else if ( failed_asserts > 0 ) then
         if ( failed_asserts == 1 ) then
             write( lun, '(a)' ) &
                 '<td><span class="red">Failed</span></td>'

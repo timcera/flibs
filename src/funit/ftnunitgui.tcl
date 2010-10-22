@@ -175,9 +175,12 @@ proc selectExecutable {{name {}}} {
 
     if { $name eq "" } {
         if { $::tcl_platform(platform) eq "windows" } {
-            set executable [tk_getOpenFile -title "Program to test" -filetypes {{{Executables} {.exe}}}]
+            set newname [tk_getOpenFile -title "Program to test" -filetypes {{{Executables} {.exe}}}]
         } else {
-            set executable [tk_getOpenFile -title "Program to test" -filetypes {{{Executables} {*}}}]
+            set newname [tk_getOpenFile -title "Program to test" -filetypes {{{Executables} {*}}}]
+        }
+        if { $newname != "" } {
+            set executable ""
         }
     }
 

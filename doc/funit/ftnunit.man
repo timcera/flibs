@@ -11,7 +11,7 @@ tests in Java programs. The [emph ftnunit] framework was inspired by
 that facility. It is not as good-looking as JUnit, by no means:
 [list_begin bullet]
 [bullet]
-It has no graphical user-interface
+It has a simple graphical user-interface that does not group the tests.
 
 [bullet]
 As Fortran does not allow introspection, the test routines can not
@@ -210,17 +210,6 @@ execution may continue.
 [nl]
 If the subroutine testproc returns, the program stops, unless you have
 called the subroutine [emph runtests_init] before [emph runtests].
-[nl]
-
-[call [cmd "call runtests_init"]]
-Routine to initialise the ftnunit system, so that you call [emph runtests]
-more than once. To complete the tests, call [emph runtests_final], as
-this will print the final statistics and stop the program.
-[nl]
-
-[call [cmd "call runtests_final"]]
-Routine to finalise the ftnunit system: it will print the final statistics
-and stop the program, but only if the file "ftnunit.run" is present.
 
 [list_begin arg]
 [arg_def "subroutine" testproc]
@@ -230,7 +219,24 @@ routine [emph test] - see below.
 [list_end]
 [nl]
 
-[call [cmd "call test( proc, text )"]]
+[call [cmd "call runtests_init"]]
+Routine to initialise the ftnunit system, so that you call [emph runtests]
+more than once. To complete the tests, call [emph runtests_final], as
+this will print the final statistics and stop the program.
+[nl]
+
+[call [cmd "call runtests_final( stop )"]]
+Routine to finalise the ftnunit system: it will print the final statistics
+and stop the program, but only if the file "ftnunit.run" is present.
+
+[list_begin arg]
+[arg_def "logical, optional, intent(in)" stop]
+If present and set to true, the routine will not stop the program.
+Instead it returns and the program continues working.
+[list_end]
+[nl]
+
+[call [cmd "call test( proc, text, ignore )"]]
 Routine to run the individual unit test routine (emph proc). It decides
 if the test has not run yet and if so, the test routine is called.
 Otherwise it is skipped.
@@ -244,6 +250,12 @@ arguments. Within each such subroutine the complete unit test is run.
 
 [arg_def "character(len=*), intent(in)" text]
 Text describing the particular unit test. It is printed in the log
+file.
+
+[arg_def "logical, optional, intent(in)" ignore]
+If present and set to true, the test routine will not be actually run.
+Instead it is shown as "ignored". This feature is useful if the code to
+be tested is not yet ready for testing.
 file.
 [list_end]
 [nl]
@@ -326,6 +338,24 @@ The second real value or array
 
 [arg_def "character(len=*), intent(in)" text]
 Text describing the condition
+[list_end]
+[nl]
+
+
+[call [cmd "call assert_inbetween( value, vmin, vmax, text )"]]
+Routine to check that a (single or double precision) real value lies between
+two given bounds. This establishes an absolute range for the values, rather than
+a relative.
+
+[list_begin arg]
+[arg_def "real" value]
+The real value to be tested
+
+[arg_def "real" vmin]
+The minimum value that is allowed
+
+[arg_def "real" vmax]
+The maximum value that is allowed
 [list_end]
 [nl]
 
@@ -440,6 +470,18 @@ Internet browser to view the HTML report).
 [list_end]
 
 Note that the default implementation consists of empty routine.
+
+[para]
+As an example of customisation, under Windows, you could start the
+default Internet browser showing the HTML file like this:
+
+    subroutine ftnunit_hook_test_complete
+
+        call system( "ftnunit.html" )
+
+    end subroutine ftnunit_hook_test_complete
+
+provided an association for files with extension "html" exists.
 
 
 [section "GENERATING TESTS FROM A TABLE"]

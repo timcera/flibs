@@ -174,6 +174,7 @@ subroutine test_all
 
     call test( test_no_file, "Read non-existent file" )
     call test( test_empty_file, "Read an empty file" )
+    call test( test_program_stop, "Stop the program - and expect it to stop" )
     call test( test_invalid_file, "Read an invalid file" )
     call test( test_ordinary_file, "Read an ordinary file" )
     call test( test_compare_files, "Comparing two files" )
@@ -241,6 +242,26 @@ subroutine test_empty_file
     call assert_true( nodata == 0, "No data read" )
 
 end subroutine test_empty_file
+
+! test_program_stop --
+!     Test: the test indicates the program should stop -
+!     this is to be expected and it must be recorded as such
+! Arguments:
+!     None
+!
+subroutine test_program_stop
+
+    call expect_program_stop
+
+    !
+    ! Typical situation:
+    ! The program stops because it has detected a fatal
+    ! error of some kind
+    ! The ftnunit framework should report this as OK
+    !
+    stop
+
+end subroutine test_program_stop
 
 ! test_invalid_file --
 !     Test: try to read a file that is not valid
