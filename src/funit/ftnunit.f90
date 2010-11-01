@@ -20,6 +20,8 @@
 !       - Check the output (especially the array assertions)
 !     - Split the source code in several files
 !     - Implement "expect_program_test"
+!       - current implementation incomplete! Variable
+!         "stopped" must be properly used.
 !
 !
 !     $Id$
@@ -289,7 +291,7 @@ subroutine runtests_init_priv
                         if ( ierr /= 0 ) then
                             stopped = .false.
                         endif
-                        close( lun )
+                        close( lun, status = 'delete' )
                     endif
                 endif
                 if ( .not. stopped ) then
@@ -297,6 +299,7 @@ subroutine runtests_init_priv
                     call ftnunit_write_html_previous_failed
                 else
                     write( *, '(4x,a)' ) 'Note: the program correctly stopped'
+                    call ftnunit_write_html_previous_stopped
                 endif
             endif
         endif
@@ -383,9 +386,20 @@ end subroutine runtests
 !     and whether it was successful. A file is needed because the
 !     program has to be rerun.
 !
+! Note:
+!     It is NOT possible to distinguish an expected stop from
+!     a crash in a test that should stop explicitly. Hence the
+!     different status (Stopped).
+!
 subroutine expect_program_stop
 
-    ! TODO
+    integer :: lun
+
+    write(*,*) 'Warning: the feature "expect_program_stop" is incomplete!'
+    call ftnunit_get_lun( lun )
+    open( lun, file = "ftnunit.stop" )
+    write( lun, *) .true.
+    close( lun )
 
 end subroutine expect_program_stop
 
@@ -1353,6 +1367,7 @@ subroutine ftnunit_write_html_test_begin( text )
 
     if ( previous ) then
         if ( ignore_previous_test ) then
+            ignore_previous_test = .false.
             write( lun, '(a)' ) &
                 '<td><span class="yellow">Ignored</span></td></tr>'
         else if ( failed_asserts == 0 ) then
@@ -1401,6 +1416,30 @@ subroutine ftnunit_write_html_previous_failed
     failed_asserts = 1 ! Implicit assertion failed that the test will complete
 
 end subroutine ftnunit_write_html_previous_failed
+
+! ftnunit_write_html_previous_stopped --
+!     Auxiliary subroutine to write the closing of a test that was expected to stop
+!     from the previous run to the HTML file
+! Arguments:
+!     None
+!
+! Note:
+!     There is no distinction possible between a deliberate stop and a run-time error
+!
+subroutine ftnunit_write_html_previous_stopped
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    write( lun, '(a)' ) &
+        '<td><span class="green">Stopped</span></td></tr>', &
+        '<tr><td><span class="indent">Deliberate stop, but run-time failure is still possible: check the log file</span></td></tr>'
+
+    close( lun )
+
+end subroutine ftnunit_write_html_previous_stopped
 
 ! ftnunit_write_html_close_row --
 !     Auxiliary subroutine to write the closing of a row to the HTML file

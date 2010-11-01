@@ -181,7 +181,10 @@ subroutine test_all
 end subroutine test_all
 
 subroutine test_extra
+    call test( test_ignored_test, "Test is skipped", .true. )
+    call test( test_deliberate_failure, "Test fails deliberately" )
     call test( test_compare_reals, "Comparing real numbers" )
+    call test( test_deliberate_stop, "Expected stop" )
 
 end subroutine test_extra
 
@@ -370,6 +373,45 @@ subroutine test_compare_reals
     call assert_inbetween( dvalue, dvmin, dvmax, "Double-precision value slightly larger than 1" )
 
 end subroutine test_compare_reals
+
+
+! test_ignore_test --
+!     Test: only check that ignored tests are treated correctly
+! Arguments:
+!     None
+!
+subroutine test_ignored_test
+
+    call assert_true( .false.,  "This test should NOT be run" )
+
+end subroutine test_ignored_test
+
+
+! test_deliberate_failure --
+!     Test: deliberate failure - check HTML formatting after ignored test
+! Arguments:
+!     None
+! Note:
+!     Should be run after test_ignore_test!
+!
+subroutine test_deliberate_failure
+
+    call assert_true( .false.,  "Deliberate failure" )
+
+end subroutine test_deliberate_failure
+
+
+! test_deliberate_stop --
+!     Test: deliberate stop - this should not be marked as a failure
+! Arguments:
+!     None
+!
+subroutine test_deliberate_stop
+
+    call expect_program_stop
+    stop
+
+end subroutine test_deliberate_stop
 
 
 end module dataproc_testing
