@@ -45,12 +45,20 @@ proc interrogateExecutable {executable} {
         return
     }
 
+    set columnWidth 0
+    set treeFont [::ttk::style lookup TTreeview -font]
+
     set items {}
     set allCases [$tree insert {} end -text "All cases" -image $::notrun]
     lappend items $allCases
     foreach case [split $cases \n] {
         lappend items [$tree insert $allCases end -text $case -image $::notrun]
+        set textWidth [font measure $treeFont $case]
+        if { $textWidth > $columnWidth } {
+            set columnWidth $textWidth
+        }
     }
+    $tree column #0 -width [expr {70+$columnWidth}]
 }
 
 
@@ -180,7 +188,7 @@ proc selectExecutable {{name {}}} {
             set newname [tk_getOpenFile -title "Program to test" -filetypes {{{Executables} {*}}}]
         }
         if { $newname != "" } {
-            set executable ""
+            set executable $newname
         }
     }
 
@@ -211,25 +219,27 @@ proc setupWindow {} {
 
     set left       [::ttk::frame    .left]
     set right      [::ttk::frame    .right]
-    set tree       [::ttk::treeview .left.tree -yscrollcommand [list .left.treescroll set] -selectmode browse]
+    set tree       [::ttk::treeview .left.tree -xscrollcommand [list .left.xtreescroll set] -yscrollcommand [list .left.ytreescroll set] -selectmode browse]
     set output     [text .right.output -xscrollcommand [list .right.xoutputscroll set] -yscrollcommand [list .right.youtputscroll set]]
 
-    set treescroll [::ttk::scrollbar .left.treescroll     -command [list .left.tree yview]]
-    set xoutput    [::ttk::scrollbar .right.xoutputscroll -command [list .right.output xview] -orient horizontal]
-    set youtput    [::ttk::scrollbar .right.youtputscroll -command [list .right.output yview] -orient vertical]
+    set xtreescroll [::ttk::scrollbar .left.xtreescroll    -command [list .left.tree xview]    -orient horizontal]
+    set ytreescroll [::ttk::scrollbar .left.ytreescroll    -command [list .left.tree yview]    -orient vertical]
+    set xoutput     [::ttk::scrollbar .right.xoutputscroll -command [list .right.output xview] -orient horizontal]
+    set youtput     [::ttk::scrollbar .right.youtputscroll -command [list .right.output yview] -orient vertical]
 
     set buttonrow    [::ttk::frame     .right.buttons]
     set runbutton    [::ttk::button    .right.buttons.run   -text Run   -command [list runSelectedTest]]
     set clearbutton  [::ttk::button    .right.buttons.clear -text Clear -command [list $output delete 1.0 end]]
 
-    grid $tree $treescroll -sticky news
-    grid $output  $youtput -sticky news
-    grid $xoutput -        -sticky news
+    grid $tree        $ytreescroll -sticky news
+    grid $xtreescroll              -sticky news
+    grid $output      $youtput     -sticky news
+    grid $xoutput                  -sticky news
 
-    grid $runbutton $clearbutton -sticky news
-    grid $buttonrow        -sticky news
+    grid $runbutton $clearbutton   -sticky news
+    grid $buttonrow                -sticky news
 
-    grid $left $right      -sticky news
+    grid $left $right              -sticky news
     grid rowconfigure    $left  0 -weight 1
     grid columnconfigure $left  1 -weight 1
     grid rowconfigure    $right 0 -weight 1
@@ -254,6 +264,7 @@ proc setupWindow {} {
 
     bind $tree <<TreeviewSelect>> [list setTestSelection %X %Y]
 
+    $output configure -font [::ttk::style lookup TTreeview -font]
     $output tag configure title -font       "Helvetica 12 bold"
     $output tag configure error -foreground red
 
