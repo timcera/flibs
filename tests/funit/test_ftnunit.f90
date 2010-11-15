@@ -175,6 +175,7 @@ subroutine test_all
     call test( test_no_file, "Read non-existent file" )
     call test( test_empty_file, "Read an empty file" )
     call test( test_program_stop, "Stop the program - and expect it to stop" )
+    call test( test_program_does_not_stop, "Stop the program - but it does not" )
     call test( test_invalid_file, "Read an invalid file" )
     call test( test_ordinary_file, "Read an ordinary file" )
     call test( test_compare_files, "Comparing two files" )
@@ -265,6 +266,18 @@ subroutine test_program_stop
     stop
 
 end subroutine test_program_stop
+
+! test_program_does_not_stop --
+!     Test: the test indicates the program should stop -
+!     but it does not - this should be recorded as a failure
+! Arguments:
+!     None
+!
+subroutine test_program_does_not_stop
+
+    call expect_program_stop
+
+end subroutine test_program_does_not_stop
 
 ! test_invalid_file --
 !     Test: try to read a file that is not valid

@@ -136,6 +136,7 @@ subroutine test( proc, text, ignore )
 
     integer           :: lun
     integer           :: ierr
+    character(len=40) :: no_stop_text = 'Expected deliberate stop'
 
     ignore_test = .false.
     if ( present(ignore) ) then
@@ -183,6 +184,18 @@ subroutine test( proc, text, ignore )
         call proc
 
         !
+        ! The program was expected to stop? It did not
+        !
+        if ( ftnunit_file_exists( 'ftnunit.stop' ) ) then
+            write( *, '(a)' ) '    Expected deliberate stop, but the program continued'
+            write( *, '(a)' ) '    Test failed'
+            nofails = nofails + 1
+            call ftnunit_remove_file( 'ftnunit.stop' )
+            call ftnunit_write_html_failed_stop( no_stop_text )
+            call ftnunit_hook_test_assertion_failed( testname, no_stop_text, "Test failed" )
+        endif
+
+        !
         ! No runtime error or premature end of
         ! the program ...
         !
@@ -196,7 +209,7 @@ subroutine test( proc, text, ignore )
             write( *, '(a)' ) 'ASSERTION FAILED'
         endif
 
-    end if
+    endif
 
     call ftnunit_hook_test_stop( text )
 
@@ -279,7 +292,7 @@ subroutine runtests_init_priv
                     noruns    = 0
                     previous  = .false.
                 endif
-                close( lun )
+                close( lun, status = 'delete' )
             endif
             if ( previous ) then
                 stopped = .false.
@@ -1465,6 +1478,31 @@ subroutine ftnunit_write_html_close_row( lun )
     endif
 
 end subroutine ftnunit_write_html_close_row
+
+! ftnunit_write_html_failed_stop --
+!     Auxiliary subroutine to write a failed stop message to the HTML file
+! Arguments:
+!     text         Description of the test
+!
+subroutine ftnunit_write_html_failed_stop( text )
+    character(len=*)  :: text
+    logical           :: expected
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    failed_asserts = failed_asserts + 1
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td><span class="indent">', trim(text), '</span></td>', &
+        '<td></td>'
+    close( lun )
+
+end subroutine ftnunit_write_html_failed_stop
 
 ! ftnunit_write_html_failed_logic --
 !     Auxiliary subroutine to write a failed logic assertion to the HTML file
