@@ -12,6 +12,7 @@ PROGRAMS	=	test_diff$(EXEEXT) \
 		test_intervals$(EXEEXT) \
 		test_annealing$(EXEEXT) \
 		test_genalg$(EXEEXT) \
+		test_unsigned$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -86,6 +87,20 @@ test_genalg$(OBJEXT):	test_genalg.f90 genetic_algorithms$(OBJEXT)
 
 test_genalg$(EXEEXT):	test_genalg$(OBJEXT) genetic_algorithms$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_genalg$(OBJEXT) genetic_algorithms$(OBJEXT)
+
+#
+# Note: the program to generate the test input file is not dealt with
+# - it would require a C compiler and therefore the test input file is
+# stored in the repository
+#
+unsigned_integers$(OBJEXT):	../../src/computing/unsigned_integers.f90
+	$(FC) $(FFLAGS) ../../src/computing/unsigned_integers.f90
+
+test_unsigned$(OBJEXT):	test_unsigned.f90 unsigned_integers$(OBJEXT)
+	$(FC) $(FFLAGS) test_unsigned.f90
+
+test_unsigned$(EXEEXT):	test_unsigned$(OBJEXT) unsigned_integers$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_unsigned$(OBJEXT) unsigned_integers$(OBJEXT)
 
 clean:	
 	$(DELETE) *$(OBJEXT)
