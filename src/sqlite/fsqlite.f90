@@ -855,8 +855,7 @@ end subroutine sqlite3_step
 
 
 ! sqlite3_prepare --
-!    Reset the prepared SQL statement so that it can
-!    be used again
+!    Prepare the SQL statement for actual use
 ! Arguments:
 !    stmt          Handle to the prepared statement
 !
