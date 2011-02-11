@@ -949,10 +949,10 @@ subroutine odbc_prepare_select( db, tablename, columns, stmt, extra_clause )
     integer                                   :: i
 
     interface
-        integer function odbc_exec_c( handle, rc )
+        subroutine odbc_exec_c( handle, rc )
             integer, dimension(*) :: handle
             integer               :: rc
-        end function odbc_exec_c
+        end subroutine odbc_exec_c
     end interface
 
     !
@@ -1039,10 +1039,10 @@ subroutine odbc_insert( db, tablename, columns )
     end interface
 
     interface
-        integer function odbc_exec_c( handle, rc )
+        subroutine odbc_exec_c( handle, rc )
             integer, dimension(*) :: handle
             integer               :: rc
-        end function odbc_exec_c
+        end subroutine odbc_exec_c
     end interface
 
     !
