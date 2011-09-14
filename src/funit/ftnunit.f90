@@ -87,6 +87,9 @@ module ftnunit
     integer, private, save :: testno                 ! Current test number
     integer, private, save :: nofails                ! Number of assertions that failed
     integer, private, save :: nofails_prev           ! Number of assertions that failed before the test
+    integer, private, save :: notests_run            ! Number of tests run
+    integer, private, save :: notests_failed         ! Number of tests failed
+    integer, private, save :: notests_ignored        ! Number of tests ignored
     integer, private, save :: noruns                 ! Number of runs so far
     logical, private, save :: call_final = .true.    ! Call runtests_final implicitly?
     logical, private, save :: previous   = .false.   ! Previous test run?
@@ -136,7 +139,6 @@ subroutine test( proc, text, ignore )
 
     integer           :: lun
     integer           :: ierr
-    character(len=40) :: no_stop_text = 'Expected deliberate stop'
 
     ignore_test = .false.
     if ( present(ignore) ) then
@@ -162,10 +164,12 @@ subroutine test( proc, text, ignore )
     !
     ! Record the fact that we started the test
     !
+    notests_run = notests_run + 1
+
     has_run = .true.
     call ftnunit_get_lun( lun )
     open( lun, file = 'ftnunit.lst' )
-    write( lun, * ) testno, nofails, noruns, ' ', .true.
+    write( lun, * ) testno, nofails, noruns, notests_run, notests_failed, notests_ignored, ' ', .true.
     close( lun )
 
     !
@@ -183,16 +187,8 @@ subroutine test( proc, text, ignore )
 
         call proc
 
-        !
-        ! The program was expected to stop? It did not
-        !
-        if ( ftnunit_file_exists( 'ftnunit.stop' ) ) then
-            write( *, '(a)' ) '    Expected deliberate stop, but the program continued'
-            write( *, '(a)' ) '    Test failed'
-            nofails = nofails + 1
-            call ftnunit_remove_file( 'ftnunit.stop' )
-            call ftnunit_write_html_failed_stop( no_stop_text )
-            call ftnunit_hook_test_assertion_failed( testname, no_stop_text, "Test failed" )
+        if ( nofails /= nofails_prev ) then
+            notests_failed = notests_failed + 1
         endif
 
         !
@@ -202,14 +198,20 @@ subroutine test( proc, text, ignore )
         previous = .true.
         call ftnunit_get_lun( lun )
         open( lun, file = 'ftnunit.lst' )
-        write( lun, * ) testno, nofails, noruns, ' ', .true.
+        write( lun, * ) testno, nofails, noruns, notests_run, notests_failed, notests_ignored, ' ', .true.
         close( lun )
 
         if ( nofails /= nofails_prev .and. test_mode == mode_single ) then
             write( *, '(a)' ) 'ASSERTION FAILED'
         endif
+    else
+        notests_ignored = notests_ignored + 1
+        call ftnunit_get_lun( lun )
+        open( lun, file = 'ftnunit.lst' )
+        write( lun, * ) testno, nofails, noruns, notests_run, notests_failed, notests_ignored, ' ', .true.
+        close( lun )
 
-    endif
+    end if
 
     call ftnunit_hook_test_stop( text )
 
@@ -249,12 +251,15 @@ subroutine runtests_init_priv
         call ftnunit_write_html_header
     endif
 
-    last_test = 0
-    nofails   = 0
-    noruns    = 0
-    testno    = 0
-    previous  = .false.
-    has_run   = .false.
+    last_test       = 0
+    nofails         = 0
+    noruns          = 0
+    testno          = 0
+    notests_run     = 0
+    notests_ignored = 0
+    notests_failed  = 0
+    previous        = .false.
+    has_run         = .false.
 
     if ( ftnunit_file_exists("ftnunit.run") ) then
         call ftnunit_get_lun( lun )
@@ -285,14 +290,16 @@ subroutine runtests_init_priv
             call ftnunit_get_lun( lun )
             open( lun, file = "ftnunit.lst", iostat = ierr )
             if ( ierr == 0 ) then
-                read( lun, *, iostat = ierr ) last_test, nofails, noruns, previous
+                read( lun, *, iostat = ierr ) last_test, nofails, noruns, &
+                    notests_run, notests_failed, notests_ignored, previous
                 if ( ierr /= 0 ) then
                     last_test = 0
                     nofails   = 0
                     noruns    = 0
                     previous  = .false.
                 endif
-                close( lun, status = 'delete' )
+                close( lun )
+                notests_failed = notests_failed + 1
             endif
             if ( previous ) then
                 stopped = .false.
@@ -337,6 +344,9 @@ subroutine runtests_final( stop )
 
     if ( ftnunit_file_exists("ftnunit.run") ) then
         if ( test_mode == mode_all ) then
+            write(*,'(a,i5)') 'Number of tests run:                        ', notests_run
+            write(*,'(a,i5)') 'Number of tests ignored:                    ', notests_ignored
+            write(*,'(a,i5)') 'Number of tests failed:                     ', notests_failed
             write(*,'(a,i5)') 'Number of failed assertions:                ', nofails
             write(*,'(a,i5)') 'Number of runs needed to complete the tests:', noruns
         endif
@@ -694,13 +704,20 @@ end subroutine assert_equal_int1d
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
 !
+! Note:
+!     Because of NaNs, the conditions are reversed!
+!
 subroutine assert_comparable_real( value1, value2, margin, text )
     real, intent(in)             :: value1
     real, intent(in)             :: value2
     real, intent(in)             :: margin
     character(len=*), intent(in) :: text
 
-    if ( abs(value1-value2) > 0.5 * margin * (abs(value1)+abs(value2)) ) then
+    if ( abs(value1-value2) <= 0.5 * margin * (abs(value1)+abs(value2)) ) then
+        !
+        ! Within the margin - no action
+        !
+    else
         nofails = nofails + 1
         write(*,*) '    Values not comparable: "',trim(text), '" - assertion failed'
         write(*,*) '    Values: ', value1, ' and ', value2
@@ -719,6 +736,9 @@ end subroutine assert_comparable_real
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
 !
+! Note:
+!     Because of NaNs, the conditions are reversed!
+!
 subroutine assert_comparable_real1d( array1, array2, margin, text )
     real, dimension(:), intent(in)    :: array1
     real, dimension(:), intent(in)    :: array2
@@ -736,14 +756,22 @@ subroutine assert_comparable_real1d( array1, array2, margin, text )
         write(*,*) '    Arrays have different sizes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different sizes" )
     else
-        if ( any( abs(array1-array2) > 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( any( abs(array1-array2) <= 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+            !
+            ! Within the margin - no action
+            !
+        else
             nofails = nofails + 1
             write(*,*) '    One or more values different: "',trim(text), '" - assertion failed'
             call ftnunit_hook_test_assertion_failed( testname, text, "One or more values differ more than the margin" )
             count = 0
             do i = 1,size(array1)
-                if ( abs(array1(i)-array2(i)) > &
+                if ( abs(array1(i)-array2(i)) <= &
                          0.5 * margin * (abs(array1(i))+abs(array2(i))) ) then
+                    !
+                    ! Within the margin - no action
+                    !
+                else
                     count = count + 1
                     if ( count == 1 ) then
                         write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
@@ -772,6 +800,8 @@ end subroutine assert_comparable_real1d
 ! Side effects:
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
+! Note:
+!     Because of NaNs, the conditions are reversed!
 !
 subroutine assert_comparable_real2d( array1, array2, margin, text )
     real, dimension(:,:), intent(in)    :: array1
@@ -791,15 +821,23 @@ subroutine assert_comparable_real2d( array1, array2, margin, text )
         write(*,*) '    Arrays have different shapes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different shapes" )
     else
-        if ( any( abs(array1-array2) > 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( any( abs(array1-array2) <= 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+            !
+            ! Within the margin - no action
+            !
+        else
             nofails = nofails + 1
             write(*,*) '    One or more values different: "',trim(text), '" - assertion failed'
-        call ftnunit_hook_test_assertion_failed( testname, text, "One or more values differ more than the margin" )
+            call ftnunit_hook_test_assertion_failed( testname, text, "One or more values differ more than the margin" )
             count = 0
             do j = 1,size(array1,2)
                 do i = 1,size(array1,1)
-                    if ( abs(array1(i,j)-array2(i,j)) > &
+                    if ( abs(array1(i,j)-array2(i,j)) <= &
                              0.5 * margin * (abs(array1(i,j))+abs(array2(i,j))) ) then
+                        !
+                        ! Within the margin - no action
+                        !
+                    else
                         count = count + 1
                         if ( count == 1 ) then
                             write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
@@ -830,6 +868,8 @@ end subroutine assert_comparable_real2d
 ! Side effects:
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
+! Note:
+!     Because of NaNs, the conditions are reversed!
 !
 subroutine assert_comparable_double( value1, value2, margin, text )
     real(kind=dp), intent(in)             :: value1
@@ -837,7 +877,11 @@ subroutine assert_comparable_double( value1, value2, margin, text )
     real(kind=dp), intent(in)             :: margin
     character(len=*), intent(in)          :: text
 
-    if ( abs(value1-value2) > 0.5 * margin * (abs(value1)+abs(value2)) ) then
+    if ( abs(value1-value2) <= 0.5d0 * margin * (abs(value1)+abs(value2)) ) then
+        !
+        ! Within the margin - no action
+        !
+    else
         nofails = nofails + 1
         write(*,*) '    Values not comparable: "',trim(text), '" - assertion failed'
         write(*,*) '    Values: ', value1, ' and ', value2
@@ -855,6 +899,8 @@ end subroutine assert_comparable_double
 ! Side effects:
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
+! Note:
+!     Because of NaNs, the conditions are reversed!
 !
 subroutine assert_comparable_double1d( array1, array2, margin, text )
     real(kind=dp), dimension(:), intent(in)    :: array1
@@ -873,14 +919,22 @@ subroutine assert_comparable_double1d( array1, array2, margin, text )
         write(*,*) '    Arrays have different sizes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different sizes" )
     else
-        if ( any( abs(array1-array2) > 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( any( abs(array1-array2) <= 0.5d0 * margin * (abs(array1)+abs(array2)) ) ) then
+            !
+            ! Within the margin - no action
+            !
+        else
             nofails = nofails + 1
             write(*,*) '    One or more values different: "',trim(text), '" - assertion failed'
             call ftnunit_hook_test_assertion_failed( testname, text, "One or more values differ more than the margin" )
             count = 0
             do i = 1,size(array1)
-                if ( abs(array1(i)-array2(i)) > &
-                         0.5 * margin * (abs(array1(i))+abs(array2(i))) ) then
+                if ( abs(array1(i)-array2(i)) <= &
+                         0.5d0 * margin * (abs(array1(i))+abs(array2(i))) ) then
+                    !
+                    ! Within the margin - no action
+                    !
+                else
                     count = count + 1
                     if ( count == 1 ) then
                         write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
@@ -909,6 +963,8 @@ end subroutine assert_comparable_double1d
 ! Side effects:
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
+! Note:
+!     Because of NaNs, the conditions are reversed!
 !
 subroutine assert_comparable_double2d( array1, array2, margin, text )
     real(kind=dp), dimension(:,:), intent(in)    :: array1
@@ -928,15 +984,23 @@ subroutine assert_comparable_double2d( array1, array2, margin, text )
         write(*,*) '    Arrays have different shapes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different shapes" )
     else
-        if ( any( abs(array1-array2) > 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( any( abs(array1-array2) <= 0.5d0 * margin * (abs(array1)+abs(array2)) ) ) then
+            !
+            ! Within the margin - no action
+            !
+        else
             nofails = nofails + 1
             write(*,*) '    One or more values different: "',trim(text), '" - assertion failed'
-        call ftnunit_hook_test_assertion_failed( testname, text, "One or more values differ more than the margin" )
+            call ftnunit_hook_test_assertion_failed( testname, text, "One or more values differ more than the margin" )
             count = 0
             do j = 1,size(array1,2)
                 do i = 1,size(array1,1)
-                    if ( abs(array1(i,j)-array2(i,j)) > &
-                             0.5 * margin * (abs(array1(i,j))+abs(array2(i,j))) ) then
+                    if ( abs(array1(i,j)-array2(i,j)) <= &
+                             0.5d0 * margin * (abs(array1(i,j))+abs(array2(i,j))) ) then
+                        !
+                        ! Within the margin - no action
+                        !
+                    else
                         count = count + 1
                         if ( count == 1 ) then
                             write(*,'(a10,2a15)')    '    Index', '          First', '         Second'
@@ -967,6 +1031,8 @@ end subroutine assert_comparable_double2d
 ! Side effects:
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
+! Note:
+!     Because of NaNs, the conditions are reversed!
 !
 subroutine assert_inbetween_real( value, vmin, vmax, text )
     real, intent(in)                    :: value
@@ -978,7 +1044,11 @@ subroutine assert_inbetween_real( value, vmin, vmax, text )
 
     addtext = .false.
 
-    if ( value < vmin .or. value > vmax ) then
+    if ( value >= vmin .and. value <= vmax ) then
+        !
+        ! Within the margin - no action
+        !
+    else
         nofails = nofails + 1
         write(*,'(3a)')      '    Value out of range: "',trim(text), '" - assertion failed'
         write(*,'(a,g15.5)') '        Value:     ', value
@@ -1000,6 +1070,8 @@ end subroutine assert_inbetween_real
 ! Side effects:
 !     If the assertion fails, this is reported to standard
 !     output. Also, nofails is increased by one.
+! Note:
+!     Because of NaNs, the conditions are reversed!
 !
 subroutine assert_inbetween_double( value, vmin, vmax, text )
     real(kind=dp), intent(in)           :: value
@@ -1011,7 +1083,11 @@ subroutine assert_inbetween_double( value, vmin, vmax, text )
 
     addtext = .false.
 
-    if ( value < vmin .or. value > vmax ) then
+    if ( value >= vmin .and. value <= vmax ) then
+        !
+        ! Within the margin - no action
+        !
+    else
         nofails = nofails + 1
         write(*,'(3a)')      '    Value out of range: "',trim(text), '" - assertion failed'
         write(*,'(a,g21.12)') '        Value:     ', value
@@ -1158,7 +1234,11 @@ subroutine assert_files_comparable( filename1, filename2, &
                 read( item2(i), *, iostat = ierr2 ) value2
 
                 if ( ierr1 == 0 .and. ierr2 == 0 ) then
-                    if ( abs(value1-value2) > 0.5 * tol * (abs(value1)+abs(value2)) ) then
+                    if ( abs(value1-value2) <= 0.5 * tol * (abs(value1)+abs(value2)) ) then
+                        !
+                        ! Within the margin - no action
+                        !
+                    else
                         nofails = nofails + 1
                         call write_header
 
@@ -1356,7 +1436,11 @@ subroutine ftnunit_write_html_footer
     write( lun, '(a)' ) &
         '</tr>',    &
         '</table>'
-    write( lun,'(a,i5)') '<p>Number of failed assertions: ', nofails
+    write( lun,'(a,i5)') '<p><b>Summary:</b>'
+    write( lun,'(a,i5)') '<br>Number of tests run: ', notests_run
+    write( lun,'(a,i5)') '<br>Number of tests ignored: ', notests_ignored
+    write( lun,'(a,i5)') '<br>Number of tests failed: ', notests_failed
+    write( lun,'(a,i5)') '<br>Number of failed assertions: ', nofails
     write( lun,'(a,i5)') '<br>Number of runs needed to complete the tests:', noruns
     write( lun, '(a)' ) &
         '</body>',  &
@@ -1479,31 +1563,6 @@ subroutine ftnunit_write_html_close_row( lun )
 
 end subroutine ftnunit_write_html_close_row
 
-! ftnunit_write_html_failed_stop --
-!     Auxiliary subroutine to write a failed stop message to the HTML file
-! Arguments:
-!     text         Description of the test
-!
-subroutine ftnunit_write_html_failed_stop( text )
-    character(len=*)  :: text
-    logical           :: expected
-
-    integer           :: lun
-
-    call ftnunit_get_lun( lun )
-    open( lun, file = html_file, position = 'append' )
-
-    failed_asserts = failed_asserts + 1
-
-    call ftnunit_write_html_close_row( lun )
-
-    write( lun, '(a)' ) &
-        '<td><span class="indent">', trim(text), '</span></td>', &
-        '<td></td>'
-    close( lun )
-
-end subroutine ftnunit_write_html_failed_stop
-
 ! ftnunit_write_html_failed_logic --
 !     Auxiliary subroutine to write a failed logic assertion to the HTML file
 ! Arguments:
@@ -1622,7 +1681,7 @@ subroutine ftnunit_write_html_failed_string( text, value1, value2 )
         '<td><span class="indent">', trim(text), '</span></td>', &
         '<td>Strings should have been equal:<br>', &
         'String 1: ', value1, '<br>', &
-        'String 2: ', value1, '</td>'
+        'String 2: ', value2, '</td>'
     close( lun )
 
 end subroutine ftnunit_write_html_failed_string
