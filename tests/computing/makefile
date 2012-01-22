@@ -13,6 +13,8 @@ PROGRAMS	=	test_diff$(EXEEXT) \
 		test_annealing$(EXEEXT) \
 		test_genalg$(EXEEXT) \
 		test_unsigned$(EXEEXT) \
+		test_f0noIEEE$(EXEEXT) \
+		test_f0withIEEE$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -101,6 +103,29 @@ test_unsigned$(OBJEXT):	test_unsigned.f90 unsigned_integers$(OBJEXT)
 
 test_unsigned$(EXEEXT):	test_unsigned$(OBJEXT) unsigned_integers$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_unsigned$(OBJEXT) unsigned_integers$(OBJEXT)
+
+#
+# Note: the leadzero module comes in two versions. The names are identical
+# but one expects compiler support for IEEE NaN and Inf, the other does not.
+#
+f0noIEEE$(OBJEXT):	../../src/computing/f0noIEEE.f90
+	$(FC) $(FFLAGS) ../../src/computing/f0noIEEE.f90
+
+f0withIEEE$(OBJEXT):	../../src/computing/f0withIEEE.f90
+	$(FC) $(FFLAGS) ../../src/computing/f0withIEEE.f90
+
+test_f0noIEEE$(OBJEXT):	test_f0noIEEE.f90 f0noIEEE$(OBJEXT)
+	$(FC) $(FFLAGS) test_f0noIEEE.f90
+
+test_f0withIEEE$(OBJEXT):	test_f0withIEEE.f90 f0withIEEE$(OBJEXT)
+	$(FC) $(FFLAGS) test_f0withIEEE.f90
+
+test_f0noIEEE$(EXEEXT):	test_f0noIEEE$(OBJEXT) f0noIEEE$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_f0noIEEE$(OBJEXT) f0noIEEE$(OBJEXT)
+
+test_f0withIEEE$(EXEEXT):	test_f0withIEEE$(OBJEXT) f0withIEEE$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_f0withIEEE$(OBJEXT) f0withIEEE$(OBJEXT)
+
 
 clean:	
 	$(DELETE) *$(OBJEXT)
