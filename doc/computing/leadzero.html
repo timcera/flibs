@@ -117,7 +117,7 @@
 <ul class="syntax">
 <li><a href="#1"><b class="cmd">string = f0( x, n, s)</b></a></li>
 <li><a href="#2"><b class="cmd">integer, parameter :: p1</b></a></li>
-<li><a href="#3"><b class="cmd">integer, parameter :: p1</b></a></li>
+<li><a href="#3"><b class="cmd">integer, parameter :: p2</b></a></li>
 <li><a href="#4"><b class="cmd">integer, parameter :: ispace</b></a></li>
 <li><a href="#5"><b class="cmd">integer, parameter :: rspace</b></a></li>
 </ul>
@@ -149,7 +149,7 @@ with leading zero and + sign controlled by the character string s if it is
 present, or by SS,F0.n format as in f2003 if not, so if the processor supports
 separate positive and negative zeros then f0(-0.0,n) shall begin with
 a - sign.</p>
-<p>It returns a string of length <em>rspace+n</em>.</p>
+<p>It returns a string of the minimum required length, which is at most <em>rspace+n</em>.</p>
 <dl class="arguments">
 <dt>real(p1/p2) <i class="arg">x</i></dt>
 <dd><p>Value to be written by f0</p></dd>
@@ -168,7 +168,7 @@ not a number, f0 returns the appropriate one of +Inf,Inf,-Inf,NaN.</p></dd>
 </dl></dd>
 <dt><a name="2"><b class="cmd">integer, parameter :: p1</b></a></dt>
 <dd><p>Kind for single-precision reals - p1 = kind(1.0).</p></dd>
-<dt><a name="3"><b class="cmd">integer, parameter :: p1</b></a></dt>
+<dt><a name="3"><b class="cmd">integer, parameter :: p2</b></a></dt>
 <dd><p>Kind for double-precision reals - p2 = kind(1d0).</p></dd>
 <dt><a name="4"><b class="cmd">integer, parameter :: ispace</b></a></dt>
 <dd><p>The integer parameter <em>ispace</em> is the space needed for -huge(1) in I0 format</p></dd>

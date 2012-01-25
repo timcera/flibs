@@ -36,7 +36,7 @@ present, or by SS,F0.n format as in f2003 if not, so if the processor supports
 separate positive and negative zeros then f0(-0.0,n) shall begin with
 a - sign.
 [nl]
-It returns a string of length [strong rspace+n].
+It returns a string of the minimum required length, which is at most [strong rspace+n].
 
 [list_begin arg]
 
@@ -61,7 +61,7 @@ not a number, f0 returns the appropriate one of +Inf,Inf,-Inf,NaN.
 [call [cmd "integer, parameter :: p1"]]
 Kind for single-precision reals - p1 = kind(1.0).
 
-[call [cmd "integer, parameter :: p1"]]
+[call [cmd "integer, parameter :: p2"]]
 Kind for double-precision reals - p2 = kind(1d0).
 
 [call [cmd "integer, parameter :: ispace"]]
