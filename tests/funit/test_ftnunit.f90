@@ -411,6 +411,10 @@ subroutine test_deliberate_failure
 
     call assert_true( .false.,  "Deliberate failure" )
 
+    if ( assertions_failed() ) then
+        call assertion_report( "Deliberate failure occurred" )
+    endif
+
 end subroutine test_deliberate_failure
 
 

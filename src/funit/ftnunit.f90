@@ -139,6 +139,7 @@ subroutine test( proc, text, ignore )
 
     integer           :: lun
     integer           :: ierr
+    character(len=40) :: no_stop_text = 'Expected deliberate stop'
 
     ignore_test = .false.
     if ( present(ignore) ) then
@@ -189,6 +190,17 @@ subroutine test( proc, text, ignore )
 
         if ( nofails /= nofails_prev ) then
             notests_failed = notests_failed + 1
+        endif
+        !
+        ! The program was expected to stop? It did not
+        !
+        if ( ftnunit_file_exists( 'ftnunit.stop' ) ) then
+            write( *, '(a)' ) '    Expected deliberate stop, but the program continued'
+            write( *, '(a)' ) '    Test failed'
+            nofails = nofails + 1
+            call ftnunit_remove_file( 'ftnunit.stop' )
+            call ftnunit_write_html_failed_stop( no_stop_text )
+            call ftnunit_hook_test_assertion_failed( testname, no_stop_text, "Test failed" )
         endif
 
         !
@@ -400,6 +412,20 @@ subroutine runtests( testproc )
 
 end subroutine runtests
 
+! ftnunit_listmode --
+!     Indicate if we are running in list mode
+! Arguments:
+!     None
+! Note:
+!     The idea of the list mode is that only the descriptions
+!     of the tests are written to screen.
+!
+logical function ftnunit_listmode()
+
+    ftnunit_listmode = test_mode == mode_list
+
+end function ftnunit_listmode
+
 ! expect_program_stop --
 !     Indicate that the program is expected to stop in this test
 ! Arguments:
@@ -425,6 +451,31 @@ subroutine expect_program_stop
     close( lun )
 
 end subroutine expect_program_stop
+
+! assertion_report --
+!     Subroutine to report that an assertion failed
+! Arguments:
+!     text          Text describing the assertion
+!
+subroutine assertion_report( text )
+    character(len=*), intent(in) :: text
+
+    nofails = nofails + 1
+    write(*,*) '    Assertion "',trim(text), '" failed'
+    call ftnunit_write_html_text( text )
+    call ftnunit_hook_test_assertion_failed( testname, text, "Assertion failed" )
+end subroutine assertion_report
+
+! assertions_failed --
+!     Function returning if any assertion has failed in the current test
+! Arguments:
+!     None
+!
+logical function assertions_failed()
+
+    assertions_failed = nofails /= nofails_prev
+
+end function assertions_failed
 
 ! assert_true --
 !     Subroutine to check if a condition is true
@@ -1562,6 +1613,55 @@ subroutine ftnunit_write_html_close_row( lun )
     endif
 
 end subroutine ftnunit_write_html_close_row
+
+! ftnunit_write_html_failed_stop --
+!     Auxiliary subroutine to write a failed stop message to the HTML file
+! Arguments:
+!     text         Description of the test
+!
+subroutine ftnunit_write_html_failed_stop( text )
+    character(len=*)  :: text
+    logical           :: expected
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    failed_asserts = failed_asserts + 1
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td><span class="indent">', trim(text), '</span></td>', &
+        '<td></td>'
+    close( lun )
+
+end subroutine ftnunit_write_html_failed_stop
+
+! ftnunit_write_html_text --
+!     Auxiliary subroutine to write a complete text string to the HTML file
+! Arguments:
+!     text         Description of the test
+!
+subroutine ftnunit_write_html_text( text )
+    character(len=*)  :: text
+
+    integer           :: lun
+
+    call ftnunit_get_lun( lun )
+    open( lun, file = html_file, position = 'append' )
+
+    failed_asserts = failed_asserts + 1
+
+    call ftnunit_write_html_close_row( lun )
+
+    write( lun, '(a)' ) &
+        '<td><span class="indent">', trim(text), '</span></td>', &
+        '<td></td>'
+    close( lun )
+
+end subroutine ftnunit_write_html_text
 
 ! ftnunit_write_html_failed_logic --
 !     Auxiliary subroutine to write a failed logic assertion to the HTML file
