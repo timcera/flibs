@@ -1,3 +1,8 @@
+2012-04-06 arjenmarkus@sourceforge.net
+   * src/mysql/mysql.f90: updated kinds because of 64 bits OSes (by Daniel Kraft)
+
+     Many changes not recorded here.
+
 2008-08-10 arjenmarkus@sourceforge.net
    * chksys/chksysff.f90: added a test for the type of hexdecimal and binary constants/literals
 

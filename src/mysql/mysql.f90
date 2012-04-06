@@ -10,7 +10,7 @@ MODULE myfortran_binding
   INTEGER, PARAMETER :: error_length = 256
 
   ! The error handling routine installed.
-  !PROCEDURE(error_stop), POINTER :: error_handler => NULL ()
+  PROCEDURE(error_stop), POINTER :: error_handler => NULL ()
 
   ! This type represents a database connection.
   TYPE myfortran
@@ -25,7 +25,7 @@ MODULE myfortran_binding
   ! This is a row returned.
   TYPE myfortran_row
     INTEGER :: num_fields
-    INTEGER, ALLOCATABLE :: lengths(:)
+    INTEGER(C_LONG), ALLOCATABLE :: lengths(:)
     TYPE(C_PTR) :: c_row
   END TYPE myfortran_row
 
@@ -159,12 +159,11 @@ CONTAINS
     IMPLICIT NONE
     LOGICAL(C_BOOL) :: c_result
 
-    !XXX
-    !IF (.NOT. ASSOCIATED (error_handler)) THEN
-    !  error_handler => error_stop
-    !END IF
+    IF (.NOT. ASSOCIATED (error_handler)) THEN
+      error_handler => error_stop
+    END IF
 
-    !XXX
+    ! XXX
     !c_result = c_init (0, C_NULL_PTR, C_NULL_PTR)
     c_result = .TRUE.
     IF (.NOT. c_result) THEN
@@ -178,7 +177,7 @@ CONTAINS
     IMPLICIT NONE
     LOGICAL(C_BOOL) :: c_result
 
-    !XXX
+    ! XXX
     !c_result = c_shutdown ()
     c_result = .TRUE.
     IF (.NOT. c_result) THEN
@@ -198,11 +197,11 @@ CONTAINS
     TYPE(C_PTR) :: mysql
 
     mysql = c_init_mysql (C_NULL_PTR)
+    myfortran_connect%mysql = mysql
     IF (.NOT. C_ASSOCIATED (mysql)) THEN
       CALL error_handler ("mysql_init failed to allocate structure")
       RETURN
     END IF
-    myfortran_connect%mysql = mysql
 
     mysql = c_connect (mysql, host // C_NULL_CHAR, user // C_NULL_CHAR, &
                        pwd // C_NULL_CHAR, db // C_NULL_CHAR, 0, C_NULL_PTR, 0)
@@ -232,7 +231,7 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: sql
     INTEGER(C_INT) :: c_result
 
-    c_result = c_query (myf%mysql, sql, LEN (sql))
+    c_result = c_query (myf%mysql, sql, INT (LEN (sql), KIND=C_LONG))
     IF (c_result /= 0) THEN
       CALL error_handler (myfortran_error (myf))
     END IF
@@ -276,7 +275,7 @@ CONTAINS
 
 
   ! Get the number of rows in a result set.
-  INTEGER FUNCTION myfortran_num_rows (res)
+  INTEGER(C_LONG_LONG) FUNCTION myfortran_num_rows (res)
     IMPLICIT NONE
     TYPE(myfortran_result), INTENT(IN) :: res
     myfortran_num_rows = c_num_rows (res%res)
@@ -316,12 +315,12 @@ CONTAINS
 
     TYPE(C_PTR), POINTER :: cstrs(:)
     CHARACTER(KIND=C_CHAR), POINTER :: cstr(:)
-    INTEGER :: i
+    INTEGER(C_LONG) :: i
 
     CALL C_F_POINTER (row%c_row, cstrs, SHAPE (row%lengths))
     CALL C_F_POINTER (cstrs(ind), cstr, (/ row%lengths(ind) /))
 
-    DO i = 1, row%lengths(ind)
+    DO i = 1_C_LONG, row%lengths(ind)
       myfortran_get_field(i:i) = cstr(i)
     END DO
   END FUNCTION myfortran_get_field
@@ -360,14 +359,6 @@ CONTAINS
     PRINT *, msg
     STOP 1
   END SUBROUTINE error_stop
-
-
-  ! XXX: Make this procptr.
-  SUBROUTINE error_handler (msg)
-    IMPLICIT NONE
-    CHARACTER(LEN=*), INTENT(IN) :: msg
-    CALL error_stop (msg)
-  END SUBROUTINE error_handler
 
 
 END MODULE myfortran_binding
