@@ -1,6 +1,6 @@
 [comment {-*- flibs -*- doctools manpage}]
-[manpage_begin flibs/odbc n 1.0]
-[copyright {2010 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[manpage_begin flibs/odbc n 1.1]
+[copyright {2012 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [moddesc flibs]
 [titledesc {Interface to ODBC}]
 
@@ -30,10 +30,13 @@ such as odbc_get_driver, that have no equivalent within the context of
 SQLite.
 
 [para]
-[emph Note:] It appears that you can only open [emph existing] database
-files. These database files may be empty (i.e. hold no
-user-defined tables at all), but they are not automatically
-created and initialised via ODBC.
+[emph Note:] While ODBC is intended to provide a generic interface to
+database management systems, there are still a number of issues that you
+should be aware that depend on the operating system and the specific
+database management system.
+[para]
+These issues are documented in [sectref "PLATFORM ISSUES"].
+
 
 [section "DATA TYPES"]
 The following derived types are defined:
@@ -87,11 +90,12 @@ The variable that holds the information on the column
 Name of the column in the table to which it belongs or will belong
 
 [arg_def "integer" type]
-Type of the column: one of ODBC_INT, ODBC_REAL, ODBC_DOUBLE or
-ODBC_CHAR
+Type of the column: one of ODBC_INT, ODBC_REAL, ODBC_DOUBLE,
+ODBC_CHAR or ODBC_BINARY (see [sectref "PLATFORM ISSUES"]).
 
 [arg_def "integer, optional" length]
 Length of a character-valued column (defaults to 20 characters)
+or a BLOB-type column.
 
 [list_end]
 [nl]
@@ -111,8 +115,8 @@ The variable that holds the information on the column
 Name of the column in the table to which it belongs or will belong
 
 [arg_def "integer" type]
-Type of the column: one of ODBC_INT, ODBC_REAL, ODBC_DOUBLE or
-ODBC_CHAR
+Type of the column: one of ODBC_INT, ODBC_REAL, ODBC_DOUBLE,
+ODBC_CHAR or ODBC_BINARY.
 
 [arg_def "integer, optional" length]
 Length of a character-valued column (defaults to 20 characters)
@@ -180,8 +184,8 @@ database file to be opened.
 
 [arg_def "character(len=*), optional" driver]
 The name of the driver, currently one of the [emph parameters]
-ODBC_MSACCESS, ODBC_MSEXCEL or ODBC_SQLITE. If left out, the name is
-supposed to be a data set name (DSN).
+ODBC_MSACCESS, ODBC_MSEXCEL, ODBC_SQLITE or ODBC_POSTGRES (see [sectref "PLATFORM ISSUES"]).
+If left out, the name is supposed to be a data set name (DSN).
 
 [arg_def "type(ODBC_DATABASE)" db]
 Variable to identify the database connection
@@ -228,6 +232,30 @@ Returns true if so, otherwise false.
 
 [arg_def "type(ODBC_DATABASE)" db]
 Variable identifying the database connection
+
+[list_end]
+[nl]
+
+
+[call [cmd "call odbc_set_blob_support( db, blob_type )"]]
+Set the type of support for BLOBs (see [sectref "PLATFORM ISSUES"]).
+Use this if you intend to use BLOBs (binary large objects).
+
+[list_begin arg]
+
+[arg_def "type(ODBC_DATABASE)" db_or_stmt]
+Variable identifying the database connection.
+
+[arg_def "integer" blob_type]
+Identify how the dabase management system supports BLOBs:
+[list_begin bullet]
+[bullet]
+[emph ODBC_PLAIN_BLOB] - (default) the database system uses the keyword "BLOB" to indicate
+binary large objects and the ODBC driver simply returns a set of bytes.
+[bullet]
+[emph ODBC_POSTGRES_HEX] - the database system (notably PostgreSQL) uses the keyword "BYTEA" to indicate
+binary large objects and the ODBC driver returns a hexdecimally encoded string instead of a set of bytes.
+[list_end]
 
 [list_end]
 [nl]
@@ -787,6 +815,7 @@ program csvtable
 end program
 }]
 
+
 [section LIMITATIONS]
 The module is not complete yet:
 [list_begin bullet]
@@ -796,12 +825,13 @@ length. In fact the maximum string length is limited to 80 characters.
 [bullet]
 There is no support for NULL values or for DATE values.
 [bullet]
-The SQLite API is not completely covered, though the subset should be
+The ODBC API is not completely covered, though the subset should be
 useful for many applications.
 [bullet]
 There are no makefiles that can help build the library yet. See the
 implementation notes below.
 [list_end]
+
 
 [section "IMPLEMENTATION NOTES"]
 While the module is fairly straightforward Fortran 95 code, building a
@@ -841,5 +871,25 @@ The library has been designed with 64-bits platforms in mind: it should
 run on these platforms without any difficulties.
 [list_end]
 
+
+[section "PLATFORM ISSUES"]
+[list_begin bullet]
+[bullet]
+The library has been tested on Linux, using the [emph "PostgreSQL database"]
+system with the [emph psqlODBC] driver.
+[nl]
+It is unclear what the proper connection string should be, so that the
+type ODBC_POSTGRES for the routine [emph odbc_open] does not work yet. (PostgreSQL has
+a client/server architecture and can communicate over TCP/IP, so that more information
+may have to be specified than for file-based systems like SQLite and MS Access. Use the
+routine [emph odbc_connect] directly, so that you can pass a complete connection string.)
+
+[bullet]
+As of version 1.1 the library supports so-called binary large objects (column type: ODBC_BINARY).
+Not all database systems support them and they are actually an extension to the SQL language
+that underlies the communication to and from the database system. For this reason it may be
+necessary to use the routine [emph odbc_set_blob_type] to identify the database-specific method
+used for BLOBs. (It does not seem possible to identify this automatically.)
+[list_end]
 
 [manpage_end]

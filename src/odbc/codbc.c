@@ -6,6 +6,11 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Macros for the type of BLOB support - keep in sync with Fortran source */
+#define ODBC_NO_BLOB_SUPPORT (-1)
+#define ODBC_PLAIN_BYTES     0
+#define ODBC_POSTGRESQL_HEX  1
+
 #if !defined(LOWERCASE) && !defined(DBL_UNDERSCORE)
 #ifdef WIN32
 //#define FTNCALL __stdcall
@@ -558,17 +563,20 @@ int FTNCALL odbc_bind_blob_c_(
        int      *colidx,
        int     *blob,
        int     *size_blob,
-       int      *indicator
+       int      *indicator,
+       int      *blob_type
       )
 {
     int   rc           ;
+    int   i            ;
     char  sqlstate[10] ;
     char  msgtext[100] ;
     int   msglength    ;
     int   native_error ;
 
     rc = SQLBindCol(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int),
-            indicator ) ;
+             indicator ) ;
+
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
@@ -718,22 +726,48 @@ int FTNCALL odbc_column_blob_c_(
        int      *colidx,
        int      *blob,
        int      *size_blob,
-       int      *indicator
+       int      *indicator,
+       int      *blob_type
       )
 {
     int rc ;
 
-    char  sqlstate[10] ;
-    char  msgtext[100] ;
-    int   msglength    ;
-    int   native_error ;
+    char        sqlstate[10] ;
+    char        msgtext[100] ;
+    SQLSMALLINT msglength    ;
+    int         native_error ;
+    int         i            ;
+    char       *hexstring    ;
 
-    rc = SQLGetData(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int), indicator ) ;
+    if ( (*blob_type) != ODBC_POSTGRESQL_HEX ) {
+        rc = SQLGetData(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int), indicator ) ;
+    } else {
+
+        /* Handle PostgreSQL's hexdecimal output style */
+        /* TODO: This does not work yet! It should handle the particular endianness of the
+                 platform and the PostgreSQL driver on Linux that I used seems confused about
+                 the data that are returned. For instance: I got back a string of which the
+                 first character was missing or maimed and the indicator was set to 39, where
+                 I expected 40.
+        */
+
+        hexstring = (char *) malloc( 2 * (*size_blob)*sizeof(int) + 4 ) ;
+        rc = SQLGetData(*stmt, *colidx, SQL_BINARY, hexstring, 2*(*size_blob)*sizeof(int)+4, indicator ) ;
+
+        /* TODO: determine if there is one byte or more in front of the hexadecimal string */
+
+        if ( SQL_SUCCEEDED(rc) ) {
+            for ( i = 0 ; i < ((*indicator)-1)/8 ; i ++ ) {
+                sscanf(hexstring+1+8*i,"%8x", &blob[i] ) ;
+            }
+        }
+
+        free( hexstring) ;
+    }
+
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        rc = SQLGetDiagRec( SQL_HANDLE_STMT, stmt, 1, sqlstate, &native_error, msgtext, 100, &msglength );
-        fprintf( stderr, "SQL: %s -- %s\n", sqlstate, msgtext );
         return rc;
     }
 }

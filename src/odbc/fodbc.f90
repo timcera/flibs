@@ -18,20 +18,30 @@ module odbc_types
     integer, parameter         :: ODBC_CHAR    = 4
     integer, parameter         :: ODBC_BINARY  = -3 ! For BLOBs - SQL_VARBINARY
 
+    !
+    ! Note: these must be kept in sync with the C code!
+    !
+    integer, parameter         :: ODBC_NO_BLOB_SUPPORT = -1 ! BLOBs: no support
+    integer, parameter         :: ODBC_PLAIN_BYTES     =  0 ! BLOBs: BLOB(..) and raw bytes returned
+    integer, parameter         :: ODBC_POSTGRESQL_HEX  =  1 ! BLOBs: BYTEA and hexadecimal string returned
+
     integer, parameter         :: ODBC_ROW     = 100
     integer, parameter         :: ODBC_ERRCODE = 999
 
-    character(len=40), parameter :: ODBC_MSACCESS ="MicroSoft Access Driver (*.mdb)"
-    character(len=40), parameter :: ODBC_MSEXCEL  ="MicroSoft Excel Driver (*.xls)"
-    character(len=40), parameter :: ODBC_SQLITE3  ="SQLite3 ODBC Driver"
+    character(len=40), parameter :: ODBC_MSACCESS   = "MicroSoft Access Driver (*.mdb)"
+    character(len=40), parameter :: ODBC_MSEXCEL    = "MicroSoft Excel Driver (*.xls)"
+    character(len=40), parameter :: ODBC_SQLITE3    = "SQLite3 ODBC Driver"
+    character(len=40), parameter :: ODBC_POSTGRESQL = "PostGreSQL Driver"
 
     type ODBC_STATEMENT
         integer, dimension(2)   :: stmt_handle
+        integer                 :: blob_type
     end type ODBC_STATEMENT
 
     type ODBC_DATABASE
         integer, dimension(2)   :: db_handle   = 0
         integer, dimension(2)   :: stmt_handle = 0 ! For querying table names
+        integer                 :: blob_type   = ODBC_PLAIN_BYTES
         integer                 :: error
         character(len=80)       :: errmsg
     end type ODBC_DATABASE
@@ -106,11 +116,14 @@ contains
 !    column        Column information
 !    primary       Name of the primary key
 !
-character(len=40) function typename( column, primary )
+character(len=40) function typename( column, primary, blob_type )
    type(ODBC_COLUMN), intent(in) :: column
-   character(len=*), intent(in)    :: primary
+   character(len=*), intent(in)  :: primary
+   integer, intent(in)           :: blob_type
 
-   if ( column%name .ne. primary ) then
+   if ( column%type(1:4) == 'BLOB' .and. blob_type == ODBC_POSTGRESQL_HEX ) then
+       typename = 'BYTEA'
+   else if ( column%name .ne. primary ) then
       typename = column%type
    else
       !write( typename, '(2a)' ) trim(column%type), ' primary key'
@@ -215,7 +228,6 @@ subroutine odbc_column_props( column, name, type, length )
    case (ODBC_BINARY)
       write( column%type, '(a,i0,a)' ) 'BLOB(', length_, ')'
       column%blob_value%set_size = length_
-      !column%type = 'BLOB'
    case default
       column%type = 'UNKNOWN!'
    end select
@@ -416,11 +428,18 @@ subroutine odbc_open_file( filename, driver, db )
         case (odbc_msaccess, odbc_msexcel)
             connection_string = "DRIVER={" // trim(driver) // "};" // &
                 "DBQ=" // trim(filename) // ";Uid=Admin;Pwd=;"
+            db%blob_type = ODBC_NO_BLOB_SUPPORT
         case (odbc_sqlite3)
             connection_string = "DRIVER={" // trim(driver) // "};" // &
                 "Database=" // trim(filename) // ";"
+            db%blob_type = ODBC_NO_BLOB_SUPPORT
+        case (odbc_postgresql)
+            connection_string = "DRIVER={" // trim(driver) // "};" // &
+                "Database=" // trim(filename) // ";"
+            db%blob_type = ODBC_POSTGRESQL_HEX
         case default
             db%errmsg = "Unknown driver: " // trim(driver)
+            db%blob_type = ODBC_NO_BLOB_SUPPORT
             db%error  = -1
             return
     end select
@@ -482,6 +501,20 @@ subroutine odbc_close( db )
     db%error = odbc_close_c( db%db_handle, db%stmt_handle )
 
 end subroutine odbc_close
+
+
+! odbc_set_blob_type --
+!    Set the type of BLOB support
+! Arguments:
+!    db            Connection to the database
+!    blob_type     Type of BLOB support
+!
+subroutine odbc_set_blob_type( db, blob_type )
+   type(odbc_database) :: db
+   integer, intent(in) :: blob_type
+
+   db%blob_type = blob_type
+end subroutine odbc_set_blob_type
 
 
 ! odbc_error --
@@ -962,9 +995,9 @@ subroutine odbc_create_table( db, tablename, columns, primary )
 
    ncols = size(columns)
    write( command, '(100a)' ) 'create table ', tablename, ' (', &
-      ( trim(columns(i)%name), ' ', trim(typename(columns(i), primary_)), ', ', &
+      ( trim(columns(i)%name), ' ', trim(typename(columns(i), primary_,db%blob_type)), ', ', &
            i = 1,ncols-1 ), &
-      trim(columns(ncols)%name), ' ', trim(typename(columns(ncols),primary_)), ')'
+      trim(columns(ncols)%name), ' ', trim(typename(columns(ncols),primary_,db%blob_type)), ')'
 
    call odbc_do( db, command )
 end subroutine odbc_create_table
@@ -1022,6 +1055,7 @@ subroutine odbc_prepare_select( db, tablename, columns, stmt, extra_clause )
     call stringtoc( command )
     call odbc_prepare( db, command, stmt, columns )
     call odbc_exec_c( stmt%stmt_handle, db%error )
+    stmt%blob_type = db%blob_type
 
 end subroutine odbc_prepare_select
 
@@ -1083,12 +1117,13 @@ subroutine odbc_insert( db, tablename, columns )
     end interface
 
     interface
-        integer function odbc_bind_param_blob_c( handle, colidx, value, size_value, indicator )
+        integer function odbc_bind_param_blob_c( handle, colidx, value, size_value, indicator, blob_type )
             integer, dimension(*) :: handle
             integer               :: colidx
             integer, dimension(*) :: value
             integer               :: size_value
             integer               :: indicator
+            integer               :: blob_type
         end function odbc_bind_param_blob_c
     end interface
 
@@ -1126,7 +1161,7 @@ subroutine odbc_insert( db, tablename, columns )
                         columns(i)%int_value )
            case (ODBC_BINARY)
                rc = odbc_bind_param_blob_c( stmt%stmt_handle, i, columns(i)%blob_value%data, &
-                        size(columns(i)%blob_value%data), columns(i)%blob_value%actual_size )
+                        size(columns(i)%blob_value%data), columns(i)%blob_value%actual_size, db%blob_type )
         end select
         if ( rc .ne. 0 ) then
            db%error = rc
@@ -1189,12 +1224,13 @@ subroutine odbc_next_row( stmt, columns, finished )
     end interface
 
     interface
-        integer function odbc_column_blob_c( handle, colidx, value, size_value, indicator )
+        integer function odbc_column_blob_c( handle, colidx, value, size_value, indicator, blob_type )
             integer, dimension(*) :: handle
             integer               :: colidx
             integer, dimension(*) :: value
             integer               :: size_value
             integer               :: indicator
+            integer               :: blob_type
         end function odbc_column_blob_c
     end interface
 
@@ -1231,7 +1267,7 @@ subroutine odbc_next_row( stmt, columns, finished )
                         allocate( columns(i)%blob_value%data(columns(i)%blob_value%set_size) )
                     endif
                     rc = odbc_column_blob_c( stmt%stmt_handle, i, columns(i)%blob_value%data, &
-                             columns(i)%blob_value%set_size, indicator  )
+                             columns(i)%blob_value%set_size, indicator, stmt%blob_type )
                     if (rc == 0 ) then
                         columns(i)%blob_value%actual_size = (indicator+3)/4
                     else
@@ -1294,6 +1330,7 @@ subroutine odbc_prepare( db, command, stmt, columns )
     commandc = command
     call stringtoc( commandc )
     db%error = odbc_prepare_c( db%db_handle, commandc, stmt%stmt_handle )
+    stmt%blob_type = db%blob_type
 
     if ( db%error .eq. 0 ) then
         if ( associated(columns) ) return ! Assumption: they are already known
