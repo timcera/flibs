@@ -1,14 +1,11 @@
 ! fodbc.90 --
 !     Fortran interface to ODBC
 !
-!     $id$
+!     $Id$
 !
 !     TODO:
-!     - Get columns
-!     - odbc_prepare_select: split up because of extra_clause
-!     - selecting FLOAT columns
-!     - trim() function on bind text?
-!     - error handling
+!     - odbc_prepare_select: more robust method to compute the string length needed
+!                            split up because of extra_clause
 !
 module odbc_types
     implicit none
@@ -19,13 +16,14 @@ module odbc_types
     integer, parameter         :: ODBC_REAL    = 2
     integer, parameter         :: ODBC_DOUBLE  = 3
     integer, parameter         :: ODBC_CHAR    = 4
+    integer, parameter         :: ODBC_BINARY  = -3 ! For BLOBs - SQL_VARBINARY
 
     integer, parameter         :: ODBC_ROW     = 100
     integer, parameter         :: ODBC_ERRCODE = 999
 
     character(len=40), parameter :: ODBC_MSACCESS ="MicroSoft Access Driver (*.mdb)"
     character(len=40), parameter :: ODBC_MSEXCEL  ="MicroSoft Excel Driver (*.xls)"
-    character(len=40), parameter :: ODBC_SQLITE3  ="SQLite3 ODBC"
+    character(len=40), parameter :: ODBC_SQLITE3  ="SQLite3 ODBC Driver"
 
     type ODBC_STATEMENT
         integer, dimension(2)   :: stmt_handle
@@ -38,6 +36,12 @@ module odbc_types
         character(len=80)       :: errmsg
     end type ODBC_DATABASE
 
+    type ODBC_BLOB
+        integer                            :: set_size    = 0 ! Size as set via odbc_column_props
+        integer                            :: actual_size = 0 ! Size in bytes of the actual data
+        integer, dimension(:), allocatable :: data            ! Using an integer array as convenient storage
+    end type ODBC_BLOB
+
     type ODBC_COLUMN
         character(len=40)       :: name     = ' '
         character(len=40)       :: type     = ' '
@@ -46,6 +50,7 @@ module odbc_types
         integer                 :: int_value
         real(kind=dp)           :: double_value
         character(len=80)       :: char_value
+        type(ODBC_BLOB)         :: blob_value
     end type ODBC_COLUMN
 end module odbc_types
 
@@ -82,12 +87,14 @@ module odbc
       module procedure odbc_set_column_real
       module procedure odbc_set_column_double
       module procedure odbc_set_column_char
+      module procedure odbc_set_column_blob
    end interface
    interface odbc_get_column
       module procedure odbc_get_column_int
       module procedure odbc_get_column_real
       module procedure odbc_get_column_double
       module procedure odbc_get_column_char
+      module procedure odbc_get_column_blob
    end interface
 
 contains
@@ -205,6 +212,10 @@ subroutine odbc_column_props( column, name, type, length )
       column%type = 'DOUBLE'
    case (ODBC_CHAR)
       write( column%type, '(a,i0,a)' ) 'CHAR(', length_, ')'
+   case (ODBC_BINARY)
+      write( column%type, '(a,i0,a)' ) 'BLOB(', length_, ')'
+      column%blob_value%set_size = length_
+      !column%type = 'BLOB'
    case default
       column%type = 'UNKNOWN!'
    end select
@@ -247,6 +258,7 @@ end subroutine odbc_column_query
 ! odbc_set_column_real   --
 ! odbc_set_column_double --
 ! odbc_set_column_char   --
+! odbc_set_column_blob   --
 !    Convenience routines to set the value of a column
 ! Arguments:
 !    column        Column structure
@@ -286,11 +298,30 @@ subroutine odbc_set_column_char( column, value )
    column%type_set  = ODBC_CHAR
 end subroutine odbc_set_column_char
 
+subroutine odbc_set_column_blob( column, value )
+   type(ODBC_COLUMN), intent(inout) :: column
+   type(ODBC_BLOB), intent(in)      :: value
+
+   if ( allocated(column%blob_value%data) ) then
+       deallocate( column%blob_value%data )
+   endif
+
+   allocate( column%blob_value%data(size(value%data)) )
+   if ( value%actual_size <= 0 ) then
+       column%blob_value%actual_size = 4 * size(value%data)
+   else
+       column%blob_value%actual_size = value%actual_size
+   endif
+   column%blob_value%data        = value%data
+   column%type_set               = ODBC_BINARY
+end subroutine odbc_set_column_blob
+
 
 ! odbc_get_column_int    --
 ! odbc_get_column_real   --
 ! odbc_get_column_double --
 ! odbc_get_column_char   --
+! odbc_get_column_blob   --
 !    Convenience routines to get the value of a column
 ! Arguments:
 !    column        Column structure
@@ -329,6 +360,19 @@ subroutine odbc_get_column_char( column, value )
 
    value = column%char_value
 end subroutine odbc_get_column_char
+
+subroutine odbc_get_column_blob( column, value )
+   type(ODBC_COLUMN), intent(inout) :: column
+   type(ODBC_BLOB), intent(out)     :: value
+
+   if ( allocated(value%data) ) then
+       deallocate( value%data )
+   endif
+
+   allocate( value%data(column%blob_value%actual_size) )
+   value%actual_size = column%blob_value%actual_size
+   value%data        = column%blob_value%data(1:column%blob_value%actual_size)
+end subroutine odbc_get_column_blob
 
 
 ! odbc_open_dsn --
@@ -370,11 +414,11 @@ subroutine odbc_open_file( filename, driver, db )
 
     select case (driver)
         case (odbc_msaccess, odbc_msexcel)
-            connection_string = "DBQ=" // trim(filename) // &
-                ";DRIVER={" // trim(driver) // "};"
+            connection_string = "DRIVER={" // trim(driver) // "};" // &
+                "DBQ=" // trim(filename) // ";Uid=Admin;Pwd=;"
         case (odbc_sqlite3)
-            connection_string = "Database=" // trim(filename) // &
-                ";DRIVER={" // trim(driver) // "}; LongNames=0; Timeout=1000; NoTXN=0; SyncPragma=NORMAL; StepAPI=0"
+            connection_string = "DRIVER={" // trim(driver) // "};" // &
+                "Database=" // trim(filename) // ";"
         case default
             db%errmsg = "Unknown driver: " // trim(driver)
             db%error  = -1
@@ -855,7 +899,7 @@ subroutine odbc_query_table( db, tablename, columns )
    type(ODBC_STATEMENT)                      :: stmt
    character(len=20+len(tablename))          :: command
 
-   write( command, '(2a)' ) 'select * from ',tablename
+   write( command, '(3a)' ) 'select * from ',tablename, ';'
 
    !
    ! Note, we must free the columns, but we can not be sure
@@ -1039,6 +1083,16 @@ subroutine odbc_insert( db, tablename, columns )
     end interface
 
     interface
+        integer function odbc_bind_param_blob_c( handle, colidx, value, size_value, indicator )
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            integer, dimension(*) :: value
+            integer               :: size_value
+            integer               :: indicator
+        end function odbc_bind_param_blob_c
+    end interface
+
+    interface
         subroutine odbc_exec_c( handle, rc )
             integer, dimension(*) :: handle
             integer               :: rc
@@ -1070,6 +1124,9 @@ subroutine odbc_insert( db, tablename, columns )
                columns(i)%int_value = len_trim(columns(i)%char_value)
                rc = odbc_bind_param_text_c( stmt%stmt_handle, i, columns(i)%char_value, &
                         columns(i)%int_value )
+           case (ODBC_BINARY)
+               rc = odbc_bind_param_blob_c( stmt%stmt_handle, i, columns(i)%blob_value%data, &
+                        size(columns(i)%blob_value%data), columns(i)%blob_value%actual_size )
         end select
         if ( rc .ne. 0 ) then
            db%error = rc
@@ -1131,6 +1188,16 @@ subroutine odbc_next_row( stmt, columns, finished )
         end function odbc_column_text_c
     end interface
 
+    interface
+        integer function odbc_column_blob_c( handle, colidx, value, size_value, indicator )
+            integer, dimension(*) :: handle
+            integer               :: colidx
+            integer, dimension(*) :: value
+            integer               :: size_value
+            integer               :: indicator
+        end function odbc_column_blob_c
+    end interface
+
     integer                           :: rc
     integer                           :: i
     integer, save                     :: indicator
@@ -1150,10 +1217,26 @@ subroutine odbc_next_row( stmt, columns, finished )
                 case (ODBC_INT)
                     rc = odbc_column_int_c( stmt%stmt_handle, i, columns(i)%int_value, indicator )
                 case (ODBC_REAL,ODBC_DOUBLE)
-                   rc = odbc_column_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator  )
+                    rc = odbc_column_double_c( stmt%stmt_handle, i, columns(i)%double_value, indicator  )
                 case (ODBC_CHAR)
-                   rc = odbc_column_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator  )
-                   call stringtof( columns(i)%char_value )
+                    rc = odbc_column_text_c( stmt%stmt_handle, i, columns(i)%char_value, indicator  )
+                    call stringtof( columns(i)%char_value )
+                case (ODBC_BINARY)
+                    if ( allocated(columns(i)%blob_value%data) ) then
+                        if ( size(columns(i)%blob_value%data) /= columns(i)%blob_value%set_size ) then
+                            deallocate( columns(i)%blob_value%data )
+                            allocate( columns(i)%blob_value%data(columns(i)%blob_value%set_size) )
+                        endif
+                    else
+                        allocate( columns(i)%blob_value%data(columns(i)%blob_value%set_size) )
+                    endif
+                    rc = odbc_column_blob_c( stmt%stmt_handle, i, columns(i)%blob_value%data, &
+                             columns(i)%blob_value%set_size, indicator  )
+                    if (rc == 0 ) then
+                        columns(i)%blob_value%actual_size = (indicator+3)/4
+                    else
+                        columns(i)%blob_value%actual_size = 0
+                    endif
             end select
             ! if ( rc .ne. 0 ) then
             !    db%error = rc
@@ -1232,6 +1315,8 @@ subroutine odbc_prepare( db, command, stmt, columns )
                     columns(i)%type_set = ODBC_DOUBLE
                 case( 'CHAR', 'VARC' )
                     columns(i)%type_set = ODBC_CHAR
+                case( 'BLOB' )
+                    columns(i)%type_set = ODBC_BINARY
             end select
 
         enddo

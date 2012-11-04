@@ -1,3 +1,23 @@
+2012-11-04 arjenmarkus@sourceforge.net
+   * src/computing/libdate.f90: implemented routine scan_date
+   * doc/computing/libdate.man: documentation of routine scan_date
+   * tests/computing/test_libdate.f90: implemented tests for scan_date and corrected mistakes
+   * src/strings/tokenize.f90: removed superfluous comment, now storing start of token (for tokenlist)
+   * src/strings/tokenlist.f90: implemented a token list derived type - more convenient interface
+   * doc/strings/tokenlist.man: documentation of the tokenlists module
+   * tests/strings/makefile: first version of a makefile for the test programs in this subdirectory
+   * src/streams/readchar.f90: basic module for reading a file character by character (to be used in more sophisticated modules)
+   * tests/streams/test_readchar.f90: test program for the read_characters module
+   * tests/streams/readchar.txt: test file for the read_characters module
+   * tests/streams/makefile: first version of a makefile for the test programs in this subdirectory
+   * doc/streams/readchar.man: documentation of the read_characters module
+
+2012-11-03 arjenmarkus@sourceforge.net
+   * src/odbc/fodbc.f90: support for BLOBs (SQLite and PostgreSQL)
+   * src/odbc/codbc.f90: support for BLOBs (SQLite and PostgreSQL)
+   * tests/odbc/test_fodbc.f90: test support for BLOBs (SQLite and PostgreSQL)
+   * doc/odbc/fodbc.man: description of support for BLOBs (several platform dependencies!)
+
 2012-04-06 arjenmarkus@sourceforge.net
    * src/mysql/mysql.f90: updated kinds because of 64 bits OSes (by Daniel Kraft)
 

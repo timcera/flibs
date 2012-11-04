@@ -8,8 +8,9 @@
 
 #if !defined(LOWERCASE) && !defined(DBL_UNDERSCORE)
 #ifdef WIN32
-#define FTNCALL __stdcall
-#define INBETWEEN
+//#define FTNCALL __stdcall
+#define FTNCALL
+//#define INBETWEEN
 #define odbc_connect_c_             ODBC_CONNECT_C
 #define odbc_open_c_                ODBC_OPEN_C
 #define odbc_close_c_               ODBC_CLOSE_C
@@ -31,12 +32,15 @@
 #define odbc_bind_null_c_           ODBC_BIND_NULL_C
 #define odbc_bind_double_c_         ODBC_BIND_DOUBLE_C
 #define odbc_bind_text_c_           ODBC_BIND_TEXT_C
+#define odbc_bind_blob_c_           ODBC_BIND_BLOB_C
 #define odbc_bind_param_int_c_      ODBC_BIND_PARAM_INT_C
 #define odbc_bind_param_double_c_   ODBC_BIND_PARAM_DOUBLE_C
 #define odbc_bind_param_text_c_     ODBC_BIND_PARAM_TEXT_C
+#define odbc_bind_param_blob_c_     ODBC_BIND_PARAM_BLOB_C
 #define odbc_column_int_c_          ODBC_COLUMN_INT_C
 #define odbc_column_double_c_       ODBC_COLUMN_DOUBLE_C
 #define odbc_column_text_c_         ODBC_COLUMN_TEXT_C
+#define odbc_column_blob_c_         ODBC_COLUMN_BLOB_C
 #define odbc_get_table_name_1_c_    ODBC_GET_TABLE_1_C
 #define odbc_get_table_name_2_c_    ODBC_GET_TABLE_2_C
 #include <windows.h>
@@ -46,7 +50,7 @@
 #if defined(LOWERCASE) || defined(DBL_UNDERSCORE)
 #define FTNCALL
 #if defined(DBL_UNDERSCORE)
-#define odbc_connect_c_             odbc_connect_c
+#define odbc_connect_c_             odbc_connect_c__
 #define odbc_open_c_                odbc_open_c__
 #define odbc_close_c_               odbc_close_c__
 #define odbc_do_c_                  odbc_do_c__
@@ -67,12 +71,15 @@
 #define odbc_bind_null_c_           odbc_bind_null_c__
 #define odbc_bind_double_c_         odbc_bind_double_c__
 #define odbc_bind_text_c_           odbc_bind_text_c__
+#define odbc_bind_blob_c_           odbc_bind_blob_c__
 #define odbc_bind_param_int_c_      odbc_bind_param_int_c__
 #define odbc_bind_param_double_c_   odbc_bind_param_double_c__
 #define odbc_bind_param_text_c_     odbc_bind_param_text_c__
+#define odbc_bind_param_blob_c_     odbc_bind_param_blob_c__
 #define odbc_column_int_c_          odbc_column_int_c__
 #define odbc_column_double_c_       odbc_column_double_c__
 #define odbc_column_text_c_         odbc_column_text_c__
+#define odbc_column_blob_c_         odbc_column_blob_c__
 #define odbc_get_table_1_c_         odbc_get_table_1_c__
 #define odbc_get_table_2_c_         odbc_get_table_2_c__
 #endif /* defined(DBL_UNDERSCORE) */
@@ -233,7 +240,7 @@ int FTNCALL odbc_get_data_source_c_(
        int      len_description
 #endif
 #ifndef INBETWEEN
-      ,int      len_dsnname
+       int      len_dsnname
       ,int      len_description
 #endif
       )
@@ -269,7 +276,7 @@ int FTNCALL odbc_get_driver_c_(
        int      len_description
 #endif
 #ifndef INBETWEEN
-      ,int      len_driver
+       int      len_driver
       ,int      len_description
 #endif
       )
@@ -442,7 +449,7 @@ void FTNCALL odbc_column_name_type_c_(
     int          rc            ;
     SQLSMALLINT  actual_length ;
     SQLSMALLINT  data_type     ;
-    SQLSMALLINT  column_size   ;
+    SQLULEN      column_size   ;
     SQLSMALLINT  decimals      ;
     SQLSMALLINT  nullable      ;
 
@@ -474,6 +481,11 @@ void FTNCALL odbc_column_name_type_c_(
         case SQL_TYPE_DATE:
         case SQL_TYPE_TIMESTAMP:
             strcpy( type, "CHARACTER" ) ; /* For now at least */
+            break ;
+        case SQL_BINARY:
+        case SQL_VARBINARY:
+        case SQL_LONGVARBINARY:
+            strcpy( type, "BLOB" ) ;
             break ;
         default:
             strcpy( type, "????" ) ;
@@ -533,6 +545,29 @@ int FTNCALL odbc_bind_text_c_(
     int   rc   ;
 
     rc = SQLBindCol(*stmt, *colidx, SQL_CHAR, text, len_text,
+            indicator ) ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return rc;
+    }
+}
+
+int FTNCALL odbc_bind_blob_c_(
+       SQLHSTMT *stmt,
+       int      *colidx,
+       int     *blob,
+       int     *size_blob,
+       int      *indicator
+      )
+{
+    int   rc           ;
+    char  sqlstate[10] ;
+    char  msgtext[100] ;
+    int   msglength    ;
+    int   native_error ;
+
+    rc = SQLBindCol(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int),
             indicator ) ;
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
@@ -602,6 +637,25 @@ int FTNCALL odbc_bind_param_text_c_(
    }
 }
 
+int FTNCALL odbc_bind_param_blob_c_(
+       SQLHSTMT *stmt,
+       int      *colidx,
+       int      *blob,
+       int      *size_blob,
+       int      *actual_length
+      )
+{
+   int   rc   ;
+
+   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY,
+            (*size_blob)*sizeof(int), 0, blob, 0, actual_length ) ;
+   if ( SQL_SUCCEEDED(rc) ) {
+       return 0;
+   } else {
+       return rc;
+   }
+}
+
 int FTNCALL odbc_column_int_c_(
        SQLHSTMT *stmt,
        int      *colidx,
@@ -655,6 +709,31 @@ int FTNCALL odbc_column_text_c_(
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
+        return rc;
+    }
+}
+
+int FTNCALL odbc_column_blob_c_(
+       SQLHSTMT *stmt,
+       int      *colidx,
+       int      *blob,
+       int      *size_blob,
+       int      *indicator
+      )
+{
+    int rc ;
+
+    char  sqlstate[10] ;
+    char  msgtext[100] ;
+    int   msglength    ;
+    int   native_error ;
+
+    rc = SQLGetData(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int), indicator ) ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        rc = SQLGetDiagRec( SQL_HANDLE_STMT, stmt, 1, sqlstate, &native_error, msgtext, 100, &msglength );
+        fprintf( stderr, "SQL: %s -- %s\n", sqlstate, msgtext );
         return rc;
     }
 }
