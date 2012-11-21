@@ -81,7 +81,7 @@ module m_logger
   ! Static fields
   !
   ! Logical unit associated with the log file
-  integer :: log_fileunit = 6
+  integer :: log_fileunit
   ! Logical unit associated with the standard output
   integer :: log_stdout = -1
   ! Logical set to false if the user wants to inactivate
@@ -159,12 +159,11 @@ contains
     if ( logger_initialized ) then
        call log_error ( "Logger is allready initialized in log_startup." )
     else
-       log_fileunit = log_get_freeunit()
        if ( append_real ) then
-          open (log_fileunit, FILE= log_file , ACTION='WRITE', STATUS='UNKNOWN', &
+          open (NEWUNIT=log_fileunit, FILE=log_file , ACTION='WRITE', STATUS='UNKNOWN', &
                POSITION ='APPEND')
        else
-          open (log_fileunit, FILE= log_file , ACTION='WRITE', STATUS='UNKNOWN')
+          open (NEWUNIT=log_fileunit, FILE=log_file , ACTION='WRITE', STATUS='UNKNOWN')
        endif
        logger_initialized = .true.
     endif
@@ -246,7 +245,7 @@ contains
   !     msg              Message
   !
   subroutine log_write( unit, msg )
-    integer, intent(in) :: unit
+    integer, intent(in out) :: unit
     character(len=*), intent(in) :: msg
     character(len=500)           :: filename
     if (  unit == -1 ) then
@@ -258,7 +257,7 @@ contains
        !
        inquire( unit, name = filename )
        close( unit )
-       open( unit, FILE=filename, ACTION='WRITE', STATUS='UNKNOWN', &
+       open( NEWUNIT=unit, FILE=filename, ACTION='WRITE', STATUS='UNKNOWN', &
             POSITION ='APPEND')
     endif
   end subroutine log_write
@@ -284,37 +283,6 @@ contains
     call log_get_delimiter( used_level , msg )
     call log_msg( msg )
   end subroutine log_delimiter
-  !
-  ! log_get_freeunit --
-  !   Returns a free logical unit.
-  ! Note:
-  !   Duplicated from m_fileunit so that m_logger is a stand-alone module.
-  !   Do not maintain.
-  !
-  integer function log_get_freeunit ( )
-    integer :: iunit
-    integer :: ios
-    logical :: lopen
-    logical :: unit_found
-    iunit = 0
-    unit_found = .false.
-    log_get_freeunit = 0
-    do iunit = 1, 100
-       if ( iunit /= 5 .and. iunit /= 6 .and. iunit /= 9 ) then
-          inquire ( UNIT = iunit, opened = lopen, iostat = ios )
-          if ( ios == 0 ) then
-             if ( .not. lopen ) then
-                log_get_freeunit = iunit
-                unit_found = .true.
-                exit
-             endif
-          endif
-       endif
-    enddo
-    if (.NOT.unit_found) then
-       write(*,*) "Logging: No free logical unit for log file"
-    endif
-  end function log_get_freeunit
   !
   ! log_isinitialized --
   !   Returns true if the logger is allready initialized.

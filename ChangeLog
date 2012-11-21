@@ -1,3 +1,8 @@
+2012-11-21 arjenmarkus@sourceforge.net
+   * src/reporting/m_logger.f90: apply patch by Karin Nystrom (introducing Fortran 2008 feature NEWUNIT=)
+   * tests/reporting/makefile: add rules for making three more test programs (only test_report still missing)
+   * doc/reporting/m_logger.man: document the use of NEWUNIT=
+
 2012-11-04 arjenmarkus@sourceforge.net
    * src/computing/libdate.f90: implemented routine scan_date
    * doc/computing/libdate.man: documentation of routine scan_date
