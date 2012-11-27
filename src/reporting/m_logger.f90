@@ -1,17 +1,17 @@
 ! m_logger.f90 --
 !
-!   The module m_logger provides static methods to manage a log file, 
+!   The module m_logger provides static methods to manage a log file,
 !   which is an execution report of the program.
 !
 ! Overview
 !
 !   The goal of this component is to provide a way to write messages
-!   both on standard output and on a log file, so that a trace 
+!   both on standard output and on a log file, so that a trace
 !   of the execution can be read by the user after the execution.
-!   The module m_logger therefore provides static methods to 
+!   The module m_logger therefore provides static methods to
 !   - connect a file to the logger,
 !   - configure the logging process, for example disable the standard
-!     output messages, 
+!     output messages,
 !   - log messages.
 !
 !   The logger must be started up with "log_startup()" and shut down
@@ -32,9 +32,9 @@
 !    By default, the logging is done both on file and on standard output.
 !    The user may want to configure the behaviour of the logger so that message
 !    are not written on standard output.
-!    The static method "log_configure(option,value)" is the central point to configure the 
+!    The static method "log_configure(option,value)" is the central point to configure the
 !    logger. It takes a character "option" string and a "value" as arguments.
-!    In the following example, one selectively writes 
+!    In the following example, one selectively writes
 !    messages on standard output or on file, or both.
 !
 !      call log_startup ( 'test_m_logger.log' )
@@ -132,7 +132,7 @@ module m_logger
 
 contains
   ! log_startup --
-  !     Initialises the logging management and connect it to the 
+  !     Initialises the logging management and connect it to the
   !     given filename.
   !
   ! Arguments:
@@ -191,12 +191,12 @@ contains
   !   Log the given character string to the logging units.
   !   If the logging to standard output is enabled, writes the message
   !   on standard output.
-  !   If the logging to the log file is enabled, writes the message 
+  !   If the logging to the log file is enabled, writes the message
   !   into the log file.
   !   Before outputting directly the message string, the string is
   !   trimmed, that is to say that all trailing blanks are removed from
   !   the string.
-  !   If the time stamp option is enabled, a time stamp with 
+  !   If the time stamp option is enabled, a time stamp with
   !   format "year-month-day hh:mm:ss" is inserted before the message.
   !
   ! Arguments:
@@ -255,16 +255,13 @@ contains
        !
        ! Flush the file
        !
-       inquire( unit, name = filename )
-       close( unit )
-       open( NEWUNIT=unit, FILE=filename, ACTION='WRITE', STATUS='UNKNOWN', &
-            POSITION ='APPEND')
+       flush( unit )
     endif
   end subroutine log_write
   ! log_delimiter --
   !   Log a delimiter of given level, to make so that the log file
   !   contain different visual parts.
-  !   Available values for level are : LOG_LEVEL_VOLUME, 
+  !   Available values for level are : LOG_LEVEL_VOLUME,
   !   LOG_LEVEL_CHAPTER, LOG_LEVEL_SECTION, LOG_LEVEL_SUBSECTION.
   !   If level is not provided, the default value for level is LOG_LEVEL_VOLUME.
   !
@@ -315,9 +312,9 @@ contains
        stop
     endif
   end subroutine log_error_stop
-  ! 
+  !
   ! log_set_stoponerror --
-  ! 
+  !
   subroutine log_set_stoponerror ( stoponerror )
     logical , intent(in) :: stoponerror
     logger_stoponerror = stoponerror
@@ -328,7 +325,7 @@ contains
   !   The "option" may be one of the following.
   ! option = "timestamp"
   !   Disable or enable the insertion of time stamps.
-  !   If the time stamp option is enabled, a time stamp with 
+  !   If the time stamp option is enabled, a time stamp with
   !   format "year-month-day hh:mm:ss" is inserted before the message.
   ! option = "writeonstdout"
   !   Disable or enable the writing on standard output.
@@ -491,9 +488,9 @@ contains
     character ( len = 500 ) :: message
     select case ( option )
     case ( "level_string_volume" )
-       value = log_level_string_volume 
+       value = log_level_string_volume
     case ( "level_string_chapter" )
-       value = log_level_string_chapter 
+       value = log_level_string_chapter
     case ( "level_string_section" )
        value = log_level_string_chapter
     case ( "level_string_subsection" )
@@ -542,7 +539,7 @@ contains
   !
   ! log_init --
   !   Deprecated, use log_startup instead.
-  !   Initialises the logging management and connect it to the 
+  !   Initialises the logging management and connect it to the
   !   given filename.
   !
   subroutine log_init (log_file, append )
@@ -554,7 +551,7 @@ contains
   ! log_get_delimiter --
   !   Deprecated : use log_cget instead.
   !   Fills msg with a log delimiter of given level.
-  !   Available values for level are : LOG_LEVEL_VOLUME, 
+  !   Available values for level are : LOG_LEVEL_VOLUME,
   !   LOG_LEVEL_CHAPTER, LOG_LEVEL_SECTION, LOG_LEVEL_SUBSECTION
   !
   ! Arguments:
