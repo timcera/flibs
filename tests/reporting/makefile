@@ -25,13 +25,20 @@ MODEXT	=	.mod
 OUTPUT	=	-o # Trick: add a trailing blank to the OUTPUT macro
 RM	=	rm
 
-all	:	test_m_logger$(EXEEXT) test_m_exception$(EXEEXT) test_m_throwable$(EXEEXT) test_m_assert$(EXEEXT)
+all	:	test_m_logger$(EXEEXT) test_m_exception$(EXEEXT) test_m_throwable$(EXEEXT) test_m_assert$(EXEEXT) \
+      test_m_multilog$(EXEEXT)
 
 test_m_logger$(EXEEXT)	:	test_m_logger.f90 m_logger$(OBJEXT)
 	$(FC) test_m_logger.f90 m_logger$(OBJEXT) $(OUTPUT)test_m_logger$(EXEEXT)
 
 m_logger$(OBJEXT)	:	../../src/reporting/m_logger.f90
 	$(FC) $(FCOPTS) ../../src/reporting/m_logger.f90
+
+test_m_multilog$(EXEEXT)	:	test_m_multilog.f90 m_multilog$(OBJEXT)
+	$(FC) test_m_multilog.f90 m_multilog$(OBJEXT) $(OUTPUT)test_m_multilog$(EXEEXT)
+
+m_multilog$(OBJEXT)	:	../../src/reporting/m_multilog.f90
+	$(FC) $(FCOPTS) ../../src/reporting/m_multilog.f90
 
 test_m_exception$(EXEEXT)	:	test_m_exception.f90 m_exception$(OBJEXT)
 	$(FC) test_m_exception.f90 m_exception$(OBJEXT) $(OUTPUT)test_m_exception$(EXEEXT)
@@ -61,6 +68,6 @@ report$(OBJEXT)	:	../../src/reporting/report.f90
 	$(FC) $(FCOPTS) ../../src/reporting/report.f90
 
 clean:
-	$(RM) test_m_logger$(EXEEXT) test_m_expection$(EXEEXT) test_m_assertion$(EXEEXT) test_m_throwable$(EXEEXT) test_report$(EXEEXT)
-	$(RM) m_logger$(OBJEXT)      m_expection$(OBJEXT)      m_assertion$(OBJEXT)      m_throwable$(OBJEXT)      reporting$(OBJEXT)
-	$(RM) m_logger$(MODEXT)      m_expection$(MODEXT)      m_assertion$(MODEXT)      m_throwable$(MODEXT)      reporting$(MODEXT)
+	$(RM) test_m_logger$(EXEEXT) test_m_expection$(EXEEXT) test_m_assertion$(EXEEXT) test_m_throwable$(EXEEXT) test_report$(EXEEXT) test_m_multilog$(EXEEXT)
+	$(RM) m_logger$(OBJEXT)      m_expection$(OBJEXT)      m_assertion$(OBJEXT)      m_throwable$(OBJEXT)      reporting$(OBJEXT)   m_multilog$(OBJEXT)
+	$(RM) m_logger$(MODEXT)      m_expection$(MODEXT)      m_assertion$(MODEXT)      m_throwable$(MODEXT)      reporting$(MODEXT)   m_multilog$(MODEXT)
