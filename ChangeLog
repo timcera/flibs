@@ -6,6 +6,7 @@
    * src/computing/random_permutations.f90: added new module for random permutations
    * tests/computing/test_random_permutations.f90: added test program for random permutations
    * tests/computing/makefile: include the test program for random permutations
+   * doc/cgi/fortran-fastcgi-nginx.html: added instructions for using Fast-CGI with Nginx webserver
 
 2012-11-27 arjenmarkus@users.sourceforge.net
    * src/reporting/m_logger.f90: use the new flush statement instead of closing/opening the log file
