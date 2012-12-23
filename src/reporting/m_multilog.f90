@@ -504,10 +504,10 @@ contains
   ! Log delimiters are global (so far) so the 'log' option is not
   ! very meaningful.
   !
-  subroutine configure_character ( option , val )!, log )
+  subroutine configure_character ( option , val, log )
     character ( len = * ) , intent(in)     :: option
     character ( len = * ) , intent(in)     :: val
-!    type(log_t), optional,  intent(in out) :: log
+    type(log_t), optional,  intent(in out) :: log        ! Not used - added for symmetry
     character ( len = 500 ) :: message
     select case ( option )
     case ( "level_string_volume" )
@@ -538,12 +538,12 @@ contains
   !   Current value of the option to enable / disable stopping when an error is met.
   !
   ! Arguments:
-  !    option        see above
-  !    val            "    "
   !    log           log file, optional. If not provided, .true. will be returned
   !                  if "option" is set to true for one or more logs
+  !    option        see above
+  !    val            "    "
   !
-  subroutine cget_logical ( option , val, log )
+  subroutine cget_logical ( log, option , val )
     character ( len = * ) , intent(in)  :: option
     logical,                intent(out) :: val
     type(log_t), optional,  intent(in)  :: log
@@ -584,6 +584,8 @@ contains
   ! log_cget_integer --
   !   Returns the value of the given integer option.
   !   The "option" may be one of the following.
+  ! option = "infolevel"
+  !   Minimum level for writing messages
   ! option = "logfileunit"
   !   Current logical unit connected to the log provided as argument
   !
@@ -616,7 +618,8 @@ contains
   ! option = "level_string_subsection"
   !   Get the string used for subsection delimiter.
   !
-  subroutine cget_character ( option , val )
+  subroutine cget_character ( log , option , val )
+    type(log_t), optional , intent(in)  :: log       ! Not used - added for symmetry
     character ( len = * ) , intent(in)  :: option
     character ( len = * ) , intent(out) :: val
     character ( len = 500 ) :: message

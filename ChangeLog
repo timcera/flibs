@@ -1,3 +1,12 @@
+2012-12-23 arjenmarkus@users.sourceforge.net
+   * src/reporting/m_multilog.f90: added new module provided by Karin Nystrom
+   * tests/reporting/test_m_multilog.f90: test program for the new module provided by Karin Nystrom
+   * doc/reporting/m_multilog.man: describe the new module
+   * tests/reporting/makefile: include the test program for the m_multilog module
+   * src/computing/random_permutations.f90: added new module for random permutations
+   * tests/computing/test_random_permutations.f90: added test program for random permutations
+   * tests/computing/makefile: include the test program for random permutations
+
 2012-11-27 arjenmarkus@users.sourceforge.net
    * src/reporting/m_logger.f90: use the new flush statement instead of closing/opening the log file
    * tests/reporting/test_m_logger.f90: add a test that aborts the program, so we can ensure the log

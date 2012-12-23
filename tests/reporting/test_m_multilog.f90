@@ -31,8 +31,8 @@ program test_multilogging
   call add_log( log_warning )
   call add_log( log_error )
   !
-  ! Message with and without time stamp written to all four logs.
-  !
+  ! Message with and without time stamp written to all four logs. 
+  ! 
   write (*,*) 'Writing two messages to all logs'
   call log_configure( "timestamp" , .true. )
   call log_msg( 'First message, with timestamp', ALL )
@@ -104,7 +104,7 @@ program test_multilogging
   call log_msg( 'This message is written both on screen and on file' )
   !
   ! Shut down one of the logs and write that to info_log.
-  !
+  ! 
   write (*,*) 'Removing log_fine and writing message to log_info'
   call remove_log ( log_fine )
   call log_msg( "log_fine shut down, now this (log_info) is the most detailed log.", INFO)

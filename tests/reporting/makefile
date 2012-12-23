@@ -70,4 +70,4 @@ report$(OBJEXT)	:	../../src/reporting/report.f90
 clean:
 	$(RM) test_m_logger$(EXEEXT) test_m_expection$(EXEEXT) test_m_assertion$(EXEEXT) test_m_throwable$(EXEEXT) test_report$(EXEEXT) test_m_multilog$(EXEEXT)
 	$(RM) m_logger$(OBJEXT)      m_expection$(OBJEXT)      m_assertion$(OBJEXT)      m_throwable$(OBJEXT)      reporting$(OBJEXT)   m_multilog$(OBJEXT)
-	$(RM) m_logger$(MODEXT)      m_expection$(MODEXT)      m_assertion$(MODEXT)      m_throwable$(MODEXT)      reporting$(MODEXT)   m_multilog$(MODEXT)
+	$(RM) m_logger$(MODEXT)      m_expection$(MODEXT)      m_assertion$(MODEXT) 
