@@ -329,6 +329,12 @@ Save and exit editor.
   C:\temp&gt;spawn-fcgi.exe -f fortran_fcgi.exe -a 127.0.0.1 -p 9000
 </pre>
 
+<li>Restart the NGINX server, so that it can connect to the spawned process:
+<pre>
+  C:\temp&gt;start nginx -s stop
+  C:\temp&gt;start nginx
+</pre>
+
 <li>Check running process on the command-line window at C:\nginx-1.3.9
 <pre>
   C:\nginx-1.3.9&gt;tasklist
