@@ -358,206 +358,273 @@ Username &amp; Password fields, then click Login. Also click on the available li
 <h2>Section III. fortran_fcgi.F90 - A simple FastCGI application in Fortran</h2>
 
 <pre>
-!======================================================================
 !
-!    fortran_fcgi.F90 - A simple FastCGI application in Fortran
-!    Copyright (C) 2012 Ricolindo L Carino
+! Demonstration Fortran FastCGI program, to run with the nginx webserver
+! By Ricolindo.Carino@gmail.com and arjen.markus895@gmail.com
 !
-!    fortran_fcgi.F90 is free software: you can redistribute it and/or modify
-!    it under the terms of the GNU General Public License as published by
-!    the Free Software Foundation, either version 3 of the License, or
-!    (at your option) any later version.
+! Requires:
+!    - the FLIBS modules cgi_protocol and fcgi_protocol
+!    - the FastCGI library
+! See 'readme' for setup instructions of the compiler, nignx, and FastCGI library
 !
-!    fortran_fcgi.F90 is distributed in the hope that it will be useful,
-!    but WITHOUT ANY WARRANTY; without even the implied warranty of
-!    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!    GNU General Public License for more details.
+! See 'makefile' for compile and execute commands. In summary,
+!   To compile test_fcgi.f90      : make
+!   To execute as FastCGI process : spawn-fcgi -a 127.0.0.1 -p 9000 ./test_fcgi
+!      The "-a 127.0.0.1" and "-p 9000" options to spawn-fcgi must match the
+!          "fastcgi_pass   127.0.0.1:9000;" in nginx.conf
 !
-!    You should have received a copy of the GNU General Public License
-!    along with this program (see the file COPYING.TXT). If not, see
-!    &lt;http://www.gnu.org/licenses/&gt;.
+! Notes:
+!    1. Example 2 is from FLIBS test_cgi.f90
+!    2. Customize routine respond() for your own application
 !
-!    Send inquiries about fortran_fcgi.F90 to:
-!      Ricolindo L Carino
-!      E-mail: Ricolindo.Carino@gmail.com
-!      Address: 600 Cruise St., Starkville, MS 39759, U.S.A.
-!
-!======================================================================
 
-! Under GNU/Linux
-! Compile as :
-! $ gfortran -o fortran_fcgi fortran_fcgi.F90 -lfcgi -Wl,--rpath -Wl,/usr/local/lib
-! Execute as:
-! $ spawn-fcgi -a 127.0.0.1 -p 9000 ./fortran_fcgi
+program test_fcgi
 
-! Under MS Windows (assuming file is in C:\temp)
-! Compile as:
-! C:\temp&gt;gfortran -o fortran_fcgi fortran_fcgi.F90 -lfcgi
-! Execute as:
-! C:\temp&gt;spawn-fcgi.exe -a 127.0.0.1 -p 9000 -f fortran_fcgi.exe
-
-program fortran_fcgi
-
-    use ISO_C_BINDING
+    use fcgi_protocol
 
     implicit none
 
-    interface
+    type(DICT_STRUCT), pointer  :: dict =&gt; null() ! Initialisation is important!
+    logical                     :: stopped = .false. ! set to true in respond() to terminate program
+    integer                     :: unitNo ! unit number  for a scratch file
 
-        ! The function to accept a request from the webserver
-        function FCGI_Accept () bind(C, NAME='FCGI_Accept')
-            use ISO_C_BINDING
-            implicit none
-            integer(C_INT) :: FCGI_Accept
-        end function FCGI_Accept
+    ! open scratch file
+    open(newunit=unitNo, status='scratch')
+    ! comment previous line AND uncomment next line for debugging;
+    !open(newunit=unitNo, file='fcgiout', status='unknown') ! file 'fcgiout' will show %REMARKS%
 
-        ! The function to retrieve POSTed data
-        function FCGI_getchar () bind(C, NAME='FCGI_getchar')
-            use ISO_C_BINDING
-            implicit none
-            character(C_CHAR) :: FCGI_getchar
-        end function FCGI_getchar
+    ! wait for environment variables from webserver
+    do while (fcgip_accept_environment_variables() &gt;= 0)
 
-        ! The function to write back to the webserver
-        function FCGI_puts (s) bind(C, NAME='FCGI_puts')
-            use ISO_C_BINDING
-            implicit none
-            integer(C_INT) :: FCGI_puts
-            character(C_CHAR), dimension(*) :: s
-        end function FCGI_puts
+        ! build dictionary from GET or POST data, environment variables
+        call fcgip_make_dictionary( dict, unitNo )
 
-    end interface
+        ! give dictionary to the user supplied routine
+        ! routine writes the response to unitNo
+        ! routine sets stopped to true to terminate program
+        call respond(dict, unitNo, stopped)
 
-    character(len=3), parameter :: AFORMAT = '(a)'
-    character(len=2), parameter :: CRLF = achar(13)//achar(10)
-    character(len=1), parameter :: NUL = achar(0)
+        ! copy file unitNo to the webserver
+        call fcgip_put_file( unitNo, 'text/html' )
 
-    ! For reading POSTed data
-    character(len=1) :: ch
-    character(len=10) :: contentLength
-    character(len=80) :: script
-    character(len=2048) :: content
+        ! terminate?
+        if (stopped) exit
 
-    integer :: device, i, nChars, nHits
+    end do !  while (fcgip_accept_environment_variables() &gt;= 0)
 
-    ! Counter for requests
-    nHits = 0
+    ! before termination, it is good practice to close files that are open
+    close(unitNo)
 
-    ! open a 'scratch' response file
-    device = max(10, getpid()) ! unit number for response file
-    open(unit=device, form='formatted', status='scratch')
-
-    do while (FCGI_Accept() &gt;= 0)
-
-        ! how many requests do far?
-        nHits = nHits + 1
-
-        ! tell the webserver to expect text/html
-        nChars = FCGI_puts ('Content-type: text/html'//CRLF//NUL)
-
-        ! the requested script
-        call get_environment_variable('DOCUMENT_URI', script)
-
-        ! request method was GET ?
-        call get_environment_variable('QUERY_STRING', content)
-        nChars = len_trim(content)
-        if (nChars==0) then
-            ! request method was POST ?
-            call get_environment_variable('CONTENT_LENGTH', contentLength)
-            nChars = len_trim(contentLength)
-            content = ' '
-            if (nChars&gt;0) then
-                read(contentLength,*) nChars
-                do i=1,nChars
-                    ch = FCGI_getchar()
-                    content(i:i) = ch
-                end do
-            else  ! not GET nor POST
-                if (index(script, 'shutdown.cgi')&gt;0) then
-                    nChars = FCGI_puts ('&lt;h1&gt;Bye!&lt;/h1&gt;'//NUL)
-                    exit
-                end if
-            end if
-        end if
-
-        ! for other environment variables besides QUERY_STRING and CONTENT_LENGTH
-        ! see /usr/local/nginx/conf/fastcgi_params
-
-        ! start writing at the beginning of the response file
-        rewind (device)
-
-        ! write response to the query to device
-        call respond(trim(script), trim(content), device)
-
-        ! flush all writes to device
-        flush(device)
-
-        ! copy the response file line by line to the webserver
-        rewind(device)
-        do while (.true.)
-            read(device, AFORMAT, iostat=i) content
-            if (i < 0) exit ! no more lines
-            nChars = FCGI_puts (trim(content)//NUL) ! FCGI expects NULL terminated strings
-        end do
-
-    end do ! while (FCGI_Accept() &gt;= 0)
-    close(device)
+    ! webserver will return an error since this process will now terminate
+    unitNo = fcgip_accept_environment_variables()
 
 
 contains
 
 
-    subroutine respond (script, query, lun)
-        character(len=*), intent (in) :: script, query
-        integer, intent (in) :: lun
+    subroutine respond ( dict, unitNo, stopped )
+
+        type(DICT_STRUCT), pointer        :: dict
+        integer, intent(in)               :: unitNo
+        logical, intent(out)              :: stopped
+
+        ! the following are defined in fcgi_protocol
+        !character(len=3), parameter :: AFORMAT = '(a)'
+        !character(len=2), parameter :: CRLF = achar(13)//achar(10)
+        !character(len=1), parameter :: NUL = achar(0)
+
+        ! the script name
+        character(len=80)  :: scriptName
+
+        ! variables for Example 1
+        character(len=80)  :: actionButton, username, password
+
+        ! variables for Example 2 (from test_cgi.f90 of FLIBS)
+        integer                           :: steps
+        real                              :: xmin
+        real                              :: xmax
+        character(len=20)                 :: fnName
+        character(len=20)                 :: output
+
+        real, dimension(:), allocatable   :: x
+        real, dimension(:), allocatable   :: y
+
+        integer                           :: i
+        logical                           :: okInputs
 
         ! start of response
-        write(lun,AFORMAT) &
-            '&lt;html&gt;', &
-            '&lt;head&gt;&lt;title&gt;Fortran FastCGI&lt;/title&gt;&lt;/head&gt;', &
-            '&lt;body&gt;', &
+        ! lines starting with %REMARK% are for debugging &amp; will not be copied to webserver
+        write(unitNo, AFORMAT) &amp;
+            '%REMARK% respond() started ...', &amp;
+            '&lt;html&gt;', &amp;
+            '&lt;head&gt;&lt;title&gt;Fortran FastCGI&lt;/title&gt;&lt;/head&gt;', &amp;
+            '&lt;body&gt;', &amp;
             '&lt;h1&gt;Fortran FastCGI&lt;/h1&gt;'
 
-        ! parse the query and respond accordingly
-        write(lun,AFORMAT) &
-            'You said :&lt;br&gt;', &
-            '&lt;pre&gt;', &
-            script, &
-            '&lt;/pre&gt; and &lt;pre&gt;', &
-            query, &
-            '&lt;/pre&gt;'
+        ! retrieve script name (key=DOCUMENT_URI) from dictionary
+        call cgi_get( dict, "DOCUMENT_URI", scriptName )
 
-        ! some code test the POST and GET
-        write(lun,AFORMAT) &
-            "&lt;hr&gt;", &
-            "&lt;b&gt;For members&lt;/b&gt;&lt;br&gt;&lt;br&gt;", &
-            "&lt;form action='login.cgi' method='post'&gt;", &
-            "    Username:&lt;br&gt; &lt;input type='text' name='username' value=''&gt;&lt;br&gt;&lt;br&gt;", &
-            "    Password:&lt;br&gt; &lt;input type='password' name='password' value=''&gt;&lt;br&gt;&lt;br&gt;", &
-            "    &lt;input type='submit' value='Login'&gt;", &
-            "&lt;/form&gt;", &
-            "&lt;hr&gt;", &
-            "&lt;b&gt;For guests&lt;/b&gt;", &
-            "&lt;ul&gt;", &
-            "&lt;li&gt;&lt;a href='/calculate.cgi?F=function1&A1=arg1'&gt;function1(arg1)&lt;/a&gt;&lt;/li&gt;", &
-            "&lt;li&gt;&lt;a href='/calculate.cgi?F=function1&A1=arg2'&gt;function1(arg2)&lt;/a&gt;&lt;/li&gt;", &
-            "&lt;li&gt;&lt;a href='/calculate.cgi?F=function2&A1=arg3'&gt;function2(arg3)&lt;/a&gt;&lt;/li&gt;", &
-            "&lt;/ul&gt;", &
-            "&lt;hr&gt;", &
-            "&lt;a href='register.cgi'&gt;&lt;b&gt;Register&lt;/b&gt;&lt;/a&gt; as a member, or ", &
-            "&lt;a href='shutdown.cgi'&gt;&lt;b&gt;Stop&lt;/b&gt;&lt;/a&gt; this demo."
+        if ( trim(scriptName) /= '/' ) &amp; ! a script was requested
+            write(unitNo,AFORMAT) 'Script is : '//trim(scriptName)
 
-        ! end of document
-        write(lun,AFORMAT) '&lt;/body&gt;', '&lt;/html&gt;'
+        select case (trim(scriptName))
+
+            case ('/login') ! See form in Example 1 below
+                ! keys are: action, username, password
+
+                call cgi_get( dict, "action", actionButton)
+                write(unitNo,AFORMAT) '&lt;br&gt;Action is : '//trim(actionButton)
+
+                call cgi_get( dict, "username", username)
+                write(unitNo,AFORMAT) '&lt;br&gt;Username is : '//trim(username)
+
+                call cgi_get( dict, "password", password)
+                write(unitNo,AFORMAT) '&lt;br&gt;Password is : '//trim(password)
+
+
+            case ('/calculate') ! See form in Example 2 below
+                ! keys are: function, minimum, maximum, steps, output
+
+                fnName  = '?'
+                xmin     = 0.0
+                xmax     = 1.0
+                steps    = 10
+                call cgi_get( dict, "function", fnName  )
+                call cgi_get( dict, "minimum",  xmin     )
+                call cgi_get( dict, "maximum",  xmax     )
+                call cgi_get( dict, "steps",    steps    )
+                call cgi_get( dict, "output",   output   )
+
+                write(unitNo, AFORMAT) '%REMARK% function='//trim(fnName )
+                write(unitNo, '(a,f8.3)') '%REMARK% minimum=', xmin
+                write(unitNo, '(a,f8.3)') '%REMARK% maximum=', xmax
+                write(unitNo, '(a,i4)') '%REMARK% steps=', steps
+                write(unitNo, AFORMAT) '%REMARK% output='//trim(output)
+
+                okInputs = .true.
+                if ( trim(fnName ) == '?' ) then
+                    write(unitNo,AFORMAT) '&lt;br&gt;No function selected'
+                    okInputs = .false.
+                endif
+                if ( abs(xmin) &gt; 100.0 .or. abs(xmax) &gt; 100.0 ) then
+                    write(unitNo,AFORMAT) '&lt;br&gt;Minimum and maximum should be in the range -100 to 100'
+                    okInputs = .false.
+                endif
+                if ( trim(fnName ) == 'J0' ) then
+                    write(unitNo,AFORMAT) '&lt;br&gt;Sorry, the Bessel function is not yet implemented'
+                    okInputs = .false.
+                endif
+
+                if (okInputs) then
+                    !
+                    ! Actual processing
+                    !
+                    allocate( x(0:steps), y(0:steps) )
+
+                    x = (/ (xmin + i*(xmax-xmin)/steps, i=0,steps) /)
+                    if ( trim(fnName ) == 'sin' ) then
+                        y = sin(x)
+                    endif
+                    if ( trim(fnName ) == 'cos' ) then
+                        y = cos(x)
+                    endif
+
+                    !
+                    ! Write the HTML output or the CSV file
+                    !
+                    if ( trim(output) == 'html' ) then
+                        write( unitNo,AFORMAT ) &amp;
+                            '&lt;table&gt;', &amp;
+                            '&lt;tr&gt;&lt;td&gt;X&lt;/td&gt;&lt;td&gt;'//trim(fnName)//'(X)&lt;/td&gt;&lt;/tr&gt;'
+                        do i = 0,steps
+                            write( unitNo, '(a,f12.6,a,f12.6,a)' ) &amp;
+                                '&lt;tr&gt;&lt;td&gt;', x(i), '&lt;/td&gt;&lt;td&gt;', y(i), '&lt;/td&gt;&lt;/tr&gt;'
+                        enddo
+                        write( unitNo,AFORMAT ) &amp;
+                            '&lt;/table&gt;'
+                    else
+                        write( unitNo,AFORMAT ) &amp;
+                            '&lt;pre&gt;', '      X     ,      '//trim(fnName)//'(X)'
+                        do i = 0,steps
+                            write( unitNo, '(f12.6,a,f12.6)' ) x(i), ',', y(i)
+                        enddo
+                        write( unitNo,AFORMAT ) &amp;
+                            '&lt;/pre&gt;'
+                    endif
+
+                end if
+
+
+            case ('/shutdown') ! to terminate program
+                write(unitNo,AFORMAT) '&lt;br&gt;Program has terminated.&lt;br&gt;&lt;a href="/"&gt;Verify&lt;/a&gt;'
+                stopped = .true.
+
+        end select
+
+        ! generate page for next action
+        if (.not. stopped) then
+
+            write(unitNo,AFORMAT) &amp;
+                "&lt;hr&gt;", &amp;
+                "&lt;b&gt;Example 1: POST method&lt;/b&gt;", &amp;
+                "&lt;table&gt;", &amp;
+                "&lt;form action='login' method='post'&gt;", &amp;
+                "&lt;tr&gt;&lt;td&gt;Username:&lt;/td&gt;&lt;td&gt;Password:&lt;/td&gt;&lt;td&gt;&amp;nbsp;Action:&lt;/td&gt;&lt;/tr&gt;", &amp;
+                "&lt;tr&gt;&lt;td&gt;&lt;input type='text' name='username' value=''&gt;&lt;/td&gt;", &amp;
+                "    &lt;td&gt;&lt;input type='password' name='password' value=''&gt;&lt;/td&gt;", &amp;
+                "    &lt;td&gt;&amp;nbsp;&lt;input type='submit' name='action' value='Login'&gt;", &amp;
+                "        or &lt;input type='submit' name='action' value='Register'&gt;&lt;/td&gt;&lt;/tr&gt;", &amp;
+                "&lt;/form&gt;", &amp;
+                "&lt;/table&gt;"
+
+            write(unitNo,AFORMAT) &amp;
+                "&lt;hr&gt;", &amp;
+                "&lt;b&gt;Example 2: GET method&lt;/b&gt;", &amp;
+                "&lt;form action='calculate' method='get'&gt;", &amp;
+                "&lt;p&gt;", &amp;
+                "Function: f(x) =", &amp;
+                "&lt;select name='function'&gt;", &amp;
+                "    &lt;option value='sin' selected&gt;sin(x)&lt;/option&gt;", &amp;
+                "    &lt;option value='cos'&gt;cos(x)&lt;/option&gt;", &amp;
+                "    &lt;option value='J0'&gt;J0(x)&lt;/option&gt;", &amp;
+                "&lt;/select&gt;", &amp;
+                "&lt;br&gt;", &amp;
+                "Domain:", &amp;
+                "&lt;table&gt;", &amp;
+                "&lt;tr&gt;", &amp;
+                "&lt;td&gt;Minimum = &lt;/td&gt;&lt;td&gt;&lt;input type='text' name='minimum' value='0.0'&gt;&lt;/td&gt;", &amp;
+                "&lt;/tr&gt;", &amp;
+                "&lt;tr&gt;", &amp;
+                "&lt;td&gt;Maximum = &lt;/td&gt;&lt;td&gt;&lt;input type='text' name='maximum' value='1.0'&gt;&lt;/td&gt;", &amp;
+                "&lt;/tr&gt;", &amp;
+                "&lt;tr&gt;", &amp;
+                "&lt;td&gt;Steps = &lt;/td&gt;&lt;td&gt;&lt;input type='text' name='steps' value='10'&gt;&lt;/td&gt;", &amp;
+                "&lt;/tr&gt;", &amp;
+                "&lt;/table&gt;", &amp;
+                "&lt;p&gt;", &amp;
+                "Type of output:", &amp;
+                "&lt;input type='radio' name='output' value='html', checked&gt;HTML&lt;/input&gt;", &amp;
+                "&lt;input type='radio' name='output' value='csv'&gt;CSV&lt;/input&gt;", &amp;
+                "&lt;p&gt;", &amp;
+                "&lt;input type='submit' value='Calculate'&gt;", &amp;
+                "&lt;/form&gt;"
+
+            write(unitNo,AFORMAT) &amp;
+                "&lt;hr&gt;", &amp;
+                "&lt;b&gt;Example 3: Hyperlink&lt;/b&gt;&lt;br&gt;", &amp;
+                "&amp;nbsp;&lt;a href='shutdown'&gt;&lt;b&gt;Stop&lt;/b&gt;&lt;/a&gt; the Fortran FastCGI program."
+
+        end if
+
+        ! end of response
+        write(unitNo,AFORMAT) '&lt;/body&gt;', '&lt;/html&gt;', &amp;
+            '%REMARK% respond() completed ...'
 
         return
 
     end subroutine respond
 
-
-end program fortran_fcgi
-
-!======================================================================
+end program test_fcgi
 </pre>
 
 </body>
