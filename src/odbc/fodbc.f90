@@ -1081,6 +1081,8 @@ subroutine odbc_insert( db, tablename, columns )
     integer                                   :: rc
     integer, save                             :: indicator
 
+    character (len=10+40*size(columns))       :: string
+
     interface
         subroutine odbc_errmsg_c( handle, errmsg )
             integer, dimension(*) :: handle
@@ -1137,7 +1139,14 @@ subroutine odbc_insert( db, tablename, columns )
     !
     ! Prepare the insert statement for this table
     !
-    write( command, '(100a)' ) 'insert into ', trim(tablename), ' values(', &
+    i = 0
+    string = '('//trim(columns(1)%name)
+    do i = 2,size(columns)
+       string = trim(string)//','//trim(columns(i)%name)
+    end do
+    string = trim(string) //') '
+
+    write( command, '(100a)' ) 'insert into ', trim(tablename),trim(string), ' values(', &
        ('?,', i = 1,size(columns)-1), '?);'
 
     call stringtoc( command )
