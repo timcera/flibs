@@ -261,9 +261,9 @@ integer function dict_hashkey( key )
     dict_hashkey = 0
 
     do i = 1,len(key)
-        dict_hashkey = mod( multiplier * dict_hashkey + ichar(key(i:i)), hash_size )
+        dict_hashkey = modulo( multiplier * dict_hashkey + ichar(key(i:i)), hash_size )
     enddo
 
-    dict_hashkey = 1 + mod( dict_hashkey-1, hash_size )
+    dict_hashkey = 1 + modulo( dict_hashkey-1, hash_size )
 end function dict_hashkey
 
