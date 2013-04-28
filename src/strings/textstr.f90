@@ -157,9 +157,10 @@ subroutine txt_from_string( text, string )
     do i = 1,nosegm-1
         text%text(i) = string(1+(i-1)*segment_length:i*segment_length)
     enddo
-    text%text(nosegm) = string(1+(nosegm-1)*segment_length:)
+    if ( nosegm > 0 ) then
+        text%text(nosegm) = string(1+(nosegm-1)*segment_length:)
+    endif
     text%length       = len(string)
-
 end subroutine txt_from_string
 
 ! txt_to_string --
@@ -183,8 +184,11 @@ subroutine txt_to_string( text, string )
     do i = 1,nosegm-1
         string(1+(i-1)*segment_length:i*segment_length) = text%text(i)
     enddo
-    string(1+(nosegm-1)*segment_length:) = text%text(nosegm)
-
+    if ( nosegm > 0 ) then
+        string(1+(nosegm-1)*segment_length:) = text%text(nosegm)
+    else
+        string = ' '
+    endif
 end subroutine txt_to_string
 
 ! txt_read_from_file --
