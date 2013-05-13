@@ -1,6 +1,6 @@
 
 <html><head>
-<title>flibs/m_vfile - flibs</title>
+<title>flibs/m_exception - flibs</title>
 <style type="text/css"><!--
     HTML {
 	background: 	#FFFFFF;
@@ -96,12 +96,12 @@
    -->
 <! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com   -- Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net
    -->
-<! -- CVS: $Id$ flibs/m_vfile.n
+<! -- CVS: $Id$ flibs/m_exception.n
    -->
 <body><div class="doctools">
-<h1 class="title">flibs/m_vfile(n) 1.0  &quot;flibs&quot;</h1>
+<h1 class="title">flibs/m_exception(n) 1.0  &quot;flibs&quot;</h1>
 <div id="name" class="section"><h2><a name="name">Name</a></h2>
-<p>flibs/m_vfile - Manage exceptions</p>
+<p>flibs/m_exception - Manage exceptions</p>
 </div>
 <div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
 <ul class="toc">
@@ -360,17 +360,15 @@ all counters.</p></dd>
 <dd></dd>
 </dl>
 <p>Set the unit number onto which the messages are output.
-If the unitnumber is negative or 0, the messages are written
-to the standard output (unit *).
-Note : a unitnumber equals to 6 is generally the standard output, 
-but this may depend on the fortran compiler.</p></dd>
+If the unitnumber is 0, the messages are written
+to the standard output (unit *).</p></dd>
 <dt><a name="11"><b class="method">exception_getlogunit</b> ( ) result ( logunit )</a></dt>
 <dd><dl class="arguments">
 <dt><b class="type">integer ::</b> <i class="arg">logunit</i></dt>
 <dd></dd>
 </dl>
-<p>Returns the positive unit number onto which the messages are output,
-if enabled or a negative integer if the feature is disabled.</p></dd>
+<p>Returns the unit number onto which the messages are output,
+if enabled or 0 if the feature is disabled.</p></dd>
 <dt><a name="12"><b class="method">exception_logactive</b> ( <i class="arg">bool</i> )</a></dt>
 <dd><dl class="arguments">
 <dt><b class="type">logical, intent(in) ::</b> <i class="arg">bool</i></dt>
