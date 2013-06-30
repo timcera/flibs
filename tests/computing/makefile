@@ -17,6 +17,7 @@ PROGRAMS	=	test_diff$(EXEEXT) \
 		test_f0withIEEE$(EXEEXT) \
 		test_random_permutation$(EXEEXT) \
 		test_enum_space$(EXEEXT) \
+		test_grid_traverse$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -147,6 +148,16 @@ test_enum_space$(OBJEXT):	test_enum_space.f90 enum_space$(OBJEXT)
 
 test_enum_space$(EXEEXT):	test_enum_space$(OBJEXT) enum_space$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_enum_space$(OBJEXT) enum_space$(OBJEXT)
+
+
+traverse_grid$(OBJEXT):	../../src/computing/traverse_grid.f90 select_precision$(OBJEXT)
+	$(FC) $(FFLAGS) ../../src/computing/traverse_grid.f90
+
+test_traverse_grid$(OBJEXT):	test_traverse_grid.f90 traverse_grid$(OBJEXT) select_precision$(OBJEXT)
+	$(FC) $(FFLAGS) test_traverse_grid.f90
+
+test_traverse_grid$(EXEEXT):	test_traverse_grid$(OBJEXT) traverse_grid$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_traverse_grid$(OBJEXT) traverse_grid$(OBJEXT)
 
 
 clean:	
