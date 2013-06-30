@@ -243,7 +243,7 @@ proc setupWindow {} {
     grid rowconfigure    $left  0 -weight 1
     grid columnconfigure $left  1 -weight 1
     grid rowconfigure    $right 0 -weight 1
-    grid columnconfigure $right 1 -weight 1
+    grid columnconfigure $right 0 -weight 1
 
     grid rowconfigure    .      0 -weight 1
     grid columnconfigure .      1 -weight 1

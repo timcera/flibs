@@ -40,6 +40,7 @@ MODULE myfortran_binding
       USE ISO_C_BINDING
       IMPLICIT NONE
       LOGICAL(C_BOOL) :: c_shutdown
+      !gcc$ attributes stdcall:: c_shutdown
     END FUNCTION c_shutdown
 
     FUNCTION c_init (argc, argv, groups) &
@@ -50,6 +51,7 @@ MODULE myfortran_binding
       INTEGER(C_INT), VALUE :: argc
       TYPE(C_PTR), DIMENSION(*) :: argv
       TYPE(C_PTR), DIMENSION(*) :: groups
+      !gcc$ attributes stdcall:: c_init
     END FUNCTION c_init
 
     FUNCTION c_error (mysql) &
@@ -78,6 +80,8 @@ MODULE myfortran_binding
       IMPLICIT NONE
       TYPE(C_PTR) :: c_init_mysql
       TYPE(C_PTR), VALUE :: mysql
+      !gcc$ attributes stdcall:: c_init_mysql
+      !dec$ attributes stdcall:: mysql_init
     END FUNCTION c_init_mysql
 
     SUBROUTINE c_close (mysql) &
@@ -85,6 +89,8 @@ MODULE myfortran_binding
       USE ISO_C_BINDING
       IMPLICIT NONE
       TYPE(C_PTR), VALUE :: mysql
+      !gcc$ attributes stdcall:: c_close
+      !dec$ attributes stdcall:: mysql_close
     END SUBROUTINE c_close
 
     FUNCTION c_query (mysql, sql, len) &

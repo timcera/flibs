@@ -3,6 +3,7 @@
 
       $Id$
 */
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -98,7 +99,7 @@
 static SQLHENV environment = (SQLHENV) NULL;
 static int     count_dbs   = 0;
 
-static InitEnv() {
+static void InitEnv() {
     SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &environment );
     SQLSetEnvAttr( environment, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
 }
@@ -122,14 +123,14 @@ int FTNCALL odbc_connect_c_(
 
     SQLAllocHandle( SQL_HANDLE_DBC, environment, db );
 
-    rc = SQLDriverConnect( *db, NULL, connectc, SQL_NTS, NULL, 0, NULL,
+    rc = SQLDriverConnect( *db, NULL, (SQLCHAR *)connectc, SQL_NTS, NULL, 0, NULL,
              SQL_DRIVER_NOPROMPT );
 
     if ( SQL_SUCCEEDED(rc) ) {
         count_dbs ++;
         return 0;
     } else {
-        return rc ;
+        return (int) rc ;
     }
 }
 
@@ -167,11 +168,11 @@ int FTNCALL odbc_do_c_(
        int      len_errmsg
       )
 {
-    int   rc  ;
-    SQLHSTMT stmt;
+    SQLRETURN rc  ;
+    SQLHSTMT  stmt;
 
     SQLAllocHandle( SQL_HANDLE_STMT, *db, &stmt );
-    rc = SQLExecDirect(stmt, command, SQL_NTS );
+    rc = SQLExecDirect(stmt, (SQLCHAR *)command, SQL_NTS );
 
     if ( SQL_SUCCEEDED(rc) ) {
         count_dbs ++;
@@ -179,7 +180,7 @@ int FTNCALL odbc_do_c_(
         return 0;
     } else {
         SQLFreeHandle( SQL_HANDLE_STMT, stmt ) ;
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -188,7 +189,7 @@ void FTNCALL odbc_step_c_(
        int      *completion
       )
 {
-    int   rc ;
+    SQLRETURN rc ;
 
     rc = SQLFetch( *stmt ) ;
 
@@ -208,7 +209,7 @@ void FTNCALL odbc_exec_c_(
        int      *code
       )
 {
-    int rc ;
+    SQLRETURN rc ;
 
     rc = SQLExecute( *stmt ) ;
 
@@ -227,7 +228,7 @@ void FTNCALL odbc_finalize_c_(
        SQLHSTMT *stmt
       )
 {
-    int   rc ;
+    SQLRETURN rc ;
 
     rc = SQLFreeHandle( SQL_HANDLE_STMT, *stmt );
 
@@ -260,13 +261,13 @@ int FTNCALL odbc_get_data_source_c_(
 
     rc = SQLDataSources( environment,
              ((*direction)==0? SQL_FETCH_FIRST : SQL_FETCH_NEXT),
-             dsnname, len_dsnname-1, &len_dsn,
-             description, len_description-1, &len_desc);
+             (SQLCHAR *)dsnname, len_dsnname-1, &len_dsn,
+             (SQLCHAR *)description, len_description-1, &len_desc);
 
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -296,13 +297,13 @@ int FTNCALL odbc_get_driver_c_(
 
     rc = SQLDrivers( environment,
              ((*direction)==0? SQL_FETCH_FIRST : SQL_FETCH_NEXT),
-             driver, len_driver-1, &len_drv,
-             description, len_description-1, &len_desc);
+             (SQLCHAR *)driver, len_driver-1, &len_drv,
+             (SQLCHAR *)description, len_description-1, &len_desc);
 
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -315,9 +316,9 @@ int FTNCALL odbc_get_table_name_c_(
        int       len_description
       )
 {
-    SQLRETURN   rc;
-    SQLSMALLINT ncols;
-    int         i;
+    SQLRETURN   rc    ;
+    SQLSMALLINT ncols ;
+    SQLSMALLINT i     ;
 
     if ( environment == (SQLHENV) NULL ) {
         InitEnv();
@@ -342,7 +343,7 @@ int FTNCALL odbc_get_table_name_c_(
 
         for ( i = 0; i < ncols && i < (*nstrings); i ++ ) {
             SQLRETURN  ret;
-            SQLINTEGER indicator;
+            SQLLEN     indicator;
             ret = SQLGetData( *stmt, i+1, SQL_C_CHAR,
                       description+i*len_description, len_description,
                       &indicator );
@@ -354,7 +355,7 @@ int FTNCALL odbc_get_table_name_c_(
         }
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -389,19 +390,19 @@ int FTNCALL odbc_get_diagnostics_c_(
 #endif
       )
 {
-    int rc ;
-    int handle_type;
-    int native;
-    SQLSMALLINT dummy;
+    SQLRETURN   rc          ;
+    SQLSMALLINT handle_type ;
+    SQLINTEGER  native      ;
+    SQLSMALLINT dummy       ;
 
     handle_type = SQL_HANDLE_DBC;
     if ( *type == 1 ) {
         handle_type = SQL_HANDLE_STMT;
     }
 
-    rc = SQLGetDiagRec( handle_type, *handle, *idx, state, &native,
-             text, len_text, &dummy );
-    return rc;
+    rc = SQLGetDiagRec( handle_type, *handle, *idx, (SQLCHAR *)state, &native,
+             (SQLCHAR *)text, len_text, &dummy );
+    return (int) rc;
 }
 
 int FTNCALL odbc_prepare_c_(
@@ -416,12 +417,12 @@ int FTNCALL odbc_prepare_c_(
 #endif
       )
 {
-    int   rc   ;
+    SQLRETURN rc ;
 
     SQLAllocHandle( SQL_HANDLE_STMT, *db, stmt );
-    rc = SQLPrepare( *stmt, command, SQL_NTS ) ;
+    rc = SQLPrepare( *stmt, (SQLCHAR *)command, SQL_NTS ) ;
 
-    return rc ;
+    return (int) rc ;
 }
 
 void FTNCALL odbc_column_count_c_(
@@ -451,14 +452,14 @@ void FTNCALL odbc_column_name_type_c_(
        int       len_type
       )
 {
-    int          rc            ;
+    SQLRETURN    rc            ;
     SQLSMALLINT  actual_length ;
     SQLSMALLINT  data_type     ;
     SQLULEN      column_size   ;
     SQLSMALLINT  decimals      ;
     SQLSMALLINT  nullable      ;
 
-    rc = SQLDescribeCol( *stmt, *colidx, name, (SQLSMALLINT)len_name, &actual_length,
+    rc = SQLDescribeCol( *stmt, *colidx, (SQLCHAR *)name, (SQLSMALLINT)len_name, &actual_length,
              &data_type, &column_size, &decimals, &nullable ) ;
 
     name[len_name-1] = '\0' ;
@@ -507,14 +508,16 @@ int FTNCALL odbc_bind_int_c_(
        int      *indicator
       )
 {
-   int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-   rc = SQLBindCol(*stmt, *colidx, SQL_INTEGER, value, 0, indicator ) ;
-   if ( SQL_SUCCEEDED(rc) ) {
-       return 0;
-   } else {
-       return rc;
-   }
+    rc = SQLBindCol(*stmt, *colidx, SQL_INTEGER, value, 0, &ind ) ;
+    *indicator = (int) ind ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return (int) rc;
+    }
 }
 
 int FTNCALL odbc_bind_double_c_(
@@ -524,13 +527,15 @@ int FTNCALL odbc_bind_double_c_(
        int      *indicator
       )
 {
-    int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-    rc = SQLBindCol(*stmt, *colidx, SQL_DOUBLE, value, 0, indicator ) ;
+    rc = SQLBindCol(*stmt, *colidx, SQL_DOUBLE, value, 0, &ind ) ;
+    *indicator = (int) ind ;
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -547,14 +552,15 @@ int FTNCALL odbc_bind_text_c_(
 #endif
       )
 {
-    int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-    rc = SQLBindCol(*stmt, *colidx, SQL_CHAR, text, len_text,
-            indicator ) ;
+    rc = SQLBindCol(*stmt, *colidx, SQL_CHAR, text, len_text, &ind ) ;
+    *indicator = (int) ind ;
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -567,20 +573,16 @@ int FTNCALL odbc_bind_blob_c_(
        int      *blob_type
       )
 {
-    int   rc           ;
-    int   i            ;
-    char  sqlstate[10] ;
-    char  msgtext[100] ;
-    int   msglength    ;
-    int   native_error ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-    rc = SQLBindCol(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int),
-             indicator ) ;
+    rc = SQLBindCol(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int), &ind ) ;
+    *indicator = (int) ind ;
 
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -594,14 +596,16 @@ int FTNCALL odbc_bind_param_int_c_(
        int      *indicator
       )
 {
-   int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_INTEGER, SQL_INTEGER, 0, 0, value, 0, indicator ) ;
-   if ( SQL_SUCCEEDED(rc) ) {
-       return 0;
-   } else {
-       return rc;
-   }
+    rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_INTEGER, SQL_INTEGER, 0, 0, value, 0, &ind ) ;
+    *indicator = (int) ind ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return (int) rc;
+    }
 }
 
 int FTNCALL odbc_bind_param_double_c_(
@@ -611,14 +615,16 @@ int FTNCALL odbc_bind_param_double_c_(
        int      *indicator
       )
 {
-   int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_DOUBLE, SQL_DOUBLE, 0, 0, value, 0, indicator ) ;
-   if ( SQL_SUCCEEDED(rc) ) {
-       return 0;
-   } else {
-       return rc;
-   }
+    rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_DOUBLE, SQL_DOUBLE, 0, 0, value, 0, &ind ) ;
+    *indicator = (int) ind ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return (int) rc;
+    }
 }
 
 int FTNCALL odbc_bind_param_text_c_(
@@ -634,15 +640,17 @@ int FTNCALL odbc_bind_param_text_c_(
 #endif
       )
 {
-   int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    act ;
 
-   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
-            strlen(text)+1, 0, text, 0, actual_length ) ;
-   if ( SQL_SUCCEEDED(rc) ) {
-       return 0;
-   } else {
-       return rc;
-   }
+    rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
+             strlen(text)+1, 0, text, 0, &act ) ;
+    *actual_length = (int) act ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return (int) rc;
+    }
 }
 
 int FTNCALL odbc_bind_param_blob_c_(
@@ -653,15 +661,17 @@ int FTNCALL odbc_bind_param_blob_c_(
        int      *actual_length
       )
 {
-   int   rc   ;
+    SQLRETURN rc  ;
+    SQLLEN    act ;
 
-   rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY,
-            (*size_blob)*sizeof(int), 0, blob, 0, actual_length ) ;
-   if ( SQL_SUCCEEDED(rc) ) {
-       return 0;
-   } else {
-       return rc;
-   }
+    rc = SQLBindParameter(*stmt, *colidx, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY,
+             (*size_blob)*sizeof(int), 0, blob, 0, &act ) ;
+    *actual_length = (int) act ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return (int) rc;
+    }
 }
 
 int FTNCALL odbc_column_int_c_(
@@ -671,14 +681,16 @@ int FTNCALL odbc_column_int_c_(
        int      *indicator
       )
 {
-   int rc;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-   rc = SQLGetData(*stmt, *colidx, SQL_INTEGER, value, 0, indicator ) ;
-   if ( SQL_SUCCEEDED(rc) ) {
-       return 0;
-   } else {
-       return rc;
-   }
+    rc = SQLGetData(*stmt, *colidx, SQL_INTEGER, value, 0, &ind ) ;
+    *indicator = (int) ind ;
+    if ( SQL_SUCCEEDED(rc) ) {
+        return 0;
+    } else {
+        return (int) rc;
+    }
 }
 
 int FTNCALL odbc_column_double_c_(
@@ -688,13 +700,15 @@ int FTNCALL odbc_column_double_c_(
        int      *indicator
       )
 {
-    int rc;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-    rc = SQLGetData(*stmt, *colidx, SQL_DOUBLE, value, 0, indicator ) ;
+    rc = SQLGetData(*stmt, *colidx, SQL_DOUBLE, value, 0, &ind ) ;
+    *indicator = (int) ind ;
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -711,13 +725,15 @@ int FTNCALL odbc_column_text_c_(
 #endif
       )
 {
-    int rc ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-    rc = SQLGetData(*stmt, *colidx, SQL_CHAR, text, len_text, indicator ) ;
+    rc = SQLGetData(*stmt, *colidx, SQL_CHAR, text, len_text, &ind ) ;
+    *indicator = (int) ind ;
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -730,17 +746,15 @@ int FTNCALL odbc_column_blob_c_(
        int      *blob_type
       )
 {
-    int rc ;
+    SQLRETURN rc  ;
+    SQLLEN    ind ;
 
-    char        sqlstate[10] ;
-    char        msgtext[100] ;
-    SQLSMALLINT msglength    ;
-    int         native_error ;
     int         i            ;
     char       *hexstring    ;
 
     if ( (*blob_type) != ODBC_POSTGRESQL_HEX ) {
-        rc = SQLGetData(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int), indicator ) ;
+        rc = SQLGetData(*stmt, *colidx, SQL_BINARY, blob, (*size_blob)*sizeof(int), &ind ) ;
+        *indicator = (int) ind ;
     } else {
 
         /* Handle PostgreSQL's hexdecimal output style */
@@ -752,7 +766,8 @@ int FTNCALL odbc_column_blob_c_(
         */
 
         hexstring = (char *) malloc( 2 * (*size_blob)*sizeof(int) + 4 ) ;
-        rc = SQLGetData(*stmt, *colidx, SQL_BINARY, hexstring, 2*(*size_blob)*sizeof(int)+4, indicator ) ;
+        rc = SQLGetData(*stmt, *colidx, SQL_BINARY, hexstring, 2*(*size_blob)*sizeof(int)+4, &ind ) ;
+        *indicator = (int) ind ;
 
         /* TODO: determine if there is one byte or more in front of the hexadecimal string */
 
@@ -768,7 +783,7 @@ int FTNCALL odbc_column_blob_c_(
     if ( SQL_SUCCEEDED(rc) ) {
         return 0;
     } else {
-        return rc;
+        return (int) rc;
     }
 }
 
@@ -777,7 +792,7 @@ void FTNCALL odbc_reset_c_(
        odbc_stmt **stmt
       )
 {
-   int   rc  ;
+   SQLRETURN rc  ;
 
    rc = odbc_reset( *stmt ) ;
 
@@ -799,16 +814,16 @@ int FTNCALL odbc_get_table_1_c_(
        int   len_errmsg
       )
 {
-   int   rc  ;
-   char *msg ;
+   SQLRETURN rc  ;
+   char      *msg ;
 
-   rc = odbc_get_table_name(*db, command, &result, nrow, ncol, &msg ) ;
+   rc = odbc_get_table_name(*db, command, &result, nrow, ncol, (SQLCHAR *)&msg ) ;
    if ( msg != NULL )
    {
       strncpy( errmsg, msg, len_errmsg ) ;
    }
 
-   return rc ;
+   return (int) rc ;
 }
 
 void FTNCALL odbc_get_table_2_c_(

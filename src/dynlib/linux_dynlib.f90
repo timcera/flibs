@@ -51,10 +51,8 @@ subroutine system_load_library( handle, cname )
 
     integer(kind=c_int), parameter :: load_type = rtld_lazy
 
-    write(*,*) 'A'
     handle = c_load_library( cname, load_type )
     call c_print_error
-    write(*,*) 'B'
 end subroutine system_load_library
 
 ! system_get_procedure --
@@ -79,8 +77,7 @@ subroutine system_get_procedure( handle, cname, cproc, success )
     cproc = c_get_procedure( handle, cname )
     call c_print_error
 
-    success = transfer(cproc, 0_c_long) /= 0_c_long
-    write(*,*) 'After get_procedure', success
+    success = c_associated(cproc)
 
 end subroutine system_get_procedure
 

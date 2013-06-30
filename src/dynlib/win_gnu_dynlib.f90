@@ -45,9 +45,7 @@ subroutine system_load_library( handle, cname )
     integer(kind=c_long)           :: handle
     character(len=1), dimension(*) :: cname
 
-    write(*,*) ' in system_load_library', cname(1:20), ichar(cname(13))
     handle = c_load_library( cname )
-    write(*,*) ' system_load_library: loaded'
 end subroutine system_load_library
 
 ! system_get_procedure --
@@ -70,7 +68,7 @@ subroutine system_get_procedure( handle, cname, cproc, success )
 
     cproc = c_get_procedure( handle, cname )
 
-    success = transfer(cproc, 0_c_long) /= 0_c_long
+    success = c_associated(cproc)
 
 end subroutine system_get_procedure
 

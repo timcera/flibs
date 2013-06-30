@@ -1,3 +1,8 @@
+2013-06-30 arjenmarkus@users.sourceforge.net
+   * src/computing/traverse_grid.f90: added module for traversing a grid
+   * src/computing/enum_space.f90: module and documentation for enumerating points
+   * src/dynlib/win_ifort_dynib.f90: 
+
 2013-05-13 knystrom@users.sourceforge.net
    * src/reporting/m_exception.f90: negative LUN allowed
    * tests/reporting/test_m_exception.f90: added test case for negative LUN
