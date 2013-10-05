@@ -1,7 +1,20 @@
+2013-10-04 arjenmarkus@users.sourceforge.net
+   * src/dbase/dbasefile.f90: reader for dBase III files
+   * test/dbase/test_dbasefile.f90: test program for the reader for dBase III files
+   * test/dbase/makefile: corresponding makefile
+   * test/dbase/example.dbf: example of a dBase III file
+
 2013-06-30 arjenmarkus@users.sourceforge.net
    * src/computing/traverse_grid.f90: added module for traversing a grid
    * src/computing/enum_space.f90: module and documentation for enumerating points
-   * src/dynlib/win_ifort_dynib.f90: 
+   * src/dynlib/linux_dynlib.f90: use c_associated()
+   * src/dynlib/win_ifort_dynlib.f90: use c_associated()
+   * src/dynlib/win_gnu_dynlib.f90: use c_associated() and compiler directives
+   * src/dynlib/dynlib.f90: extend the module
+   * src/mysql/mysql.f90: small improvements
+   * src/odbc/codbc.c: consistent casts and data types
+   * src/odbc/fodbc.c: support for blobls added (does not seem to work properly though)
+
 
 2013-05-13 knystrom@users.sourceforge.net
    * src/reporting/m_exception.f90: negative LUN allowed
