@@ -92,14 +92,14 @@
     }
 --></style>
 </head>
-<! -- Generated from file 'strings/textstr.man' by tcllib/doctools with format 'html'
+<! -- Generated from file 'textstr.man' by tcllib/doctools with format 'html'
    -->
-<! -- Copyright &copy; 2005 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
+<! -- Copyright &copy; 2013 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
    -->
 <! -- CVS: $Id$ flibs/strings.n
    -->
 <body><div class="doctools">
-<h1 class="title">flibs/strings(n) 1.0  &quot;flibs&quot;</h1>
+<h1 class="title">flibs/strings(n) 1.1  &quot;flibs&quot;</h1>
 <div id="name" class="section"><h2><a name="name">Name</a></h2>
 <p>flibs/strings - Manipulate and store strings</p>
 </div>
@@ -136,8 +136,12 @@
 <li><a href="#18"><b class="cmd">length = mltxt_number( text )</b></a></li>
 <li><a href="#19"><b class="cmd">call mltxt_cleanup( text )</b></a></li>
 <li><a href="#20"><b class="cmd">call mltxt_insert( text, pos, line )</b></a></li>
-<li><a href="#21"><b class="cmd">call mltxt_delete( text, pos )</b></a></li>
+<li><a href="#21"><b class="cmd">call mltxt_delete( text, first, last )</b></a></li>
 <li><a href="#22"><b class="cmd">call mltxt_get( text, pos, line )</b></a></li>
+<li><a href="#23"><b class="cmd">call mltxt_read_file( filename, text, error )</b></a></li>
+<li><a href="#24"><b class="cmd">call mltxt_write_file( text, filename, error )</b></a></li>
+<li><a href="#25"><b class="cmd">use multiline_text_functions</b></a></li>
+<li><a href="#26"><b class="cmd">call mltxt_iterate( text, filter, first, last )</b></a></li>
 </ul>
 </div>
 </div>
@@ -249,9 +253,7 @@ If the string is too short, the result will be a truncated string.</p>
 <dd><p>Indicates whether end-of-file was reached or not</p></dd>
 </dl></dd>
 <dt><a name="13"><b class="cmd">call txt_write_to_file( lun, text )</b></a></dt>
-<dd><p>Write a text string to a file (as one complete line).
-If the LU-number is smaller/equal 0, it is written to
-the screen.</p>
+<dd><p>Write a text string to a file (as one complete line).</p>
 <dl class="arguments">
 <dt>integer, intent(in) <i class="arg">lun</i></dt>
 <dd><p>The LU-number of the file</p></dd>
@@ -314,16 +316,18 @@ the given position.</p>
 <dd><p>Position after which to insert the new line (use 0
 to make it the first line)</p></dd>
 <dt>(...), intent(in) <i class="arg">line</i></dt>
-<dd><p>Ordinary string or text_string variable holding the text that will be
+<dd><p>Ordinary string, text_string or multine_text variable holding the text that will be
 inserted.</p></dd>
 </dl></dd>
-<dt><a name="21"><b class="cmd">call mltxt_delete( text, pos )</b></a></dt>
-<dd><p>Delete the line at the given position.</p>
+<dt><a name="21"><b class="cmd">call mltxt_delete( text, first, last )</b></a></dt>
+<dd><p>Delete the line at the given positions.</p>
 <dl class="arguments">
 <dt>type(MULTILINE_TEXT), intent(inout) <i class="arg">text</i></dt>
 <dd><p>Multiline text to be modified</p></dd>
-<dt>integer, intent(in) <i class="arg">pos</i></dt>
-<dd><p>Position of the line to be removed.</p></dd>
+<dt>integer, intent(in) <i class="arg">first</i></dt>
+<dd><p>Position of the first line to be removed.</p></dd>
+<dt>integer, intent(in) <i class="arg">last</i></dt>
+<dd><p>Position of the last line to be removed (optional, defaults to the first line).</p></dd>
 </dl></dd>
 <dt><a name="22"><b class="cmd">call mltxt_get( text, pos, line )</b></a></dt>
 <dd><p>Return a pointer (!) to the line at the given position.
@@ -337,9 +341,76 @@ change the line of text via this pointer.</p>
 <dt>type(TEXT_STRING), pointer <i class="arg">line</i></dt>
 <dd><p>Variable that will <em>point</em> to the line of text</p></dd>
 </dl></dd>
+<dt><a name="23"><b class="cmd">call mltxt_read_file( filename, text, error )</b></a></dt>
+<dd><p>Read an entire file into a multiline text variable.</p>
+<dl class="arguments">
+<dt>characer(len=*), intent(in) <i class="arg">lun</i></dt>
+<dd><p>The name of the file to be read</p></dd>
+<dt>type(TEXT_STRING), intent(out) <i class="arg">text</i></dt>
+<dd><p>Text string to be created/filled</p></dd>
+<dt>logical, intent(out) <i class="arg">error</i></dt>
+<dd><p>Indicates whether an error occurred or not</p></dd>
+</dl></dd>
+<dt><a name="24"><b class="cmd">call mltxt_write_file( text, filename, error )</b></a></dt>
+<dd><p>Write a multiline text variable to a file.</p>
+<dl class="arguments">
+<dt>type(TEXT_STRING), intent(out) <i class="arg">text</i></dt>
+<dd><p>Text string to be created/filled</p></dd>
+<dt>characer(len=*), intent(in) <i class="arg">lun</i></dt>
+<dd><p>The name of the file to be written</p></dd>
+<dt>logical, intent(out) <i class="arg">error</i></dt>
+<dd><p>Indicates whether an error occurred or not</p></dd>
+</dl></dd>
+</dl>
+<p>The file <em>textstr_func.f90</em> contains a single module, multiple_line_text_functions,
+designed for filtering multiline text:</p>
+<dl class="definitions">
+<dt><a name="25"><b class="cmd">use multiline_text_functions</b></a></dt>
+<dd><p>To import the subroutines, use this module.</p></dd>
+<dt><a name="26"><b class="cmd">call mltxt_iterate( text, filter, first, last )</b></a></dt>
+<dd><p>Manipulate the contents of a multiline text variable via a user-defined subroutine or object (filter).
+Each line within the range is visited once. Lines that get inserted along the way are not examined.</p>
+<dl class="arguments">
+<dt>type(MULTILINE_TEXT), intent(in) <i class="arg">text</i></dt>
+<dd><p>Multiline text to be examined and possibly changed</p></dd>
+<dt>subroutine/object filter <i class="arg">filter</i></dt>
+<dd><p>Subroutine or object that defines the filter - see below</p></dd>
+<dt>integer, intent(in) first <i class="arg">first</i></dt>
+<dd><p>The first line to be examined (defaults to 1)</p></dd>
+<dt>integer, intent(in) first <i class="arg">last</i></dt>
+<dd><p>The last line to be examined (defaults to the last line in the variable <i class="term">text</i>)</p></dd>
+</dl>
+<p>The subroutine <i class="term">filter</i> has the following interface:</p>
+<pre class="example">
+    subroutine filter( pos, string, action, text_str, mltxt_str )
+        integer, intent(in)          :: pos
+        character(len=*), intent(in) :: string
+        integer                      :: action
+        type(text_string)            :: text_str
+        type(multiline_text)         :: mltxt_str
+    end subroutine filter
+</pre>
+<p>where:</p>
+<ul class="itemized">
+<li><p><i class="term">pos</i> is the current line number</p></li>
+<li><p><i class="term">string</i> is the entire text of that line</p></li>
+<li><p><i class="term">action</i> is the action to take:</p>
+<ul class="itemized">
+<li><p><i class="term">mltxt_insert_after_text</i>: insert the contents of the <i class="term">text_str</i> variable after the current line.</p></li>
+<li><p><i class="term">mltxt_insert_after_mltxt</i>: insert the contents of the <i class="term">mltxt_str</i> variable after the current line.</p></li>
+<li><p><i class="term">mltxt_insert_before_text</i>: insert the contents of the <i class="term">text_str</i> variable before the current line.</p></li>
+<li><p><i class="term">mltxt_insert_before_mltxt</i>: insert the contents of the <i class="term">mltxt_str</i> variable before the current line.</p></li>
+<li><p><i class="term">mltxt_delete_current</i>: delete the current line</p></li>
+<li><p><i class="term">mltxt_replace_text</i>: replace the contents of the current line by that of <i class="term">text_str</i></p></li>
+<li><p><i class="term">mltxt_replace_mltxt</i>: replace the contents of the current line by that of <i class="term">mltxt_str</i></p></li>
+<li><p><i class="term">mltxt_exit</i>: break off the loop</p></li>
+<li><p><i class="term">mltxt_continue</i>: continue with the next line (nothing is changed or added)</p></li>
+</ul>
+</li>
+</ul></dd>
 </dl>
 </div>
 <div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
-<p>Copyright &copy; 2005 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;</p>
+<p>Copyright &copy; 2013 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;</p>
 </div>
 </div></body></html>
