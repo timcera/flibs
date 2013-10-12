@@ -153,4 +153,65 @@ Its interface is the same for routine [term NEWUOA].
 [list_end]
 
 [list_end]
+
+[section EXAMPLE]
+The functon to be minimised does not need to be a straightforward mathematical function.
+The only requirements are that it is continuous in its arguments and more or less smooth.
+
+[para]
+Here is an example of a minimisation problem that would be very difficult to solve when
+derivatives are required. The problem is to find the values for the coefficients [term a] and
+[term b] in the system of ordinary differential equations below that lead to a final vector
+[term "(x,y) = (0.5,0.25)"] at time [term "t = 1"]:
+[example {
+    dx/dt = - a x
+    dy/dt = + a x - b y
+
+    (x,y) = (1,0) at time t = 0
+}]
+
+The subroutine to compute the function to be minimised is shown below. It computes the
+solution at [term "t = 1"] for the above system and computes the sum of square differences with the
+target vector. This sum is the function value to be minimised:
+
+[example {
+! compute_diff --
+!     Compute the solution and determine how close it is to the required solution
+!
+! Arguments:
+!     param          Vector of parameters
+!     f              Value of the function to be minimized
+!
+subroutine compute_diff( param, f )
+    use bobyqa_minimisation, only: wp
+
+    implicit none
+    real(kind=wp), dimension(:) :: param
+    real(kind=wp)               :: f
+
+    integer                     :: i
+    real(kind=wp), dimension(2) :: x
+    real(kind=wp), dimension(2) :: dx
+    real(kind=wp)               :: dt
+
+    !
+    ! Initial condition: x = [1.0, 0.0]
+    ! We want x = [0.5, 0.25] at time = 1
+    !
+    dt   = 0.01
+    x(1) = 1.0
+    x(2) = 0.0
+
+    do i = 1,100
+        dx(1) = -param(1) * x(1)
+        dx(2) = +param(1) * x(1) - param(2) * x(2)
+
+        x(1)  = x(1) + dx(1) * dt
+        x(2)  = x(2) + dx(2) * dt
+    enddo
+
+    f = (x(1)-0.5)**2 + (x(2)-0.25)**2
+
+end subroutine calfun}]
+
 [manpage_end]
