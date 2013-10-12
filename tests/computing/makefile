@@ -17,7 +17,9 @@ PROGRAMS	=	test_diff$(EXEEXT) \
 		test_f0withIEEE$(EXEEXT) \
 		test_random_permutation$(EXEEXT) \
 		test_enum_space$(EXEEXT) \
-		test_grid_traverse$(EXEEXT) \
+		test_traverse_grid$(EXEEXT) \
+		test_bobyqa$(EXEEXT) \
+		test_newuoa$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -158,6 +160,26 @@ test_traverse_grid$(OBJEXT):	test_traverse_grid.f90 traverse_grid$(OBJEXT) selec
 
 test_traverse_grid$(EXEEXT):	test_traverse_grid$(OBJEXT) traverse_grid$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_traverse_grid$(OBJEXT) traverse_grid$(OBJEXT)
+
+
+bobyqa$(OBJEXT):	../../src/computing/bobyqa.f
+	$(FC) $(FFLAGS) ../../src/computing/bobyqa.f
+
+test_bobyqa$(OBJEXT):	test_bobyqa.f90 bobyqa$(OBJEXT)
+	$(FC) $(FFLAGS) test_bobyqa.f90
+
+test_bobyqa$(EXEEXT):	test_bobyqa$(OBJEXT) bobyqa$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_bobyqa$(OBJEXT) bobyqa$(OBJEXT)
+
+
+newuoa$(OBJEXT):	../../src/computing/newuoa.f
+	$(FC) $(FFLAGS) ../../src/computing/newuoa.f
+
+test_newuoa$(OBJEXT):	test_newuoa.f90 newuoa$(OBJEXT)
+	$(FC) $(FFLAGS) test_newuoa.f90
+
+test_newuoa$(EXEEXT):	test_newuoa$(OBJEXT) newuoa$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_newuoa$(OBJEXT) newuoa$(OBJEXT)
 
 
 clean:	
