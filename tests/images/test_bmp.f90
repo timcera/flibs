@@ -6,7 +6,7 @@ program test_bmp
 
     implicit none
 
-    integer, parameter                      :: byte = 1
+    integer, parameter                      :: byte = one_byte
 
     integer(4), allocatable, dimension(:,:) :: image
     integer                                 :: error
@@ -14,10 +14,28 @@ program test_bmp
     integer                                 :: red, green, blue
     integer(kind=byte)                      :: scale
     integer(kind=byte)                      :: max_colour
+    integer(kind=four_bytes)                :: full_colour1, full_colour2
+
+    character(len=256)                      :: message
+
+    ! Test the colour functions
+    !
+    full_colour1 = RGB( 210,      220,      230      )
+    full_colour2 = RGB( -46_byte, -36_byte, -26_byte )
+
+    if ( full_colour1 /= full_colour2 ) then
+        write(*,*) 'Problem constructing colours:'
+        write(*,*) '    4-byte and 1-byte integers give different results'
+    endif
 
     error = openbitmap( image, "clouds.bmp" )
-    write(*,*) 'Error: ', error
-    write(*,*) 'Size:  ', shape(image)
+    write(*,*) 'Error:  ', error
+    write(*,*) 'Size:   ', shape(image)
+    if ( error /= 0 ) then
+        call GetErrorMessage(message)
+        write(*,*) 'Message:', trim(message)
+        stop
+    endif
 
     !
     ! Simple test regarding the manipulation of colours:
@@ -32,6 +50,8 @@ program test_bmp
         enddo
     enddo
 
+    write(*,*) 'Save new bitmap ...'
+
     error = savebitmap( image, "clouds_bw.bmp" )
 
     deallocate( image )
@@ -40,6 +60,7 @@ program test_bmp
     ! Construct an image with red, blue and green patches and overlaps thereof
     ! Note: simply adding is only possible with separated colours
     !
+    write(*,*) 'Constructing new image ...'
     allocate( image(300,300) )
     image = 0
 
@@ -55,4 +76,5 @@ program test_bmp
 
     error = savebitmap( image, "colours.bmp" )
 
+    write(*,*) 'Done'
 end program test_bmp
