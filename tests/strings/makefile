@@ -9,6 +9,9 @@ PROGRAMS	=	test_token$(EXEEXT) \
 		test_tokenlist$(EXEEXT) \
 		text_tst$(EXEEXT) \
 		test_textstr_func$(EXEEXT) \
+		test_m_vstring$(EXEEXT) \
+		test_m_vstringformat$(EXEEXT) \
+		test_m_vstringlist$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -48,8 +51,38 @@ textstr_func$(OBJEXT):	../../src/strings/textstr_func.f90
 test_textstr_func$(OBJEXT):	test_textstr_func.f90 textstr_func$(OBJEXT)
 	$(FC) $(FFLAGS) test_textstr_func.f90
 
-test_textstr_func$(EXEEXT):	test_textstr_func$(OBJEXT) textstr_func$(OBJEXT) textstr_func$(OBJEXT)
+test_textstr_func$(EXEEXT):	test_textstr_func$(OBJEXT) textstr_func$(OBJEXT) textstr$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_textstr_func$(OBJEXT) textstr_func$(OBJEXT) textstr$(OBJEXT)
+
+
+m_vstring$(OBJEXT):	../../src/strings/m_vstring.f90
+	$(FC) $(FFLAGS) -x f95-cpp-input -D_VSTRING_ALLOCATABLE ../../src/strings/m_vstring.f90
+
+test_m_vstring$(OBJEXT):	test_m_vstring.f90 m_vstring$(OBJEXT)
+	$(FC) $(FFLAGS) -I../support -x f95-cpp-input test_m_vstring.f90
+
+test_m_vstring$(EXEEXT):	test_m_vstring$(OBJEXT) m_vstring$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_vstring$(OBJEXT) m_vstring$(OBJEXT)
+
+
+m_vstringformat$(OBJEXT):	../../src/strings/m_vstringformat.f90
+	$(FC) $(FFLAGS) -x f95-cpp-input -D_VSTRING_ALLOCATABLE ../../src/strings/m_vstringformat.f90
+
+test_m_vstringformat$(OBJEXT):	test_m_vstringformat.f90 m_vstringformat$(OBJEXT)
+	$(FC) $(FFLAGS) -I../support -x f95-cpp-input test_m_vstringformat.f90
+
+test_m_vstringformat$(EXEEXT):	test_m_vstringformat$(OBJEXT) m_vstringformat$(OBJEXT) m_vstring$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_vstringformat$(OBJEXT) m_vstringformat$(OBJEXT) m_vstring$(OBJEXT)
+
+
+m_vstringlist$(OBJEXT):	../../src/strings/m_vstringlist.f90 ../../src/datastructures/qsortarray_template.f90
+	$(FC) $(FFLAGS) -I../../src/datastructures -x f95-cpp-input -D_VSTRING_ALLOCATABLE -D_VSTRINGLIST_ALLOCATABLE ../../src/strings/m_vstringlist.f90
+
+test_m_vstringlist$(OBJEXT):	test_m_vstringlist.f90 m_vstringlist$(OBJEXT)
+	$(FC) $(FFLAGS) -I../support -x f95-cpp-input test_m_vstringlist.f90
+
+test_m_vstringlist$(EXEEXT):	test_m_vstringlist$(OBJEXT) m_vstringlist$(OBJEXT) m_vstring$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_vstringlist$(OBJEXT) m_vstringlist$(OBJEXT) m_vstring$(OBJEXT)
 
 
 clean:	

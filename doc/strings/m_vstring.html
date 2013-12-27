@@ -92,7 +92,7 @@
     }
 --></style>
 </head>
-<! -- Generated from file 'strings/m_vstring.man' by tcllib/doctools with format 'html'
+<! -- Generated from file 'm_vstring.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com   -- Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net
    -->
@@ -194,7 +194,7 @@
 <p>The module <em>m_vstring</em> provides OO services to manage strings of dynamic length.
 The goal of the current component is to provide higher-level
 services that the standard fortran currently provides.
-The component provides methods which mimic the services 
+The component provides methods which mimic the services
 available in the Tcl language.
 It provides string comparison, string search and string
 matching methods.
@@ -202,8 +202,8 @@ See in test_m_vstring to see a complete example of the
 services provided.</p>
 </div>
 <div id="section2" class="section"><h2><a name="section2">OVERVIEW</a></h2>
-<p>A vstring is an array of characters. 
-  The simplest way to create a vstring is with vstring_new 
+<p>A vstring is an array of characters.
+  The simplest way to create a vstring is with vstring_new
   from a &quot;character(len=&lt;something&gt;)&quot; string.
   The length of the vstring is computed dynamically,
   depending on the current number of characters, with vstring_length.
@@ -221,15 +221,15 @@ services provided.</p>
     call vstring_free( string1 )
 </pre>
 <div id="subsection1" class="subsection"><h3><a name="subsection1">Creating a string</a></h3>
-<p>With vstring_new, one can also create a new vstring as a copy 
+<p>With vstring_new, one can also create a new vstring as a copy
   of an existing vstring.
-  With vstring_new, one can also create a new vstring with an 
+  With vstring_new, one can also create a new vstring with an
   array of characters or with a repeated copy of an existing vstring.
   Destroy the vstring with vstring_free.</p>
 </div>
 <div id="subsection2" class="subsection"><h3><a name="subsection2">Concatenate two strings</a></h3>
 <p>Two vstrings can be concatenated in two ways.
-  The vstring_concat method returns a new vstring computed by the 
+  The vstring_concat method returns a new vstring computed by the
   concatenation of the two strings.
   The vstring_append allows to add the characters of the 2nd vstring
   at the end of the current string.
@@ -247,14 +247,14 @@ services provided.</p>
   The vstring_totitle creates a new vstring with the first letter in
   upper case and all the other characters to lower case.
   The user can know if two vstrings are equal with vstring_equals.
-  Two vstrings can be compared with vstring_compare, which 
+  Two vstrings can be compared with vstring_compare, which
   is based on the lexicographic order.
   One can transform one vstring into a new one using a map with
   vstring_map.</p>
 </div>
 <div id="subsection4" class="subsection"><h3><a name="subsection4">Pattern matching</a></h3>
 <p>The vstring_match method provides string-matching services in the glob-style.
-  It manages &quot;*&quot; pattern (which matches 0 or more characters), 
+  It manages &quot;*&quot; pattern (which matches 0 or more characters),
   the &quot;?&quot; pattern (which matches exactly one character),
   escape sequences and character ranges.
   The following example show how to compare a file name against a pattern :</p>
@@ -265,10 +265,10 @@ services provided.</p>
 </pre>
 </div>
 <div id="subsection5" class="subsection"><h3><a name="subsection5">Validating a string</a></h3>
-<p>The vstring_is method provides a way of validating data by 
-  computing whether the vstring is in a class of data, for example 
+<p>The vstring_is method provides a way of validating data by
+  computing whether the vstring is in a class of data, for example
   integer, real, digit, alphanumeric, etc...
-  In the following example, the user can check whether the 
+  In the following example, the user can check whether the
   string read on standard input is an integer :</p>
 <pre class="example">
     read ( 5 , * ) charstring
@@ -278,14 +278,14 @@ services provided.</p>
       ! Generate an error
     endif
 </pre>
-<p>If the character set under use is not in one the pre-defined classes 
-  of vstring_is, the user can directly call vstring_isincharset or 
+<p>If the character set under use is not in one the pre-defined classes
+  of vstring_is, the user can directly call vstring_isincharset or
   vstring_isinasciirange, which are the basic blocks of vstring_is.
   Second string argument may be character string
   The design choice has been made to design the subroutines/functions
   so that their dummy arguments are generally only of type t_vstring.
   Another choice would have been to allways take as dummy arguments both
-  t_vstring and &quot;character (len=*)&quot; strings, with module procedure 
+  t_vstring and &quot;character (len=*)&quot; strings, with module procedure
   interfaces to make them generic.
   The last choice ease the work of the client of the current component,
   which can use directly standard fortran constant strings (for example,</p>
@@ -300,25 +300,25 @@ services provided.</p>
     call vstring_free ( string2 )
 </pre>
 <p>that is to say 5 lines instead of 1.
-  The main drawback is that the number of interfaces is at least 
-  multiplied by 2, if not 4 or 8 when the number of string arguments is more 
-  than 2. This makes the unit tests multiplied by the same number, if one 
+  The main drawback is that the number of interfaces is at least
+  multiplied by 2, if not 4 or 8 when the number of string arguments is more
+  than 2. This makes the unit tests multiplied by the same number, if one
   want to exercise all the possible interfaces. That way was chosen
   by the original iso_varying_string module and lead to a heavy component,
-  with a large number of lines and a small number of features, because 
+  with a large number of lines and a small number of features, because
   all the time was lost in the management of such an heavy module.
   The other drawback is that is breaks the object oriented design
   so that the &quot;type bound&quot; procedure of F2003 cannot be used.
   The current choice is to focus mainly on the services provided,
   not the ease of use. That allows to provide much more features than
-  in the original component, but complicates a little more the 
-  use in the client code. 
-  The choice done here is that the first argument is allways of type 
-  vstring (and called &quot;this&quot;), while the second argument (if any), mays 
+  in the original component, but complicates a little more the
+  use in the client code.
+  The choice done here is that the first argument is allways of type
+  vstring (and called &quot;this&quot;), while the second argument (if any), mays
   by either of type vstring or of type &quot;character (len=*).
-  That solution allows to keep both consistency and ease of use at 
+  That solution allows to keep both consistency and ease of use at
   the maximum possible level.
-  Several methods are designed this way, for example, vstring_equals, 
+  Several methods are designed this way, for example, vstring_equals,
   vstring_compare, vstring_append, vstring_concat and others.</p>
 </div>
 <div id="subsection6" class="subsection"><h3><a name="subsection6">Allocatable or pointer</a></h3>
@@ -332,10 +332,10 @@ services provided.</p>
   But the &quot;allocatable&quot; implementation allows to manage the vstring
   which are going out of the current scope so that the use of vstring_free
   is not necessary and memory leaks do not occur.
-  Instead, with the pointer implementation, the call to vstring_free is 
+  Instead, with the pointer implementation, the call to vstring_free is
   strictly necessary (if not, memory is lost each time a new vstring is
   created).
-  The current version of m_vstring has been tested with the 
+  The current version of m_vstring has been tested with the
   following compilers and versions:</p>
 <ul class="itemized">
 <li><p>Intel Visual Fortran 8 : tested with _VSTRING_ALLOCATABLE and _VSTRING_POINTER
@@ -346,39 +346,39 @@ services provided.</p>
 </ul>
 </div>
 <div id="subsection7" class="subsection"><h3><a name="subsection7">Dynamic or static buffer</a></h3>
-<p>The internal algorithms provided by m_vstrings are based on 
-  basic fortran character strings. In several situations, the 
+<p>The internal algorithms provided by m_vstrings are based on
+  basic fortran character strings. In several situations, the
   dynamic vstring has to be converted into a basic fortran character
-  buffer string, which size has to be given explicitely in the source 
-  code, with the len = &lt;something&gt; statement (in the 
-  character ( len = &lt;something&gt;) ). Two solutions are provided, 
-  and the user can define the pre-processing macro 
+  buffer string, which size has to be given explicitely in the source
+  code, with the len = &lt;something&gt; statement (in the
+  character ( len = &lt;something&gt;) ). Two solutions are provided,
+  and the user can define the pre-processing macro
   _VSTRING_STATIC_BUFFER to configure that :</p>
 <ul class="itemized">
 <li><p>the first solution is to set the size of the buffer statically,
     to a constant integer value VSTRING_BUFFER_SIZE.</p></li>
-<li><p>the second solution is to compute the size 
+<li><p>the second solution is to compute the size
     of the buffer dynamicaly, with the fortran 90 len = vstring_length(this)
     statement,</p></li>
 </ul>
-<p>If the _VSTRING_STATIC_BUFFER is defined, then character strings of 
+<p>If the _VSTRING_STATIC_BUFFER is defined, then character strings of
   constant size are used as buffers.
-  If the _VSTRING_STATIC_BUFFER is not defined (which is the default), 
+  If the _VSTRING_STATIC_BUFFER is not defined (which is the default),
   then character strings of dynamic size are used as buffers.
-  The second solution is more efficient, because the strings are not 
+  The second solution is more efficient, because the strings are not
   oversized or undersized, depending on the real number of characters
-  in the dynamic string. But the feature may not be provided 
-  by the compiler at hand. For example, problems with the dynamic 
+  in the dynamic string. But the feature may not be provided
+  by the compiler at hand. For example, problems with the dynamic
   length character string have been experienced with Intel Fortran 8.</p>
 </div>
 <div id="subsection8" class="subsection"><h3><a name="subsection8">Design</a></h3>
 <p>This component has been designed with OO principles in mind.
    This is why the first argument of every method is named &quot;this&quot;,
    which is the current object.
-   If another string is required as a second argument, it may be either 
+   If another string is required as a second argument, it may be either
    of type dynamic or as a character(len=*) type, to improve
    usability.
-   This component is meant to evolve following the fortran 2003 standard 
+   This component is meant to evolve following the fortran 2003 standard
    and OO type-bound procedures.</p>
 </div>
 <div id="subsection9" class="subsection"><h3><a name="subsection9">Limitations</a></h3>
@@ -404,12 +404,12 @@ in the implementation of len = pure function value in IVF8.</p></li>
 </ul>
 </div>
 <div id="subsection11" class="subsection"><h3><a name="subsection11">History</a></h3>
-<p>This module was originally based on the iso_varying_string.f90 module 
+<p>This module was originally based on the iso_varying_string.f90 module
    by Rich Townsend.</p>
 </div>
 </div>
 <div id="section3" class="section"><h2><a name="section3">METHODS</a></h2>
-<p>In the following definitions, the <i class="arg">this</i> argument has, 
+<p>In the following definitions, the <i class="arg">this</i> argument has,
 depending on the method, one of the the following definitions :</p>
 <dl class="arguments">
 <dt><b class="type">type ( t_vstring ) , intent(inout) ::</b> <i class="arg">this</i></dt>
@@ -419,7 +419,7 @@ depending on the method, one of the the following definitions :</p>
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">this</i></dt>
 <dd></dd>
 </dl>
-<p>The &quot;intent(in)&quot; or &quot;intent(inout)&quot; declaration depends on the 
+<p>The &quot;intent(in)&quot; or &quot;intent(inout)&quot; declaration depends on the
 method and is what it is expected to be (if not, it is a bug).</p>
 <dl class="definitions">
 <dt><a name="1"><b class="method">vstring_new</b> <i class="arg">(this ?args?)</i></a></dt>
@@ -431,21 +431,21 @@ method and is what it is expected to be (if not, it is a bug).</p>
 <dt><b class="type">character(LEN=*), intent(in) ::</b> <i class="arg">char_string</i></dt>
 <dd></dd>
 </dl>
-<p>The new vstring is filled with the 
+<p>The new vstring is filled with the
 characters found in &quot;char_string&quot;.</p></dd>
 <dt><a name="4"><b class="method">vstring_new</b> <i class="arg">(this,vstring)</i></a></dt>
 <dd><dl class="arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">vstring</i></dt>
 <dd></dd>
 </dl>
-<p>The new vstring is filled with the 
+<p>The new vstring is filled with the
 characters found in the dynamic string &quot;vstring&quot;.</p></dd>
 <dt><a name="5"><b class="method">vstring_new</b> <i class="arg">(this,chararray)</i></a></dt>
 <dd><dl class="arguments">
 <dt><b class="type">character(len=1), dimension(:), intent(in) ::</b> <i class="arg">chararray</i></dt>
 <dd></dd>
 </dl>
-<p>The new vstring is filled with the 
+<p>The new vstring is filled with the
 characters found in the array of characters &quot;chararray&quot;.</p></dd>
 <dt><a name="6"><b class="method">vstring_new</b> <i class="arg">(this, ncount ?, vstring?)</i></a></dt>
 <dd><dl class="arguments">
@@ -460,7 +460,7 @@ This can be considered as an implementation of &quot;vstring_repeat&quot;.</p></
 <dt><a name="7"><b class="method">vstring_free</b> (<i class="arg">this</i>)</a></dt>
 <dd><p>Destructor.</p>
 <p>The use of the destructor is OPTIONAL.
-     See the thread &quot; New ISO_VARYING_STRING implementation 
+     See the thread &quot; New ISO_VARYING_STRING implementation
      (without memory leaks)&quot; on comp.lang.fortran :
      &quot;On most systems, memory is memory :-).  However, there is a
      difference between how ALLOCATABLE variables and POINTER
@@ -649,7 +649,8 @@ Returns -1, 0, or 1, depending on whether this is lexicographically less
 than, equal to, or greater than string2.
 If nocase is set to true, the case of the characters is not taken into account.
 The default behaviour is to take into account for case of characters.
-If length is specified, then only the first length characters are used in the comparison.</p></dd>
+If length is specified, then only the first length characters are used in the comparison.</p>
+<p>A value of 999 means that either string was not properly initialized.</p></dd>
 <dt><a name="25"><b class="method">vstring_compare</b> <i class="arg">(this,string2?, nocase , length?)</i> result ( compare )</a></dt>
 <dd><dl class="arguments">
 <dt><b class="type">character (len=*) , intent(in) ::</b> <i class="arg">string2</i></dt>
@@ -906,12 +907,12 @@ provided with flibs. In the following example, &quot;match&quot; is true.</p>
 <dt><b class="type">logical ::</b> <i class="arg">isinclass</i></dt>
 <dd></dd>
 </dl>
-<p>Returns .true. if string is a valid member of the specified character class, 
-     otherwise returns .false.. 
+<p>Returns .true. if string is a valid member of the specified character class,
+     otherwise returns .false..
      If strict is provided and .true., then an empty string returns .false..
      If strict is provided and .false., or not provided, an empty string returns .true..
-     If failindex is provided, then if the function returns .false., the index in the 
-     string where the class was no longer valid will be stored in the variable failindex. 
+     If failindex is provided, then if the function returns .false., the index in the
+     string where the class was no longer valid will be stored in the variable failindex.
      The following character classes are recognized (the class name can be abbreviated):</p>
 <ul class="itemized">
 <li><p>alpha           Any alphabet character, that is [a-zA-Z].</p></li>
@@ -919,7 +920,7 @@ provided with flibs. In the following example, &quot;match&quot; is true.</p>
 <li><p>ascii
            Any character with a value less than 128 (those that are in the 7-bit ascii range).</p></li>
 <li><p>control
-           Any control character. Control chars are in the 
+           Any control character. Control chars are in the
            ranges 00..1F and 7F..9F, that is from ascii #0 to #31 and from #127 to #159</p></li>
 <li><p>digit
            Any digit character. Note that this includes characters outside of the [0-9] range.</p></li>

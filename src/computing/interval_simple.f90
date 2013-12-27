@@ -661,8 +661,6 @@ subroutine find_root( f, fprime, xinit, tolerance, root, found )
     integer, parameter          :: maxiter = 1000
     real(kind=wp)               :: fvalue   ! Real valued!
     type(INTERVAL)              :: fpvalue
-    real(kind=wp)               :: fleft
-    real(kind=wp)               :: fright
     real(kind=wp)               :: fpleft
     real(kind=wp)               :: fpright
 
