@@ -20,7 +20,7 @@
 !      call log_msg ('Log message', WARNING)
 !
 !   will write to logs with log level equal to or lower than
-!   WARNING, i.e. WARNING, INFO and FINE.
+!   WARNING, i.e. WARNING, INFO, FINE and DEBUG.
 !
 !   The module provides methods to
 !   - connect a file to a log object
@@ -58,31 +58,34 @@
 !      call shutdown_log_group ()
 !
 !    By default, the logging is done on all log files with appropriate
-!    infolevel and on standard output. The user may want to configure
-!    the behaviour of the log_group so that message are not written on
-!    standard output.
+!    infolevel but not on standard output. The user may want to
+!    configure the behaviour of the log_group as a whole or the
+!    separate logs so that message are not written on standard output.
 !
-!    The static method "log_configure(option,value [,log])" is the central
-!    point to configure the log group. It takes a character "option"
-!    string and a "value" as arguments. In the following example, one
-!    writes messages on file and in some cases also to stdout, with
-!    and without time stamps.
+!    The static method "log_group_configure ( option, value )" is the
+!    central point to configure the log group itself or all logs
+!    connected to it. It takes a character "option" string and a
+!    "value" as arguments.
+!
+!    It is also possible to configure a specific log using the type
+!    bound generic routine log_t%configure ( option, value ). In the
+!    following example, one writes messages on file and in one case
+!    also to stdout.
 !
 !      type (log_t) :: test
 !
 !      call test%startup ( 'test_m_multilog.log' )
 !      call add_log ( test )
-!      call log_configure ( "writeonstdout" , .false. )
-!      call log_msg( 'This message is written only on file' )
-!      call log_configure ( "writeonstdout" , .true. )
+!      call test%configure ( "writeonstdout" , .true. )
 !      call log_msg( 'This message is written both on screen and on file' )
+!      call test%configure ( "writeonstdout" , .false. )
+!      call log_msg( 'This message is written only on file' )
 !      call shutdown_log_group ()
 !
-! TODO   The order of the info levels - should it be different?
-!        Possibility to define own info levels and/or re-configure
-!        the standard ones?
+! TODO   Configurable log levels i.e. possibility to re-arrange the hierarchy
+!        Parallel mode - split to one log/thread and then merge?
 !
-! Author: Karin Nyström, 2012, knystrom at users.sourceforge.net
+! Author: Karin Nyström, 2012-2013, knystrom at users.sourceforge.net
 !
 module m_multilog
   use iso_fortran_env
@@ -91,31 +94,31 @@ module m_multilog
   public :: shutdown_log_group
   public :: add_log
   public :: remove_log
-  public :: log_cget
-  public :: log_configure
+  public :: log_group_configure
+  public :: log_group_cget
+  public :: log_group_reset
   public :: log_delimiter
   public :: log_msg
-  public :: log_reset
   !
-  ! Interfaces for procedures using the global log_group object. Convert
-  ! to type bound if there is need to use more than one simultaneous
-  ! log group. (One log group handles several log files.)
+  ! Date/time type, used internally for timestamp configuration
   !
-  interface log_configure
-     module procedure configure_logical
-     module procedure configure_integer
-     module procedure configure_character
-  end interface log_configure
-  interface log_cget
-     module procedure cget_logical
-     module procedure cget_integer
-     module procedure cget_character
-  end interface log_cget
+  type :: datetime_t
+     integer :: year
+     integer :: month
+     integer :: day
+     integer :: hour
+     integer :: minute
+     integer :: sec
+     contains
+       procedure :: set_datetime
+  end type datetime_t
   !
   ! Log type - one single log
   !
   type, public :: log_t
      character(len=500) :: filename
+     ! Date/time formatting string, see format_date at the end of the module
+     character(len=40)  :: timefmt
      integer :: logindex
      integer :: fileunit
      integer :: infolevel
@@ -124,11 +127,29 @@ module m_multilog
      ! Logical set to false if the user wants to inactivate the
      ! ouput to screen. The default value is true.
      logical :: writestdout
+     ! Set to false if the user wants to inactivate output to file.
+     ! Default is true.
+     logical :: writetofile
    contains
      procedure :: startup
      procedure :: shutdown
+     procedure :: reset => log_reset
      procedure :: write
+     procedure :: log_configure_logical
+     procedure :: log_configure_integer
+     procedure :: log_configure_character
+     generic :: configure => log_configure_logical, log_configure_integer, log_configure_character
+     procedure :: log_cget_logical
+     procedure :: log_cget_integer
+     procedure :: log_cget_character
+     generic :: cget => log_cget_logical, log_cget_integer, log_cget_character
   end type log_t
+  !
+  ! Pointer to log_t
+  !
+  type :: log_ptr_t
+     type(log_t), pointer :: p
+  end type log_ptr_t
   !
   ! Log group type - handles one to four logs
   !
@@ -138,8 +159,22 @@ module m_multilog
      ! Try to abort program when error in logger occurs?
      logical :: stoponerror
      ! Four info_lvl values -> array of max four log files
-     type (log_t) :: log_array(4)
+     type(log_ptr_t), dimension(4) :: log_array
   end type log_group_t
+  !
+  ! Interfaces for procedures using the global log_group object.
+  ! Convert to type bound if there is need to use more than one
+  ! simultaneous log group. (One log group handles several log files.)
+  !
+  interface log_group_configure
+     module procedure log_group_configure_logical
+     module procedure log_group_configure_integer
+     module procedure log_group_configure_character
+  end interface log_group_configure
+  interface log_group_cget
+     module procedure log_group_cget_logical
+     module procedure log_group_cget_character
+  end interface log_group_cget
   !
   ! Static fields
   !
@@ -147,24 +182,24 @@ module m_multilog
   ! related to logger to type bound if there is need for more than one
   ! log handler.
   !
-  type (log_group_t), public :: log_group
+  type(log_group_t), public :: log_group
   ! Logical unit associated with the standard output
   integer :: log_stdout = OUTPUT_UNIT
   !
   ! Strings used as default delimiters
   !
-  integer , parameter , public :: LOG_LEVEL_DELIMITER_LENGTH = 50
-  character (len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_volume = "==============="
-  character (len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_chapter = "---------------"
-  character (len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_section = "***************"
-  character (len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_subsection = "+++++++++++++++"
+  integer, parameter, public :: LOG_LEVEL_DELIMITER_LENGTH = 50
+  character(len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_volume = "==============="
+  character(len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_chapter = "---------------"
+  character(len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_section = "***************"
+  character(len=LOG_LEVEL_DELIMITER_LENGTH) :: log_level_string_subsection = "+++++++++++++++"
   !
   ! List of available delimiters levels
   !
-  integer , parameter , public :: LOG_LEVEL_VOLUME = 1
-  integer , parameter , public :: LOG_LEVEL_CHAPTER = 2
-  integer , parameter , public :: LOG_LEVEL_SECTION = 3
-  integer , parameter , public :: LOG_LEVEL_SUBSECTION = 4
+  integer, parameter, public :: LOG_LEVEL_VOLUME = 1
+  integer, parameter, public :: LOG_LEVEL_CHAPTER = 2
+  integer, parameter, public :: LOG_LEVEL_SECTION = 3
+  integer, parameter, public :: LOG_LEVEL_SUBSECTION = 4
   !
   ! List of available log information levels
   ! DEBUG   - all messages
@@ -173,12 +208,12 @@ module m_multilog
   ! WARNING - error and warning
   ! ERROR   - only error messages
   !
-  integer , parameter , public :: DEBUG   = 0
-  integer , parameter , public :: FINE    = 0
-  integer , parameter , public :: INFO    = 1
-  integer , parameter , public :: WARNING = 2
-  integer , parameter , public :: ERROR   = 3
-  integer , parameter , public :: ALL     = 9
+  integer, parameter, public :: DEBUG   = 0
+  integer, parameter, public :: FINE    = 0
+  integer, parameter, public :: INFO    = 1
+  integer, parameter, public :: WARNING = 2
+  integer, parameter, public :: ERROR   = 3
+  integer, parameter, public :: ALL     = 9
 
 contains
   !
@@ -219,10 +254,14 @@ contains
     else
        open (NEWUNIT=this%fileunit, FILE=log_file , ACTION='WRITE', STATUS='UNKNOWN')
     end if
+    this%timestamp = .false.
+    ! Default timestamp format
+    this%timefmt = 'yyyy-mm-dd HH:MM:SS'
     ! Set file name
     this%filename = log_file
-    ! Default: no output to stdout
+    ! Default: no output to stdout, only to file
     this%writestdout = .false.
+    this%writetofile = .true.
     ! Set log info level to provided value or default
     if ( present ( info_lvl ) ) then
        this%infolevel = info_lvl
@@ -239,9 +278,189 @@ contains
   !
   subroutine shutdown ( this )
     class(log_t), intent(in out) :: this
-    close ( this%fileunit )
+    close( this%fileunit )
   end subroutine shutdown
-  ! write --
+  !
+  ! log_configure_logical --
+  !   Set the logical static "option" of the component to "val" for this log.
+  !   The "option" may be one of the following.
+  ! option = "timestamp"
+  !   Disable or enable the insertion of time stamps.
+  !   If the time stamp option is enabled, a time stamp with
+  !   format "yyyy-MM-dd hh:mm:ss" is inserted before the message.
+  ! option = "writeonstdout"
+  !   Disable or enable the writing on standard output.
+  ! option = "writetofile"
+  !   Disable or enable the writing to file.
+  !
+  ! Arguments:
+  !    option        see above
+  !    val            "    "
+  !
+  subroutine log_configure_logical ( this, option, val )
+    class(log_t),     intent(in out) :: this
+    character(len=*), intent(in)     :: option
+    logical,          intent(in)     :: val
+    character(len=500) :: message
+    select case ( option )
+    case ( "timestamp" )
+       this%timestamp = val
+    case ( "writeonstdout" )
+       this%writestdout = val
+    case ( "writeonfile" )
+       this%writetofile = val
+    case default
+       write( message, "(A,A,A,l5,A)" ) "Unknown option ", option, &
+            " for value ", val, " in log_configure_logical"
+       call log_error( message )
+    end select
+  end subroutine log_configure_logical
+  !
+  ! log_configure_integer --
+  !   Set the integer "option" to "val" for this log.
+  !   The "option" may be one of the following.
+  ! option = "infolevel"
+  !   Set level of detail in the log. Available values: ERROR, WARNING, INFO, FINE
+  !
+  ! Arguments:
+  !    option        see above
+  !    val            "    "
+  !
+  subroutine log_configure_integer ( this, option , val )
+    class(log_t),     intent(in out) :: this
+    character(len=*), intent(in)     :: option
+    integer,          intent(in)     :: val
+    character(len=500) :: message
+    select case ( option )
+    case ( "infolevel" )
+       if ( val >= 0 .and. val <= 3 ) then
+          this%infolevel = val
+       else
+          write( message, "(A,I5,A)" ) "Unknown value ", val, &
+               " for option infolevel in log_configure_integer"
+          call log_error( message )
+       end if
+    case default
+       write( message, "(A,A,A,I5,A)" ) "Unknown option ", option, &
+            " for value ", val, " in log_configure_integer"
+       call log_error( message )
+    end select
+  end subroutine log_configure_integer
+  !
+  ! log_configure_character --
+  !   Set the character "option" to "val" for this log.
+  !   The "option" may be one of the following.
+  ! option = "timefmt"
+  !   Set the string used for timestamp formatting.
+  !
+  subroutine log_configure_character ( this, option , val )
+    class(log_t),     intent(in out) :: this
+    character(len=*), intent(in)     :: option
+    character(len=*), intent(in)     :: val
+    character(len=500) :: message
+    select case ( option )
+    case ( "timefmt" )
+       this%timefmt = val
+    case default
+       write( message, "(A,A,A,A,A)" ) "Unknown option ", option, &
+            " for value ", val, " in log_configure_character"
+       call log_error( message )
+    end select
+  end subroutine log_configure_character
+  !
+  ! log_cget_logical --
+  !   Returns the value of the given logical option for this log.
+  !   The "option" may be one of the following.
+  ! option = "timestamp"
+  !   Current value of the option to enable / disable insertion of time stamps.
+  ! option = "writeonstdout"
+  !   Current value of the option to enable / disable writing on standard output.
+  ! option = "writetofile"
+  !   Current value of the option to enable / disable writing on log file.
+  !
+  ! Arguments:
+  !    option        see above
+  !    val            "    "
+  !
+  subroutine log_cget_logical ( this, option , val )
+    class(log_t),     intent(in)  :: this
+    character(len=*), intent(in)  :: option
+    logical,          intent(out) :: val
+    character(len=500) :: message
+
+    val = .false.
+    select case ( option )
+    case ( "timestamp" )
+       val = this%timestamp
+    case ( "writeonstdout" )
+       val = this%writestdout
+    case ( "writeonfile" )
+       val = this%writetofile
+    case default
+       write( message, "(A,l5,A)" ) "Unknown option ", option, &
+            " in log_cget_logical"
+       call log_error( message )
+    end select
+  end subroutine log_cget_logical
+  !
+  ! log_cget_integer --
+  !   Returns the value of the given integer option for this log.
+  !   The "option" may be one of the following.
+  ! option = "infolevel"
+  !   Minimum level for writing messages
+  ! option = "logfileunit"
+  !   Current logical unit connected to the log provided as argument
+  !
+  subroutine log_cget_integer ( this, option, val )
+    class(log_t),     intent(in)  :: this
+    character(len=*), intent(in)  :: option
+    integer,          intent(out) :: val
+    character(len=500) :: message
+    select case ( option )
+    case ( "infolevel" )
+       val = this%infolevel
+    case ( "logfileunit" )
+       val = this%fileunit
+    case default
+       write( message, "(A,I5,A)" ) "Unknown option ", option, &
+            " in log_cget_integer"
+       call log_error( message )
+    end select
+  end subroutine log_cget_integer
+  !
+  ! log_cget_character --
+  !   Returns the value of the given option.
+  !   The "option" may be one of the following.
+  ! option = "timefmt"
+  !   Get the string used for timestamp formatting
+  !
+  subroutine log_cget_character ( this, option , val )
+    class(log_t),     intent(in)  :: this
+    character(len=*), intent(in)  :: option
+    character(len=*), intent(out) :: val
+    character(len=500) :: message
+    select case ( option )
+    case ( "timefmt" )
+       val = this%timefmt
+    case default
+       write( message, "(A,A,A)" ) "Unknown option ", option, &
+            " in log_cget_character"
+       call log_error( message )
+    end select
+  end subroutine log_cget_character
+  !
+  ! log_reset --
+  !    Set all internal settings to default values for this log
+  !
+  subroutine log_reset ( this )
+    class(log_t), intent(in out) :: this
+    this%infolevel = INFO
+    this%timestamp = .false.
+    this%writestdout = .false.
+    this%writetofile = .true.
+    this%timefmt = 'yyyy-mm-dd HH:MM:SS'
+  end subroutine log_reset
+   ! write --
   !   Log the given character string to one logging unit.
   !   If the logging to standard output is enabled, writes the message
   !   on standard output.
@@ -250,58 +469,73 @@ contains
   !   Before outputting directly the message string, the string is
   !   trimmed, that is to say that all trailing blanks are removed from
   !   the string.
-  !   If the time stamp option is enabled, a time stamp with
-  !   format "year-month-day hh:mm:ss" is inserted before the message.
+  !   If the time stamp option is enabled, a time stamp with format
+  !   "yyyy-mm-dd HH:MM:SS" or custom format set with
+  !   log_*configure_character is inserted before the message.
   !
   ! Arguments:
   !     msg           Log message to be written
   !     info_lvl      Optional: log information level, default = INFO
   !
-  ! Note :
-  !    Before outputting directly the message string, the string is
-  !    trimmed, that is to say that all trailing blanks are removed from
-  !    the string.
-  !
   subroutine write( this, msg, info_lvl )
-    class(log_t),      intent(in out) :: this
-    character(len=*),  intent(in)     :: msg
-    integer, optional, intent(in)     :: info_lvl
+    class(log_t),     intent(in out) :: this
+    character(len=*), intent(in)     :: msg
+    integer,optional, intent(in)     :: info_lvl
     character(len=40) :: date_string
     character(len=40) :: time_string
     character(len=40) :: stamp
+    type(datetime_t)  :: now
     if ( this%timestamp ) then
        call date_and_time( date = date_string, time = time_string )
-       write( stamp, '(11a)' ) &
-            date_string(1:4), '-', date_string(5:6), '-', date_string(7:8), ' ',&
-            time_string(1:2), ':', time_string(3:4), ':', time_string(5:6)
+       call now%set_datetime( date_string(1:4), date_string(5:6), &
+            date_string(7:8), time_string(1:2), &
+            time_string(3:4), time_string(5:6) )
+       call format_date( now, this%timefmt, stamp )
     else
        stamp = ' '
     end if
+    ! Write to stdout?
     if ( this%writestdout ) then
        if ( this%timestamp ) then
-          call log_write ( log_stdout, trim(stamp) // ' ' // msg, info_lvl )
+          call log_write ( log_stdout, trim( stamp ) // ' ' // msg, info_lvl )
        else
           call log_write ( log_stdout, msg, info_lvl )
        end if
     end if
-    ! Always write to log file
-    if ( this%timestamp ) then
-       call log_write ( this%fileunit, trim(stamp) // ' ' // msg, info_lvl)
-    else
-       call log_write ( this%fileunit, msg, info_lvl )
+    ! Write to file?
+    if ( this%writetofile ) then
+       ! Timestamp before message?
+       if ( this%timestamp ) then
+          call log_write( this%fileunit, trim( stamp ) // ' ' // msg, info_lvl )
+       else
+          call log_write( this%fileunit, msg, info_lvl )
+       end if
     end if
   end subroutine write
   ! ------------------------------------------------------------
   !
   ! Procedures related to the global log handler 'log_group'
   !
+  ! log_group_reset --
+  !    Set all internal settings to default values for all logs
+  !
+  subroutine log_group_reset ( )
+    integer :: i
+    do i = 1, log_group%nroflogs
+       log_group%log_array(i)%p%infolevel = INFO
+       log_group%log_array(i)%p%timestamp = .false.
+       log_group%log_array(i)%p%writestdout = .false.
+       log_group%log_array(i)%p%writetofile = .true.
+       log_group%log_array(i)%p%timefmt = 'yyyy-mm-dd HH:MM:SS'
+    end do
+  end subroutine log_group_reset
   ! shutdown_log_group --
   !   Close all logs connected to the log_group object
   !
   subroutine shutdown_log_group ( )
     integer :: i
     do i = 1, log_group%nroflogs
-       call log_group%log_array(i)%shutdown ()
+       call log_group%log_array(i)%p%shutdown()
     end do
     log_group%nroflogs = 0
   end subroutine shutdown_log_group
@@ -312,12 +546,12 @@ contains
   !   log        log_t object (initialized with log_t%startup)
   !
   subroutine add_log ( log )
-    type(log_t), intent(in out) :: log
+    type(log_t), target, intent(in out) :: log
     log_group%nroflogs = log_group%nroflogs + 1
     if ( log_group%nroflogs > size (log_group%log_array) ) then
-       call log_error ('add_log: Tried to add log to a full log group.')
+       call log_error( 'add_log: Tried to add log to a full log group.' )
     else
-       log_group%log_array(log_group%nroflogs) = log
+       log_group%log_array(log_group%nroflogs)%p => log
     end if
     log%logindex = log_group%nroflogs
   end subroutine add_log
@@ -329,17 +563,19 @@ contains
   !   log        log_t object
   !
   subroutine remove_log ( log )
-    type(log_t), intent(in out) :: log
+    type(log_t), target, intent(in out) :: log
     integer :: idx
     idx = log%logindex
-    ! Move logs with higher index than the removed log down one step
+    call log%shutdown()
+    ! Move pointers to logs with higher index than the removed log
+    ! down one step
     if ( idx < log_group%nroflogs ) then
        do idx = log%logindex, log_group%nroflogs - 1
-          log_group%log_array(idx) = log_group%log_array(idx + 1)
+          log_group%log_array(idx)%p => log_group%log_array(idx + 1)%p
        end do
     end if
+    nullify ( log_group%log_array(log_group%nroflogs)%p )
     log_group%nroflogs = log_group%nroflogs - 1
-    call log%shutdown ()
   end subroutine remove_log
   ! log_msg --
   !   Log the given character string to all logging units with relevant
@@ -358,138 +594,107 @@ contains
   !     info_lvl      Optional: log information level, default = INFO
   !
   subroutine log_msg ( msg, info_lvl )
-     character(len=*),   intent(in)     :: msg
-     integer, optional,  intent(in)     :: info_lvl
+     character(len=*),  intent(in) :: msg
+     integer, optional, intent(in) :: info_lvl
      integer :: i, used_level
      if ( present ( info_lvl ) ) then
         used_level = info_lvl
      else
-        used_level = ALL
+        used_level = INFO
      end if
      if ( log_group%nroflogs < 1 ) then
-        call log_error ('log_msg: Tried to write to empty log group')
+        call log_error( 'log_msg: Tried to write to empty log group' )
      else
         do i = 1, log_group%nroflogs
-           if ( log_group%log_array(i)%infolevel <= used_level ) then
-              call log_group%log_array(i)%write( msg, used_level )
+           if ( log_group%log_array(i)%p%infolevel <= used_level ) then
+              call log_group%log_array(i)%p%write( msg, used_level )
            end if
         end do
      end if
   end subroutine log_msg
   !
-  ! log_reset --
-  !    Set all internal settings to default values.
-  !
-  ! Arguments:
-  !    log        log to reset, if not provided all logs are reset
-  !
-  subroutine log_reset ( log )
-    type(log_t), optional, intent(in out) :: log
-    integer :: i
-
-    if ( present ( log ) ) then
-       log%infolevel = INFO
-       log%timestamp = .false.
-       log%writestdout = .false.
-    else
-       do i = 1, log_group%nroflogs
-          log_group%log_array(i)%infolevel = INFO
-          log_group%log_array(i)%timestamp = .false.
-          log_group%log_array(i)%writestdout = .false.
-       end do
-    end if
-  end subroutine log_reset
-  !
-  ! configure_logical --
-  !   Set the logical static "option" of the component to "val".
+  ! log_group_configure_logical --
+  !   Set the logical static "option" of the component to "val" for
+  !   log_group itself or for all logs depending on the option.
   !   The "option" may be one of the following.
+  ! option = "stoponerror"
+  !   Disable or enable abort on error in logging.
   ! option = "timestamp"
-  !   Disable or enable the insertion of time stamps.
+  !   Disable or enable the insertion of time stamps for all logs.
   !   If the time stamp option is enabled, a time stamp with
   !   format "year-month-day hh:mm:ss" is inserted before the message.
   ! option = "writeonstdout"
-  !   Disable or enable the writing on standard output.
-  !
+  !   Disable or enable the writing on standard output for all logs.
+  ! option = "writetofile"
+  !   Disable or enable the writing to file for all logs.
   ! Arguments:
   !    option        see above
   !    val            "    "
-  !    log           log file, optional. If not provided "option" will
-  !                  be set to "val" for all logs connected to log_group
   !
-  subroutine configure_logical ( option, val, log )
-    character ( len = * ), intent(in)     :: option
-    logical,               intent(in)     :: val
-    type(log_t), optional, intent(in out) :: log
-    character ( len = 500 ) :: message
+  subroutine log_group_configure_logical ( option, val )
+    character(len=*), intent(in) :: option
+    logical,          intent(in) :: val
+    character(len=500) :: message
     integer :: i
 
     select case ( option )
     case ( "stoponerror" )
        log_group%stoponerror = val
     case ( "timestamp" )
-       if ( present ( log ) ) then
-          log%timestamp = val
-       else
-          do i = 1, log_group%nroflogs
-             log_group%log_array(i)%timestamp = val
-          end do
-       end if
+       do i = 1, log_group%nroflogs
+          log_group%log_array(i)%p%timestamp = val
+       end do
     case ( "writeonstdout" )
-       if ( present ( log ) ) then
-          log%writestdout = val
-       else
-          do i = 1, log_group%nroflogs
-             log_group%log_array(i)%writestdout = val
-          end do
-       end if
+       do i = 1, log_group%nroflogs
+          log_group%log_array(i)%p%writestdout = val
+       end do
+    case ( "writeonfile" )
+       do i = 1, log_group%nroflogs
+          log_group%log_array(i)%p%writetofile = val
+       end do
     case default
-       write (message,"(A,A,A,l5,A)") "Unknown option ", option, &
-            " for value ", val, " in configure_logical"
-       call log_error ( message )
+       write( message, "(A,A,A,l5,A)" ) "Unknown option ", option, &
+            " for value ", val, " in log_group_configure_logical"
+       call log_error( message )
     end select
-  end subroutine configure_logical
+  end subroutine log_group_configure_logical
   !
-  ! log_configure_integer --
-  !   Set the integer static "option" of the component to "val".
+  ! log_group_configure_integer --
+  !   Set the integer static "option" of the component to "val" for
+  !   log_group itself or for all logs depending on the option.
   !   The "option" may be one of the following.
   ! option = "infolevel"
-  !   Set level of detail in the log. Available values: ERROR, WARNING, INFO, FINE
+  !   Set level of detail in the logs. Available values: 
+  !   ERROR, WARNING, INFO, FINE, DEBUG (where FINE = DEBUG)
   !
   ! Arguments:
   !    option        see above
   !    val            "    "
-  !    log           log file, optional. If not provided "option" will
-  !                  be set to "val" for all logs connected to log_group
   !
-  subroutine configure_integer ( option , val, log )
-    character ( len = * ) , intent(in)     :: option
-    integer,                intent(in)     :: val
-    type(log_t), optional,  intent(in out) :: log
-    character ( len = 500 ) :: message
+  subroutine log_group_configure_integer ( option , val )
+    character(len=*), intent(in) :: option
+    integer,          intent(in) :: val
+    character(len=500) :: message
     integer :: i
     select case ( option )
     case ( "infolevel" )
        if ( val >= 0 .and. val <= 3 ) then
-          if ( present ( log ) ) then
-             log%infolevel = val
-          else
-             do i = 1, log_group%nroflogs
-                log_group%log_array(i)%infolevel = val
-             end do
-          end if
+          do i = 1, log_group%nroflogs
+             log_group%log_array(i)%p%infolevel = val
+          end do
        else
-          write (message,"(A,I5,A)") "Unknown value ", val, &
-               " for option infolevel in log_configure_integer"
-          call log_error ( message )
+          write( message, "(A,I5,A)" ) "Unknown value ", val, &
+               " for option infolevel in log_group_configure_integer"
+          call log_error( message )
        end if
     case default
-       write (message,"(A,A,A,I5,A)") "Unknown option ", option, &
-            " for value ", val, " in log_configure_integer"
-       call log_error ( message )
+       write( message, "(A,A,A,I5,A)" ) "Unknown option ", option, &
+            " for value ", val, " in log_group_configure_integer"
+       call log_error( message )
     end select
-  end subroutine configure_integer
+  end subroutine log_group_configure_integer
   !
-  ! log_configure_character --
+  ! log_group_configure_character --
   !   Set the character static "option" of the component to "val".
   !   The "option" may be one of the following.
   ! option = "level_string_volume"
@@ -500,15 +705,14 @@ contains
   !   Set the string used for section delimiter.
   ! option = "level_string_subsection"
   !   Set the string used for subsection delimiter.
+  ! option = "timefmt"
+  !   Set the string used for timestamp formatting for all logs.
   !
-  ! Log delimiters are global (so far) so the 'log' option is not
-  ! very meaningful.
-  !
-  subroutine configure_character ( option , val, log )
-    character ( len = * ) , intent(in)     :: option
-    character ( len = * ) , intent(in)     :: val
-    type(log_t), optional,  intent(in out) :: log        ! Not used - added for symmetry
-    character ( len = 500 ) :: message
+  subroutine log_group_configure_character ( option , val )
+    character(len=*), intent(in) :: option
+    character(len=*), intent(in) :: val
+    character(len=500) :: message
+    integer :: i
     select case ( option )
     case ( "level_string_volume" )
        log_level_string_volume = val
@@ -518,96 +722,47 @@ contains
        log_level_string_chapter = val
     case ( "level_string_subsection" )
        log_level_string_chapter = val
+    case ( "timefmt" )
+       do i = 1, log_group%nroflogs
+          log_group%log_array(i)%p%timefmt = val
+       end do
     case default
-       write (message,"(A,A,A,A,A)") "Unknown option ", option, &
-            " for value ", val, " in log_configure_character"
-       call log_error ( message )
+       write( message, "(A,A,A,A,A)" ) "Unknown option ", option, &
+            " for value ", val, " in log_group_configure_character"
+       call log_error( message )
     end select
-  end subroutine configure_character
+  end subroutine log_group_configure_character
   !
-  ! log_cget_logical --
-  !   Returns the value of the given logical option.
+  ! log_group_cget_logical --
+  !   Returns the value of the given logical option. Only handling
+  !   options for log_group itself. Use log_t%cget to retrieve options
+  !   for specific logs.
   !   The "option" may be one of the following.
-  ! option = "timestamp"
-  !   Current value of the option to enable / disable insertion of time stamps.
-  ! option = "writeonstdout"
-  !   Current value of the option to enable / disable writing on standard output.
-  ! option = "writeonlogfile"
-  !   Current value of the option to enable / disable writing on log file.
   ! option = "stoponerror"
   !   Current value of the option to enable / disable stopping when an error is met.
   !
   ! Arguments:
-  !    log           log file, optional. If not provided, .true. will be returned
-  !                  if "option" is set to true for one or more logs
   !    option        see above
   !    val            "    "
   !
-  subroutine cget_logical ( log, option , val )
-    character ( len = * ) , intent(in)  :: option
-    logical,                intent(out) :: val
-    type(log_t), optional,  intent(in)  :: log
-    character ( len = 500 ) :: message
-    logical :: values(4)
-    integer :: i
+  subroutine  log_group_cget_logical ( option , val )
+    character(len=*) , intent(in)  :: option
+    logical,           intent(out) :: val
+    character(len=500) :: message
 
     val = .false.
-    values(:) = .false.
     select case ( option )
-    case ( "timestamp" )
-       if ( present ( log ) ) then
-          val = log%timestamp
-       else
-          do i = 1, log_group%nroflogs
-             values(i) = log_group%log_array(i)%timestamp
-          end do
-          if (any (values .eqv. .true.) ) val = .true.
-       end if
-    case ( "writeonstdout" )
-       if ( present ( log ) ) then
-          val = log%writestdout
-       else
-          do i = 1, log_group%nroflogs
-             values(i) = log_group%log_array(i)%writestdout
-          end do
-          if (any (values .eqv. .true.) ) val = .true.
-       end if
     case ( "stoponerror" )
        val = log_group%stoponerror
     case default
-       write (message,"(A,l5,A)") "Unknown option ", option, &
-            " in log_cget_logical"
-       call log_error ( message )
+       write( message, "(A,l5,A)" ) "Unknown option ", option, &
+            " in log_group_cget_logical"
+       call log_error( message )
     end select
-  end subroutine cget_logical
+  end subroutine log_group_cget_logical
   !
-  ! log_cget_integer --
-  !   Returns the value of the given integer option.
-  !   The "option" may be one of the following.
-  ! option = "infolevel"
-  !   Minimum level for writing messages
-  ! option = "logfileunit"
-  !   Current logical unit connected to the log provided as argument
-  !
-  subroutine cget_integer ( log, option, val )
-    type(log_t),            intent(in)  :: log
-    character ( len = * ) , intent(in)  :: option
-    integer,                intent(out) :: val
-    character ( len = 500 ) :: message
-    select case ( option )
-    case ( "infolevel" )
-       val = log%infolevel
-    case ( "logfileunit" )
-       val = log%fileunit
-    case default
-       write (message,"(A,I5,A)") "Unknown option ", option, &
-            " in log_cget_integer"
-       call log_error ( message )
-    end select
-  end subroutine cget_integer
-  !
-  ! log_cget_character --
-  !   Returns the value of the given logical option.
+  ! log_group_cget_character --
+  !   Returns the value of the given option.
   !   The "option" may be one of the following.
   ! option = "level_string_volume"
   !   Get the string used for volume delimiter.
@@ -618,11 +773,10 @@ contains
   ! option = "level_string_subsection"
   !   Get the string used for subsection delimiter.
   !
-  subroutine cget_character ( log , option , val )
-    type(log_t), optional , intent(in)  :: log       ! Not used - added for symmetry
-    character ( len = * ) , intent(in)  :: option
-    character ( len = * ) , intent(out) :: val
-    character ( len = 500 ) :: message
+  subroutine log_group_cget_character ( option , val )
+    character(len=*), intent(in)  :: option
+    character(len=*), intent(out) :: val
+    character(len=500) :: message
     select case ( option )
     case ( "level_string_volume" )
        val = LOG_LEVEL_STRING_VOLUME
@@ -634,13 +788,13 @@ contains
        val = LOG_LEVEL_STRING_SUBSECTION
     case default
        write (message,"(A,A,A)") "Unknown option ", option, &
-            " in log_cget_character"
+            " in log_group_cget_character"
        call log_error ( message )
     end select
-  end subroutine cget_character
+  end subroutine log_group_cget_character
   ! -----------------------------------------------------------------
   !
-  ! Message and error handling routines (not type bound)
+  ! Message and error handling routines
   !
   ! log_write --
   !     Write the given log message "msg" of length "length"
@@ -650,7 +804,7 @@ contains
   ! Arguments:
   !     unit             LU-number to write to
   !     msg              Message
-  !     info_lvl         Optional; FINE, INFO, WARNING or ERROR
+  !     info_lvl         Optional; DEBUG, FINE, INFO, WARNING or ERROR
   !                      INFO is the default log information level,
   !                      which is also used if provided value of
   !                      info_lvl is not recognized.
@@ -661,15 +815,28 @@ contains
     integer, optional, intent(in)     :: info_lvl
 
     if ( unit == log_stdout ) then
-       write ( *, '(a)' ) trim(msg)
+       if ( present ( info_lvl )) then
+          select case (info_lvl)
+          case ( FINE, INFO ) ! INFO == DEBUG
+             write ( unit, '(a)' ) trim(msg)
+          case ( WARNING )
+             write ( unit, '(a)' ) 'Warning: '//trim(msg)
+          case ( ERROR )
+             write ( unit, '(a)' ) 'ERROR: '//trim(msg)
+          case default
+             write ( unit, '(a)' ) trim(msg)
+          end select
+       else
+          write ( *, '(a)' ) trim(msg)
+       end if
     else
        if ( present ( info_lvl )) then
           select case (info_lvl)
-          case (FINE,INFO)
+          case ( FINE, INFO ) ! INFO == DEBUG
              write ( unit, '(a)' ) trim(msg)
-          case (WARNING)
+          case ( WARNING )
              write ( unit, '(a)' ) 'Warning: '//trim(msg)
-          case (ERROR)
+          case ( ERROR )
              write ( unit, '(a)' ) 'ERROR: '//trim(msg)
           case default
              write ( unit, '(a)' ) trim(msg)
@@ -694,11 +861,11 @@ contains
   !     level            Level to be written
   !
   subroutine log_delimiter( log, level )
-    type (log_t), optional, intent(in out) :: log
-    integer,      optional, intent(in)     :: level
+    type(log_t), optional, intent(in out) :: log
+    integer,     optional, intent(in)     :: level
     character(len=40) :: msg ! the delimiter string
     integer           :: used_level
-    if (present(level)) then
+    if ( present( level ) ) then
        used_level = level
     else
        used_level = LOG_LEVEL_VOLUME
@@ -715,10 +882,9 @@ contains
   !   Generates an error for the log handling
   !
   subroutine log_error ( message )
-    implicit none
-    character (len=*), intent(in) :: message
-    write ( 6, "(A)" ) "Error in m_multilog."
-    write ( 6 , "(A)" ) message
+    character(len=*), intent(in) :: message
+    write ( ERROR_UNIT, "(A)" ) "Error in m_multilog."
+    write ( ERROR_UNIT , "(A)" ) message
     call log_error_stop ( )
   end subroutine log_error
   !
@@ -727,16 +893,10 @@ contains
   !
   subroutine log_error_stop ( )
     if ( log_group%stoponerror ) then
+       
        stop
     endif
   end subroutine log_error_stop
-  !
-  ! log_set_stoponerror --
-  !
-  subroutine log_set_stoponerror ( stoponerror )
-    logical , intent(in) :: stoponerror
-    log_group%stoponerror = stoponerror
-  end subroutine log_set_stoponerror
   !
   ! log_get_delimiter --
   !   Fills msg with a log delimiter of given level.
@@ -748,9 +908,9 @@ contains
   !     msg               Corresponding string
   !
   subroutine log_get_delimiter ( level , msg )
-    implicit none
-    integer , intent(in) :: level
+    integer,          intent(in)  :: level
     character(len=*), intent(out) :: msg
+    character(len=500) :: err_msg
     select case (level)
     case (LOG_LEVEL_VOLUME)
        write(msg,*) "==============="
@@ -761,14 +921,164 @@ contains
     case (LOG_LEVEL_SUBSECTION)
        write(msg,*) "+++++++++++++++"
     case default
-       ! NOTE :
-       ! We do not use m_exception here to limit the dependencies of
-       ! such a low level utility.
-       write(*,*) "Bad value for the message level:" , level
-       write(*,*)
-       stop
+       write (err_msg, *) "Bad value for message level in log_get_delimiter:" , level
+       call log_error ( err_msg )
     end select
   end subroutine log_get_delimiter
+  !
+  ! Type bound procedure for date/time type
+  !
+  subroutine set_datetime( this, year, month, day, hour, min, sec )
+    class(datetime_t), intent(in out) :: this
+    character(len=*), intent(in) :: year
+    character(len=*), intent(in) :: month
+    character(len=*), intent(in) :: day
+    character(len=*), intent(in) :: hour
+    character(len=*), intent(in) :: min
+    character(len=*), intent(in) :: sec
+    read( year, '(i4)' ) this%year
+    read( month, '(i2)' ) this%month
+    read( day, '(i2)' ) this%day
+    read( hour, '(i2)' ) this%hour
+    read( min, '(i2)' ) this%minute
+    read( sec, '(i2)' ) this%sec
+  end subroutine set_datetime
+  !> Format a date/time as a string. From LibDate, adapted to
+  !> datetime_base_t and added seconds.
+  !
+  ! Arguments:
+  !     date             Date/time to be formatted
+  !     pattern          String that serves as the pattern
+  !     datestring       Resulting string
+  !
+  ! Note:
+  !     The pattern can contain any of the following substrings
+  !     that will be replaced by the corresponding date/time information
+  !
+  !     dd        Day of month ("01" for instance)
+  !     ds        Day of month ("1" for instance, s for space)
+  !     HH        Hour (00-23)
+  !     HS        Hour (0-23)
+  !     mm        Month ("01" for january)
+  !     ms        Month ("1" for january, s for space)
+  !     MM        Minutes within the hour (00-59)
+  !     MS        Minutes within the hour (0-59)
+  !     SS        Seconds (00-59)
+  !     Ss        Seconds (0-59)
+  !     YY        Year without the century
+  !     yyyy      Year with the century
+  !
+  !     Each substring is replaced by a string of the same length or
+  !     shorter.
+  !
+  !     The third argument should in general be at least as long
+  !     as the pattern.
+  !
+  ! (Added by Arjen Markus)
+  !
+  ! From libdate module, copied here to avoid dependency and also to
+  ! enable two modifications: added support for seconds and removed
+  ! day of year (which didn't seem relevant for timestamps?). 
+  subroutine Format_date( date, pattern, datestring )
+    class(datetime_t), intent(in)  :: date
+    character(len=*),  intent(in)  :: pattern
+    character(len=*),  intent(out) :: datestring
+    ! Local
+    character(len=4) :: piece
+    integer :: k
+    logical :: found
+
+    datestring = pattern
+
+    found = .true.
+    do while ( found )
+       found = .false.
+
+       k = index( datestring, 'dd' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2.2)' ) date%day
+          datestring(k:k+1) = piece
+       end if
+
+       k = index( datestring, 'ds' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2)' ) date%day
+          datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       end if
+
+       k = index (datestring, 'HH' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2.2)' ) date%hour
+          datestring(k:k+1) = piece
+       end if
+
+       k = index( datestring, 'HS' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2)' ) date%hour
+          datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       end if
+
+       k = index( datestring, 'mm' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2.2)' ) date%month
+          datestring(k:k+1) = piece
+       end if
+
+       k = index( datestring, 'ms' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2)' ) date%month
+          datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       end if
+
+       k = index( datestring, 'MM' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2.2)' ) date%minute
+          datestring(k:k+1) = piece
+       end if
+
+       k = index( datestring, 'MS' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2)' ) date%minute
+          datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       end if
+
+       k = index( datestring, 'SS' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2.2)' ) date%sec
+          datestring(k:k+1) = piece
+       end if
+
+       k = index( datestring, 'Ss' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2)' ) date%sec
+          datestring(k:) = adjustl( piece(1:2) // datestring(k+2:) )
+       end if
+
+       k = index( datestring, 'YY' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i2.2)' ) mod( date%year, 100 )
+          datestring(k:k+1) = piece
+       end if
+
+       k = index( datestring, 'yyyy' )
+       if (k > 0) then
+          found = .true.
+          write( piece, '(i4)' ) date%year
+          datestring(k:k+3) = piece
+       end if
+    end do
+  end subroutine Format_date
 
 end module m_multilog
 
