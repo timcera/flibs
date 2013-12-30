@@ -1,3 +1,11 @@
+2013-12-30 knystrom@users.sourceforge.net
+   * src/filedir/m_filedir.f90: added option for GETCWD function
+   * configure.sh: changed to /bin/sh, write selected options to
+	Makefile-cfg
+   * make/makefile/Makefile-ifort: added
+   * make/makefile/Makefile-gfortran: added _FS_GETCWD_SUBROUTINE
+   * make/makefile/Makefile-g95: added _FS_GETCWD_FUNCTION
+
 2013-10-04 arjenmarkus@users.sourceforge.net
    * src/dbase/dbasefile.f90: reader for dBase III files
    * test/dbase/test_dbasefile.f90: test program for the reader for dBase III files
