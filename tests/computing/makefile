@@ -12,6 +12,7 @@ PROGRAMS	=	test_diff$(EXEEXT) \
 		test_intervals$(EXEEXT) \
 		test_annealing$(EXEEXT) \
 		test_genalg$(EXEEXT) \
+		test_pointsets$(EXEEXT) \
 		test_unsigned$(EXEEXT) \
 		test_f0noIEEE$(EXEEXT) \
 		test_f0withIEEE$(EXEEXT) \
@@ -94,6 +95,17 @@ test_genalg$(OBJEXT):	test_genalg.f90 genetic_algorithms$(OBJEXT)
 
 test_genalg$(EXEEXT):	test_genalg$(OBJEXT) genetic_algorithms$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_genalg$(OBJEXT) genetic_algorithms$(OBJEXT)
+
+
+pointsets$(OBJEXT):	../../src/computing/pointsets.f90 select_precision$(OBJEXT)
+	$(FC) $(FFLAGS) ../../src/computing/pointsets.f90
+
+test_pointsets$(OBJEXT):	test_pointsets.f90 pointsets$(OBJEXT)
+	$(FC) $(FFLAGS) test_pointsets.f90
+
+test_pointsets$(EXEEXT):	test_pointsets$(OBJEXT) pointsets$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_pointsets$(OBJEXT) pointsets$(OBJEXT)
+
 
 #
 # Note: the program to generate the test input file is not dealt with

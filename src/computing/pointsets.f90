@@ -10,7 +10,7 @@ module pointsets
     use select_precision
     implicit none
 
-    real, parameter, private :: pi = 3.1415926_wp ! Alas, no atan() possible
+    real, parameter, private :: pi = 3.14159265389793238464338_wp
 
 contains
 
@@ -346,6 +346,39 @@ subroutine random_disk( x, y, radius )
 
 end subroutine random_disk
 
+! random_circle --
+!     Generate points on a circle of given radius.
+!     The points are uniformly distributed
+! Arguments:
+!     x       Array of x-coordinates to be filled
+!     y       Array of y-coordinates to be filled
+!     radius  Radius of the circle
+! Result:
+!     Uniformly random points (that is: average
+!     number of points depends only on the area,
+!     not the position)
+!
+subroutine random_circle( x, y, radius )
+    real(kind=wp), dimension(:), intent(inout) :: x
+    real(kind=wp), dimension(:), intent(inout) :: y
+    real(kind=wp), intent(in)                  :: radius
+
+    real(kind=wp)                              :: xp
+    real(kind=wp)                              :: yp
+    integer                                    :: i
+
+    call random_number( y )
+
+    y = 2.0_wp * pi * y
+
+    do i = 1,size(x)
+        yp = y(i)
+        x(i) = radius * cos(yp)
+        y(i) = radius * sin(yp)
+    enddo
+
+end subroutine random_circle
+
 ! random_ball --
 !     Generate points within a sphere of given radius.
 !     The points are uniformly distributed
@@ -374,14 +407,14 @@ subroutine random_ball( x, y, z, radius )
 
     x = x**(1.0_wp/3.0_wp)
     y = 2.0_wp * pi * y
-    z = acos( 2.0_wp*z-1.0_wp )
+    z = acos( 2.0_wp*z-1.0_wp ) - 0.5_wp * pi
 
     do i = 1,size(x)
         xp = x(i) * radius
         yp = y(i)
         zp = z(i)
         x(i) = xp * cos(yp) * cos(zp)
-        y(i) = xp * sin(yp) * sin(zp)
+        y(i) = xp * sin(yp) * cos(zp)
         z(i) = xp * sin(zp)
     enddo
 
@@ -410,16 +443,16 @@ subroutine random_sphere( x, y, z, radius )
     real(kind=wp)                              :: zp
     integer                                    :: i
 
-    call random_rectangle( x, y, 1.0_wp, 1.0_wp )
+    call random_rectangle( y, z, 1.0_wp, 1.0_wp )
 
     y = 2.0_wp * pi * y
-    z = acos( 2.0_wp*z-1.0_wp )
+    z = acos( 2.0_wp*z-1.0_wp ) - 0.5_wp * pi
 
     do i = 1,size(x)
         yp = y(i)
         zp = z(i)
         x(i) = radius * cos(yp) * cos(zp)
-        y(i) = radius * sin(yp) * sin(zp)
+        y(i) = radius * sin(yp) * cos(zp)
         z(i) = radius * sin(zp)
     enddo
 end subroutine random_sphere
