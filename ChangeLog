@@ -1,4 +1,9 @@
 2013-12-30 knystrom@users.sourceforge.net
+   * src/reporting/m_multilog.f90: log_t configure/cget type bound,
+	configurable timestamp format
+   * tests/reporting/test_m_multilog.f90: adapting to new type bound
+	procedures for log_t and name changes for some log_group_t related
+	procedures 
    * src/filedir/m_filedir.f90: added option for GETCWD function
    * configure.sh: changed to /bin/sh, write selected options to
 	Makefile-cfg
