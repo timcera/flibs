@@ -94,12 +94,12 @@
 </head>
 <! -- Generated from file 'reporting/m_multilog.man' by tcllib/doctools with format 'html'
    -->
-<! -- Copyright &copy; 2012 Karin Nystr&ouml;m knystrom at users.sourceforge.net
+<! -- Copyright &copy; 2012-2014 Karin Nystr&ouml;m knystrom at users.sourceforge.net
    -->
 <! -- CVS: $Id$ flibs/m_multilog.n
    -->
 <body><div class="doctools">
-<h1 class="title">flibs/m_multilog(n) 1.0  &quot;flibs&quot;</h1>
+<h1 class="title">flibs/m_multilog(n) 1.3  &quot;flibs&quot;</h1>
 <div id="name" class="section"><h2><a name="name">Name</a></h2>
 <p>flibs/m_multilog - Manage multiple log files</p>
 </div>
@@ -122,18 +122,22 @@
 <li><a href="#3">integer, parameter :: LOG_LEVEL_VOLUME, LOG_LEVEL_CHAPTER, LOG_LEVEL_SECTION, LOG_LEVEL_SUBSECTION</a></li>
 <li><a href="#4"><b class="method">this%startup</b> ( <i class="arg">log_file</i> <span class="opt">?, append?</span> <span class="opt">?, info_lvl?</span>)</a></li>
 <li><a href="#5"><b class="method">this%shutdown</b></a></li>
-<li><a href="#6"><b class="method">this%write</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></li>
-<li><a href="#7"><b class="method">shutdown_log_group</b></a></li>
-<li><a href="#8"><b class="method">add_log</b> ( <i class="arg">log</i> )</a></li>
-<li><a href="#9"><b class="method">remove_log</b> ( <i class="arg">log</i> )</a></li>
-<li><a href="#10"><b class="method">log_msg</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></li>
-<li><a href="#11"><b class="method">log_reset</b> ( <i class="arg">log</i>)</a></li>
-<li><a href="#12"><b class="method">log_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> <span class="opt">?log?</span>)</a></li>
-<li><a href="#13"><b class="method">log_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> <span class="opt">?, log?</span>)</a></li>
-<li><a href="#14"><b class="method">log_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i>)</a></li>
-<li><a href="#15"><b class="method">log_cget</b> ( <span class="opt">?log ,?</span> <i class="arg">option</i> <i class="arg">, value</i>)</a></li>
-<li><a href="#16"><b class="method">log_cget</b> ( <span class="opt">?log ,?</span> <i class="arg">option</i> <i class="arg">, value</i>)</a></li>
-<li><a href="#17"><b class="method">log_cget</b> ( <span class="opt">?log ,?</span> <i class="arg">option</i> <i class="arg">, value</i>)</a></li>
+<li><a href="#6"><b class="method">this%reset</b> ( )</a></li>
+<li><a href="#7"><b class="method">this%write</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></li>
+<li><a href="#8"><b class="method">this%configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
+<li><a href="#9"><b class="method">this%configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
+<li><a href="#10"><b class="method">this%configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
+<li><a href="#11"><b class="method">this%cget</b> ( <i class="arg">option</i> <i class="arg">, value</i>)</a></li>
+<li><a href="#12"><b class="method">this%cget</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
+<li><a href="#13"><b class="method">shutdown_log_group</b></a></li>
+<li><a href="#14"><b class="method">add_log</b> ( <i class="arg">log</i> )</a></li>
+<li><a href="#15"><b class="method">remove_log</b> ( <i class="arg">log</i> )</a></li>
+<li><a href="#16"><b class="method">log_msg</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></li>
+<li><a href="#17"><b class="method">log_group_reset</b> ( )</a></li>
+<li><a href="#18"><b class="method">log_group_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
+<li><a href="#19"><b class="method">log_group_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i>)</a></li>
+<li><a href="#20"><b class="method">log_group_cget</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
+<li><a href="#21"><b class="method">log_group_cget</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></li>
 </ul>
 </div>
 </div>
@@ -156,7 +160,7 @@ with appropriate log level set. Example:</p>
    call log_msg ('Log message', WARNING)
 </pre>
 <p>will write to logs with log level equal to or lower than
-WARNING, i.e. WARNING, INFO and FINE.</p>
+WARNING, i.e. WARNING, INFO, FINE/DEBUG.</p>
 <p>The module provides methods to</p>
 <ul class="itemized">
 <li><p>connect a file to a log object</p></li>
@@ -193,19 +197,49 @@ first should be written to file and shut down the logging system.</p>
 infolevel and on standard output. The user may want to configure
 the behaviour of the log_group so that message are not written on
 standard output.</p>
-<p>The static method <i class="term">log_configure(option,value [,log])</i> is the central
-point to configure the log group. It takes a character &quot;option&quot;
-string and a &quot;value&quot; as arguments. In the following example, one
-writes messages on file and in some cases also to stdout, with
-and without time stamps.</p>
+<p>The static method <i class="term">log_group_configure(option,value)</i>
+is the central point to configure the log group itself or all logs
+connected to it. It takes a character &quot;option&quot; string and a &quot;value&quot; as
+arguments.</p>
+<p>It is also possible to configure a specific log using the type
+bound generic routine log_t%configure ( option, value ). In the
+following example, one writes messages on file and in one case
+also to stdout.</p>
 <pre class="example">
   type (log_t) :: test
   call test%startup ( 'test_m_multilog.log' )
   call add_log ( test )
-  call log_configure ( &quot;writeonstdout&quot; , .false. )
-  call log_msg( 'This message is written only on file' )
-  call log_configure ( &quot;writeonstdout&quot; , .true. )
+  call test%configure ( &quot;writeonstdout&quot; , .true. )
   call log_msg( 'This message is written both on screen and on file' )
+  call test%configure ( &quot;writeonstdout&quot; , .false. )
+  call log_msg( 'This message is written only on file' )
+  call shutdown_log_group ()
+</pre>
+<p>Timestamps can be formatted using a slightly modified version of
+format_date from the libdate module. The following strings are
+available:</p>
+<ul class="itemized">
+<li><p><i class="term">dd</i> - Day of month (&quot;01&quot; for instance)</p></li>
+<li><p><i class="term">ds</i> - Day of month (&quot;1&quot; for instance, s for space)</p></li>
+<li><p><i class="term">HH</i> - Hour (00-23)</p></li>
+<li><p><i class="term">HS</i> - Hour (0-23)</p></li>
+<li><p><i class="term">mm</i> - Month (&quot;01&quot; for january)</p></li>
+<li><p><i class="term">ms</i> - Month (&quot;1&quot; for january, s for space)</p></li>
+<li><p><i class="term">MM</i> - Minutes within the hour (00-59)</p></li>
+<li><p><i class="term">MS</i> - Minutes within the hour (0-59)</p></li>
+<li><p><i class="term">MM</i> - Seconds within the minute (00-59)</p></li>
+<li><p><i class="term">MS</i> - Seconds within the minute (0-59)</p></li>
+<li><p><i class="term">YY</i> - Year without the century</p></li>
+<li><p><i class="term">yyyy</i> - Year with the century</p></li>
+</ul>
+<p>The default pattern for timestamps is &quot;yyyy-mm-dd HH:MM:SS&quot;.</p>
+<pre class="example">
+  type (log_t) :: test
+  call test%startup ( 'test_m_multilog.log' )
+  call add_log ( test )
+  call test%configure ( &quot;timefmt&quot; , &quot;YY-mm-dd HH:MM&quot; )
+  call test%configure ( &quot;timestamp&quot; , .true. )
+  call log_msg( 'This message is written with custom timestamp' )
   call shutdown_log_group ()
 </pre>
 </div>
@@ -228,7 +262,7 @@ corresponding delimiting string to the log file(s).</p></dd>
 <dd><p>Initialises the log, connect it to the given filename and set default values.</p>
 <dl class="arguments">
 <dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
-<dd><p>The logging object.</p></dd>
+<dd></dd>
 <dt><b class="type">character(len=*), intent(in) ::</b> <i class="arg">log_file</i></dt>
 <dd><p>Name of the log file</p></dd>
 <dt><b class="type">logical, optional, intent(in) ::</b> <i class="arg">append</i></dt>
@@ -241,8 +275,18 @@ log overwrites the messages of the previous logging session.</p>
 If not present, set to default value INFO.</p></dd>
 </dl></dd>
 <dt><a name="5"><b class="method">this%shutdown</b></a></dt>
-<dd><p>Shotdown the log</p></dd>
-<dt><a name="6"><b class="method">this%write</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+</dl>
+<p>Close the log</p></dd>
+<dt><a name="6"><b class="method">this%reset</b> ( )</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+</dl>
+<p>Set all internal settings for the log to default values.</p></dd>
+<dt><a name="7"><b class="method">this%write</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></dt>
 <dd><p>Log the given character string to one logging unit.
 If the logging to standard output is enabled, writes the message
 on standard output.</p>
@@ -251,41 +295,138 @@ into the log file.</p>
 <p>Before outputting directly the message string, the string is
 trimmed, that is to say that all trailing blanks are removed from
 the string.</p>
-<p>If the time stamp option is enabled, a time stamp with
-format &quot;year-month-day hh:mm:ss&quot; is inserted before the message.
+<p>If the time stamp option is enabled, a time stamp with format
+&quot;year-month-day hh:mm:ss&quot; or custom timestamp format is inserted
+before the message.
 <em>Note:</em>
 Before outputting directly the message string, the string is
 trimmed, that is to say that all trailing blanks are removed from
 the string.</p>
 <dl class="arguments">
 <dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
-<dd><p>The logging object.</p></dd>
+<dd></dd>
 <dt><b class="type">character(len=*), intent(in) ::</b> <i class="arg">msg</i></dt>
 <dd><p>Log message to be written</p></dd>
 <dt><b class="type">integer, optional, intent(in) ::</b> <i class="arg">info_lvl</i></dt>
 <dd><p>If present, set log_t%infolevel to the provided value
 If not present, set to default value INFO.</p></dd>
 </dl></dd>
+<dt><a name="8"><b class="method">this%configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
+<dd></dd>
+<dt><b class="type">integer, intent(in) ::</b> <i class="arg">value</i></dt>
+<dd></dd>
+</dl>
+<p>Configure the integer static option of the object.
+The option is set for the log object if given, otherwise it is set for the log group
+as a whole.</p>
+<p>The <i class="arg">option</i> may be one of the following.</p>
+<ul class="itemized">
+<li><p><i class="arg">option</i> = &quot;infolevel&quot; :
+Set level of detail in the log to <i class="arg">value</i>. Available values: ALL, ERROR, WARNING,
+INFO, FINE, DEBUG. FINE and DEBUG levels are the same currently.</p></li>
+</ul></dd>
+<dt><a name="9"><b class="method">this%configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
+<dd></dd>
+<dt><b class="type">logical, intent(in) ::</b> <i class="arg">value</i></dt>
+<dd></dd>
+</dl>
+<p>Set the logical static <i class="arg">option</i> of the object to <i class="arg">value</i>.
+The option is set for the log object if given, otherwise it is set for the log group
+as a whole.</p>
+<p>The <i class="arg">option</i> may be one of the following.</p>
+<ul class="itemized">
+<li><p><i class="arg">option</i> = &quot;timestamp&quot; :
+Disable or enable the insertion of time stamps.
+If the time stamp option is enabled, a time stamp with format
+&quot;year-month-day hh:mm:ss&quot; or custom format is inserted before the
+message.</p></li>
+<li><p><i class="arg">option</i> = &quot;writeonstdout&quot; :
+Disable or enable the writing on standard output.</p></li>
+<li><p><i class="arg">option</i> = &quot;writeonlogfile&quot; :
+Disable or enable the writing on log file.</p></li>
+</ul></dd>
+<dt><a name="10"><b class="method">this%configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
+<dd></dd>
+<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">value</i></dt>
+<dd></dd>
+</dl>
+<p>Set the logical static <i class="arg">option</i> of the object to <i class="arg">value</i>.
+The option is set for the log object if given, otherwise it is set for the log group
+as a whole.</p>
+<p>The <i class="arg">option</i> may be one of the following.</p>
+<ul class="itemized">
+<li><p><i class="arg">option</i> = &quot;timefmt&quot; :
+Set timestamp format to <i class="arg">value</i></p></li>
+</ul></dd>
+<dt><a name="11"><b class="method">this%cget</b> ( <i class="arg">option</i> <i class="arg">, value</i>)</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
+<dd></dd>
+<dt><b class="type">logical, intent(in) ::</b> <i class="arg">value</i></dt>
+<dd></dd>
+</dl>
+<p>Get the logical static &quot;option&quot; of the object.</p>
+<p>The <i class="arg">option</i> may be one of the following.</p>
+<ul class="itemized">
+<li><p><i class="arg">option</i> = &quot;timestamp&quot; :
+Current value of the option to enable / disable insertion of time stamps.</p></li>
+<li><p><i class="arg">option</i> = &quot;writeonstdout&quot; :
+Current value of the option to enable / disable writing on standard output.</p></li>
+<li><p><i class="arg">option</i> = &quot;writeonlogfile&quot; :
+Current value of the option to enable / disable writing on log file.</p></li>
+<li><p><i class="arg">option</i> = &quot;stoponerror&quot; :
+Current value of the option to enable / disable stopping when an error is met.</p></li>
+</ul></dd>
+<dt><a name="12"><b class="method">this%cget</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
+<dd><dl class="arguments">
+<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
+<dd></dd>
+<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
+<dd></dd>
+<dt><b class="type">integer, intent(in) ::</b> <i class="arg">value</i></dt>
+<dd></dd>
+</dl>
+<p>Get the integer static &quot;option&quot; of the log.</p>
+<ul class="itemized">
+<li><p><i class="arg">option</i> = &quot;infolevel&quot; :
+The log's infolevel</p></li>
+<li><p><i class="arg">option</i> = &quot;logfileunit&quot; :
+Current logical unit connected to the logging system.</p></li>
+</ul></dd>
 </dl>
 <p>The module provides the following routines for the global log handler:</p>
 <dl class="definitions">
-<dt><a name="7"><b class="method">shutdown_log_group</b></a></dt>
+<dt><a name="13"><b class="method">shutdown_log_group</b></a></dt>
 <dd><p>Close all logs connected to the log_group object</p></dd>
-<dt><a name="8"><b class="method">add_log</b> ( <i class="arg">log</i> )</a></dt>
+<dt><a name="14"><b class="method">add_log</b> ( <i class="arg">log</i> )</a></dt>
 <dd><p>]
 Add a log_t object to the log group. Up to four log objects can be added.</p>
 <dl class="arguments">
-<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">log</i></dt>
+<dt><b class="type">type(log_t), intent(inout) ::</b> <i class="arg">log</i></dt>
 <dd><p>log        log_t object (initialized with log_t%startup)</p></dd>
 </dl></dd>
-<dt><a name="9"><b class="method">remove_log</b> ( <i class="arg">log</i> )</a></dt>
+<dt><a name="15"><b class="method">remove_log</b> ( <i class="arg">log</i> )</a></dt>
 <dd><p>]
 Remove a log_t object from the log group.</p>
 <dl class="arguments">
-<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">this</i></dt>
-<dd><p>log_t object (initialized with log_t%startup)</p></dd>
+<dt><b class="type">type(log_t), intent(inout) ::</b> <i class="arg">log</i></dt>
+<dd><p>log        log_t object (initialized with log_t%startup)</p></dd>
 </dl></dd>
-<dt><a name="10"><b class="method">log_msg</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></dt>
+<dt><a name="16"><b class="method">log_msg</b> ( <i class="arg">msg</i> <span class="opt">?, info_lvl?</span>)</a></dt>
 <dd><p>Log the given character string to all logging units with relevant
 info_lvl. If no info_lvl is specified, ALL is used (write to all
 logs).</p>
@@ -294,27 +435,22 @@ on standard output as well as to relevant log files.
 Before outputting directly the message string, the string is
 trimmed, that is to say that all trailing blanks are removed from
 the string.</p>
-<p>If the time stamp option is enabled, a time stamp with
-format &quot;year-month-day hh:mm:ss&quot; is inserted before the message.</p>
+<p>If the time stamp option is enabled, a time stamp with format
+&quot;year-month-day hh:mm:ss&quot; or custom time stamp is inserted before the
+message.</p>
 <dl class="arguments">
 <dt><b class="type">character(len=*), intent(in) ::</b> <i class="arg">msg</i></dt>
 <dd><p>Log message to be written</p></dd>
 <dt><b class="type">integer, optional, intent(in) ::</b> <i class="arg">info_lvl</i></dt>
 <dd><p>Optional: log information level, default = INFO</p></dd>
 </dl></dd>
-<dt><a name="11"><b class="method">log_reset</b> ( <i class="arg">log</i>)</a></dt>
-<dd><p>Set all internal settings to default values.</p>
-<dl class="arguments">
-<dt><b class="type">class(log_t), intent(inout) ::</b> <i class="arg">log</i></dt>
-<dd><p>log to reset, if not provided all logs are reset</p></dd>
-</dl></dd>
-<dt><a name="12"><b class="method">log_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> <span class="opt">?log?</span>)</a></dt>
+<dt><a name="17"><b class="method">log_group_reset</b> ( )</a></dt>
+<dd><p>Set all internal settings for all logs to default values.</p></dd>
+<dt><a name="18"><b class="method">log_group_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
 <dd><dl class="arguments">
 <dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
 <dd></dd>
 <dt><b class="type">logical, intent(in) ::</b> <i class="arg">value</i></dt>
-<dd></dd>
-<dt><b class="type">type(log_t), optional, intent(inout) ::</b> <i class="arg">log</i></dt>
 <dd></dd>
 </dl>
 <p>Set the logical static <i class="arg">option</i> of the component to <i class="arg">value</i>.
@@ -324,8 +460,9 @@ as a whole.</p>
 <ul class="itemized">
 <li><p><i class="arg">option</i> = &quot;timestamp&quot; :
 Disable or enable the insertion of time stamps.
-If the time stamp option is enabled, a time stamp with
-format &quot;year-month-day hh:mm:ss&quot; is inserted before the message.</p></li>
+If the time stamp option is enabled, a time stamp with format
+&quot;year-month-day hh:mm:ss&quot; or custom format is inserted before the
+message.</p></li>
 <li><p><i class="arg">option</i> = &quot;writeonstdout&quot; :
 Disable or enable the writing on standard output.</p></li>
 <li><p><i class="arg">option</i> = &quot;writeonlogfile&quot; :
@@ -337,29 +474,8 @@ If stoponerror is true, then the execution stops if an error is encountered.
 If stoponerror is false, then the execution continues if an error is encountered.
 In both cases, a message is displayed on standard output.</p></li>
 </ul></dd>
-<dt><a name="13"><b class="method">log_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i> <span class="opt">?, log?</span>)</a></dt>
+<dt><a name="19"><b class="method">log_group_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i>)</a></dt>
 <dd><dl class="arguments">
-<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
-<dd></dd>
-<dt><b class="type">integer, intent(in) ::</b> <i class="arg">value</i></dt>
-<dd></dd>
-<dt><b class="type">type(log_t), optional, intent(inout) ::</b> <i class="arg">log</i></dt>
-<dd></dd>
-</dl>
-<p>Configure the integer static option of the component.
-The option is set for the log object if given, otherwise it is set for the log group
-as a whole.</p>
-<p>The <i class="arg">option</i> may be one of the following.</p>
-<ul class="itemized">
-<li><p><i class="arg">option</i> = &quot;logfileunit&quot; :
-Force the logical unit for logging to be <i class="arg">value</i>.
-Use this feature with caution, since the original
-logical unit is lost.</p></li>
-</ul></dd>
-<dt><a name="14"><b class="method">log_configure</b> ( <i class="arg">option</i> <i class="arg">, value</i>)</a></dt>
-<dd><dl class="arguments">
-<dt><b class="type">type(log_t), optional, intent(inout) ::</b> <i class="arg">log</i></dt>
-<dd></dd>
 <dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
 <dd></dd>
 <dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">value</i></dt>
@@ -377,58 +493,31 @@ Set the string used for chapter delimiter.</p></li>
 Set the string used for section delimiter.</p></li>
 <li><p><i class="arg">option</i> = &quot;level_string_subsection&quot;
 Set the string used for subsection delimiter.</p></li>
+<li><p><i class="arg">option</i> = &quot;timefmt&quot;
+Set timestamp format for all logs to <i class="arg">value</i></p></li>
 </ul></dd>
-<dt><a name="15"><b class="method">log_cget</b> ( <span class="opt">?log ,?</span> <i class="arg">option</i> <i class="arg">, value</i>)</a></dt>
+<dt><a name="20"><b class="method">log_group_cget</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
 <dd><dl class="arguments">
-<dt><b class="type">type(log_t), optional, intent(inout) ::</b> <i class="arg">log</i></dt>
-<dd></dd>
 <dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
 <dd></dd>
 <dt><b class="type">logical, intent(in) ::</b> <i class="arg">value</i></dt>
 <dd></dd>
 </dl>
 <p>Get the logical static &quot;option&quot; of the component.
-The option is retrieved for the log object if given, otherwise it is retrieved for the log group
-as a whole.</p>
+The option is retrieved for the log group as a whole.</p>
 <p>The <i class="arg">option</i> may be one of the following.</p>
 <ul class="itemized">
-<li><p><i class="arg">option</i> = &quot;timestamp&quot; :
-Current value of the option to enable / disable insertion of time stamps.</p></li>
-<li><p><i class="arg">option</i> = &quot;writeonstdout&quot; :
-Current value of the option to enable / disable writing on standard output.</p></li>
-<li><p><i class="arg">option</i> = &quot;writeonlogfile&quot; :
-Current value of the option to enable / disable writing on log file.</p></li>
 <li><p><i class="arg">option</i> = &quot;stoponerror&quot; :
 Current value of the option to enable / disable stopping when an error is met.</p></li>
 </ul></dd>
-<dt><a name="16"><b class="method">log_cget</b> ( <span class="opt">?log ,?</span> <i class="arg">option</i> <i class="arg">, value</i>)</a></dt>
+<dt><a name="21"><b class="method">log_group_cget</b> ( <i class="arg">option</i> <i class="arg">, value</i> )</a></dt>
 <dd><dl class="arguments">
-<dt><b class="type">type(log_t), optional, intent(inout) ::</b> <i class="arg">log</i></dt>
-<dd></dd>
-<dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
-<dd></dd>
-<dt><b class="type">integer, intent(in) ::</b> <i class="arg">value</i></dt>
-<dd></dd>
-</dl>
-<p>Get the integer static &quot;option&quot; of the component.
-The option is retrieved for the log object if given, otherwise it is retrieved for the log group
-as a whole.</p>
-<ul class="itemized">
-<li><p><i class="arg">option</i> = &quot;logfileunit&quot; :
-Current logical unit connected to the logging system.</p></li>
-</ul></dd>
-<dt><a name="17"><b class="method">log_cget</b> ( <span class="opt">?log ,?</span> <i class="arg">option</i> <i class="arg">, value</i>)</a></dt>
-<dd><dl class="arguments">
-<dt><b class="type">type(log_t), optional, intent(inout) ::</b> <i class="arg">log</i></dt>
-<dd></dd>
 <dt><b class="type">character ( len = * ) , intent(in) ::</b> <i class="arg">option</i></dt>
 <dd></dd>
 <dt><b class="type">character ( len = * ) , intent(out) ::</b> <i class="arg">value</i></dt>
 <dd></dd>
 </dl>
-<p>Get the character static &quot;option&quot; of the component.
-The character options are global, so independent of the log objects.
-The log argument is therefore not used, it has been added for uniformity.</p>
+<p>Get the character static &quot;option&quot; of the component.</p>
 <p>The &quot;option&quot; may be one of the following.</p>
 <ul class="itemized">
 <li><p><i class="arg">option</i> = &quot;level_string_volume&quot;
@@ -443,11 +532,10 @@ Get the string used for subsection delimiter.</p></li>
 </dl>
 </div>
 <div id="section4" class="section"><h2><a name="section4">TODO</a></h2>
-<p>The order of the info levels - should it be different?</p>
-<p>Possibility to define own info levels and/or re-configure
-the standard ones?</p>
+<p>Parallel mode - split to one log/thread and then merge?</p>
+<p>Configurable log levels i.e. possibility to re-arrange the hierarchy</p>
 </div>
 <div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
-<p>Copyright &copy; 2012 Karin Nystr&ouml;m knystrom at users.sourceforge.net</p>
+<p>Copyright &copy; 2012-2014 Karin Nystr&ouml;m knystrom at users.sourceforge.net</p>
 </div>
 </div></body></html>
