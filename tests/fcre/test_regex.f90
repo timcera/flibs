@@ -2,7 +2,7 @@
 !>                             test_regex module
 !------------------------------------------------------------------------------!
 !>
-!> Unit tests for the mod_regex module of the FCRE library. Uses FUnit from the 
+!> Unit tests for the mod_regex module of the FCRE library. Uses FUnit from the
 !> FLIBS project, available at http://flibs.sourceforge.net
 !>
 !> Written by Paul Fossati, <paul.fossati@gmail.com>
@@ -41,11 +41,11 @@ module test_regex
     implicit none
     private
     save
-    
+
     public :: test_all
 contains
     subroutine test_all()
-        
+
         call test(test_match_simple, "simple pattern matching")
         call test(test_match_caseless, "case insensitive pattern matching")
         call test(test_match_reluctant, "reluctant pattern matching")
@@ -58,16 +58,18 @@ contains
         call test(test_substitution_variable_4, "substitution: $&")
         call test(test_substitution_caseless, "case insensitive substring substitution")
     end subroutine
-    
+
     subroutine test_match_simple()
         type(FRegex) :: re
         integer :: index, length, status
         type(FString), dimension(:), allocatable :: captures
-        
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
+
+        ! Not accepted by Intel Fortran
+        ! re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
         call re%setCaseSensitive(.true.)
         call re%match('sd dmoir DZ54 po32 54 era312', index, captures, length, status)
-        
+
         call assert_equal(status, 0, "error while matching")
         call assert_equal(index, 15, "matched substring index")
         call assert_equal(length, 4, "matched substring length")
@@ -76,121 +78,130 @@ contains
         call assert_true(captures(2)%string == "3", "second captured substring")
         call assert_true(captures(3)%string == "2", "third captured substring")
     end subroutine
-    
+
     subroutine test_substitution_simple()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '____')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '____')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '____')
         call re%setCaseSensitive(.true.)
         call re%replace(subject, index)
-        
+
         call assert_equal(index, 15, "matched substring index")
         call assert_true(subject == "sd dmoir DZ54 ____ 54 era312", "substituted string")
     end subroutine
-    
+
     subroutine test_substitution_backref()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '$2 $3 $1')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '$2 $3 $1')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '$2 $3 $1')
         call re%setCaseSensitive(.true.)
         call re%replace(subject, index)
-        
+
         call assert_equal(index, 15, "matched substring index")
         call assert_true(subject == "sd dmoir DZ54 3 2 po 54 era312", "substituted string")
     end subroutine
-    
+
     subroutine test_substitution_variable_1()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$`/')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$`/')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$`/')
         call re%replace(subject, index)
-        
+
         call assert_equal(index, 15, "matched substring index")
         call assert_true(subject == "sd dmoir DZ54 /sd dmoir DZ54 / 54 era312", "correct substituted string")
     end subroutine
-    
+
     subroutine test_substitution_variable_2()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$''/')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$''/')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$''/')
         call re%replace(subject, index)
-        
+
         call assert_equal(index, 15, "matched substring index")
         call assert_true(subject == "sd dmoir DZ54 / 54 era312/ 54 era312", "substituted string")
     end subroutine
-    
+
     subroutine test_substitution_variable_3()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$+/')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$+/')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$+/')
         call re%replace(subject, index)
-        
+
         call assert_equal(index, 15, "matched substring index")
         call assert_true(subject == "sd dmoir DZ54 /2/ 54 era312", "substituted string")
     end subroutine
-    
+
     subroutine test_substitution_variable_4()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$&/')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$&/')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '/$&/')
         call re%replace(subject, index)
-        
+
         call assert_equal(index, 15, "matched substring index")
         call assert_true(subject == "sd dmoir DZ54 /po32/ 54 era312", "substituted string")
     end subroutine
-    
+
     subroutine test_match_caseless()
         type(FRegex) :: re
         integer :: index, length
-        
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
+
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
         call re%setCaseSensitive(.false.)
         call re%match('sd dmoir DZ54 po32 54 era312', index, length)
         call assert_equal(index, 10, "matched substring index")
         call assert_equal(length, 4, "matched substring length")
     end subroutine
-    
+
     subroutine test_substitution_caseless()
         type(FRegex) :: re
         integer :: index
         character(:), allocatable :: subject
-        
+
         subject = 'sd dmoir DZ54 po32 54 era312'
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '$2 $3 $1')
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '$2 $3 $1')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b', '$2 $3 $1')
         call re%setCaseSensitive(.false.)
         call re%replace(subject, index)
         call assert_equal(index, 10, "matched substring index")
         call assert_true(subject == "sd dmoir 5 4 DZ po32 54 era312", "substituted string")
     end subroutine
-    
+
     subroutine test_match_reluctant()
         type(FRegex) :: re
         integer :: index, length
-        
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b\s*')
+
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b\s*')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b\s*')
         call re%setReluctant
         call re%match('sd dmoir DZ54 po32 54 era312', index, length)
         call assert_equal(index, 15, "matched substring index")
         call assert_equal(length, 4, "matched substring length (reluctant)")
-        
+
         call re%setReluctant(.false.)
         call re%match('sd dmoir DZ54 po32 54 era312', index, length)
         call assert_equal(length, 5, "matched substring length (greedy)")
@@ -201,8 +212,9 @@ contains
         integer :: index, length, i
         integer, dimension(2), parameter :: vi = [15, 20]
         integer, dimension(2), parameter :: vl = [4, 2]
-        
-        re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
+
+        !re = FRegex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
+        re = fcre_new_regex('\b(?<c>[a-z]*)(?<a>[0-9])(?<b>[0-9])\b')
         call re%setGlobal
         do i=1, 2
             call re%match('sd dmoir DZ54 po32 54 era312', index, length)
@@ -217,6 +229,6 @@ program test_program
     use test_regex
     use ftnunit
     implicit none
-    
+
     call runtests(test_all)
 end program

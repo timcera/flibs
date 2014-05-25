@@ -61,7 +61,7 @@
 #PCRE_SUFFIX=
 #PCRELIB= -L../pcre -l
 #PCREINCLUDE= -I../pcre/include
-#FUNIT_SUFFIX=../funit/
+#FUNIT_SUFFIX=../../src/funit/
 
 # Intel Fortran and MSVC/C++ or Intel C
 #FC= ifort
@@ -76,7 +76,7 @@
 #PCRE_SUFFIX=d.lib
 #PCRELIB= ..\pcre\\
 #PCREINCLUDE= -I..\pcre
-#FUNIT_SUFFIX=..\\funit\\
+#FUNIT_SUFFIX=..\\..\\src\\funit\\
 
 
 # Selected: Intel Fortran + MSVC/C++
@@ -87,7 +87,7 @@ EXE=.exe
 CFLAGS=
 FCFLAGS= $(CFLAGS) /link /nodefaultlib:msvcrtd
 LNKOUT=-exe:
-FUNIT_SUFFIX=..\\funit\\
+FUNIT_SUFFIX=..\\..\\src\\funit\\
 PCRE_SUFFIX=d.lib
 PCRELIB= .\\
 PCREINCLUDE= -Iinclude
@@ -98,17 +98,20 @@ all: example$(EXE) wordcount$(EXE)
 # Unit tests
 #
 test: test_regex$(EXE)
-        touch ftnunit.run
+        echo > ftnunit.run
         ./test_regex
 
 test_regex$(EXE): mod_regex$(OBJ) fcre$(OBJ) test_regex$(OBJ) pcre_wrappers$(OBJ) ftnunit$(OBJ)
-	$(FC) $(LNKOUT)test_regex$(EXE)  fcre$(OBJ) mod_regex$(OBJ) test_regex$(OBJ) pcre_wrappers$(OBJ) ftnunit$(OBJ) $(PCRELIB)pcre$(PCRE_SUFFIX) $(FCFLAGS)
+	$(FC) $(LNKOUT)test_regex$(EXE)  fcre$(OBJ) mod_regex$(OBJ) test_regex$(OBJ) pcre_wrappers$(OBJ) ftnunit$(OBJ) ftnunit_hooks$(OBJ) $(PCRELIB)pcre$(PCRE_SUFFIX) $(FCFLAGS)
 
-test_regex$(OBJ): test_regex.f90 mod_regex$(OBJ) ftnunit$(OBJ)
+test_regex$(OBJ): test_regex.f90 mod_regex$(OBJ) ftnunit$(OBJ) ftnunit_hooks$(OBJ)
 	$(FC) -c test_regex.f90 $(FCFLAGS)
 
-ftnunit$(OBJ): $(FUNIT_SUFFIX)ftnunit.f90
+ftnunit$(OBJ): $(FUNIT_SUFFIX)ftnunit.f90 ftnunit_hooks$(OBJ)
 	$(FC) -c $(FUNIT_SUFFIX)ftnunit.f90 $(FCFLAGS)
+
+ftnunit_hooks$(OBJ): $(FUNIT_SUFFIX)ftnunit_hooks.f90
+	$(FC) -c $(FUNIT_SUFFIX)ftnunit_hooks.f90 $(FCFLAGS)
 
 #
 # Sample program 1
