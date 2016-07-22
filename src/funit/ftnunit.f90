@@ -807,7 +807,7 @@ subroutine assert_comparable_real1d( array1, array2, margin, text )
         write(*,*) '    Arrays have different sizes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different sizes" )
     else
-        if ( any( abs(array1-array2) <= 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( all( abs(array1-array2) <= 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
             !
             ! Within the margin - no action
             !
@@ -872,7 +872,7 @@ subroutine assert_comparable_real2d( array1, array2, margin, text )
         write(*,*) '    Arrays have different shapes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different shapes" )
     else
-        if ( any( abs(array1-array2) <= 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( all( abs(array1-array2) <= 0.5 * margin * (abs(array1)+abs(array2)) ) ) then
             !
             ! Within the margin - no action
             !
@@ -970,7 +970,7 @@ subroutine assert_comparable_double1d( array1, array2, margin, text )
         write(*,*) '    Arrays have different sizes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different sizes" )
     else
-        if ( any( abs(array1-array2) <= 0.5d0 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( all( abs(array1-array2) <= 0.5d0 * margin * (abs(array1)+abs(array2)) ) ) then
             !
             ! Within the margin - no action
             !
@@ -1035,7 +1035,7 @@ subroutine assert_comparable_double2d( array1, array2, margin, text )
         write(*,*) '    Arrays have different shapes: "',trim(text), '" - assertion failed'
         call ftnunit_hook_test_assertion_failed( testname, text, "Arrays have different shapes" )
     else
-        if ( any( abs(array1-array2) <= 0.5d0 * margin * (abs(array1)+abs(array2)) ) ) then
+        if ( all( abs(array1-array2) <= 0.5d0 * margin * (abs(array1)+abs(array2)) ) ) then
             !
             ! Within the margin - no action
             !
