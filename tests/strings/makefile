@@ -12,6 +12,9 @@ PROGRAMS	=	test_token$(EXEEXT) \
 		test_m_vstring$(EXEEXT) \
 		test_m_vstringformat$(EXEEXT) \
 		test_m_vstringlist$(EXEEXT) \
+		test_keyvars$(EXEEXT) \
+		test_translation$(EXEEXT) \
+		mktranslation$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -83,6 +86,36 @@ test_m_vstringlist$(OBJEXT):	test_m_vstringlist.f90 m_vstringlist$(OBJEXT)
 
 test_m_vstringlist$(EXEEXT):	test_m_vstringlist$(OBJEXT) m_vstringlist$(OBJEXT) m_vstring$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_vstringlist$(OBJEXT) m_vstringlist$(OBJEXT) m_vstring$(OBJEXT)
+
+
+keyvars$(OBJEXT):	../../src/strings/keyvars.f90
+	$(FC) $(FFLAGS) ../../src/strings/keyvars.f90
+
+test_keyvars$(OBJEXT):	test_keyvars.f90 keyvars$(OBJEXT)
+	$(FC) $(FFLAGS) test_keyvars.f90
+
+test_keyvars$(EXEEXT):	test_keyvars$(OBJEXT) keyvars$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_keyvars$(OBJEXT) keyvars$(OBJEXT)
+
+
+mktranslation$(OBJEXT):	../../src/strings/mktranslation.f90
+	$(FC) $(FFLAGS) ../../src/strings/mktranslation.f90
+
+mktranslation$(EXEEXT):	mktranslation$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) mktranslation$(OBJEXT)
+
+translation$(OBJEXT):	../../src/strings/translation.f90 translation.inc
+	$(FC) $(FFLAGS) -I. ../../src/strings/translation.f90
+
+translation.inc:	translations.inp mktranslation$(EXEEXT)
+	./mktranslation$(EXEEXT) translations.inp
+
+test_translation$(OBJEXT):	test_translation.f90 translation$(OBJEXT)
+	$(FC) $(FFLAGS) test_translation.f90
+
+test_translation$(EXEEXT):	test_translation$(OBJEXT) translation$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_translation$(OBJEXT) translation$(OBJEXT)
+
 
 
 clean:	
