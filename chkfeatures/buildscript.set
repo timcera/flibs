@@ -1,0 +1,95 @@
+# buildscript.inp --
+#     Define the names of the source files to be handled and the error messages
+#     that should be printed if building the program fails (note: not always
+#     a negative thing - the compiler may be checking questionable practices)
+#
+#     TODO:
+#     - allow compiler options via $2 $3 $4 ...
+#     - maybe a descriptive string after the file name?
+#
+#     - submodules
+#     - execute_command_line
+#     - array operations on large arrays (temporaries can exhaust the stack)
+#     - UNICODE
+#     - object-oriented features
+#     - parametrised derived types
+#     - user-defined derived type output
+#     - type(integer)
+#     - ISO_C_BINDING, IO_FORTRAN_ENV, IEEE_ARITHMETIC (details)
+#     - static check on integer values exceeding the limit
+#     - warnings and questionable aspects such as unused variables
+#       and dummy arguments
+#     - flush
+#     - use, intrinsic
+#     - new intrinsic routines (Bessel functions for instance - for now: Bessel implemented)
+#     - ADVANCE=
+#     - stream access
+#     - reading incomplete text files
+#     - real(dp) with "accurate" single-precision constant
+#     - real(sp) with double-precision constant
+#     - contiguous
+#     - allocate - source and mold
+#     - move_alloc
+#     - handling files CRLF or LF
+#     - unit for direct access record length
+#     - "all" features in the overview tables from Fortran Forum
+#
+#     - array constructor like ['A', 'BC', 'DEF'] - force a length?
+#
+@chk_newunit
+The compiler does not support OPEN( NEWUNIT = ... )
+
+@chk_block
+The compiler does not support the BLOCK ... END BLOCK construct
+
+@chk_longint
+The compiler does not support integers with a range larger than default
+
+@chk_quadreal
+The compiler does not support reals with a precision larger than double precision
+
+@chk_quadcomplex
+The compiler does not support complex numbers with a precision larger than double precision
+
+@chk_opentwice
+Error compiling the program - check the code
+
+@chk_associate
+The compiler does not support the ASSOCIATE ... END ASSOCIATE construct
+
+@chk_allocstring
+The compiler does not support character strings with allocatable length
+
+@chk_allocstring_deriv
+The compiler does not support derived types with allocatable-length character strings
+
+@chk_auto_realloc
+Error compiling the program - check the code
+
+@chk_diff_lengths
+The compiler does not support array constructors containing strings of different lengths
+
+@chk_do_concurrent
+The compiler does not support the DO CONCURRENT ... ENDDO construct
+
+@chk_square_brackets
+The compiler does not support square brackets for array constructors
+
+@chk_internal_routine_arg
+The compiler does not support passign internal routines as actual arguments
+
+@chk_format_static
+The compiler statically detects type errors in the format to a WRITE statement
+
+@chk_bessel
+The compiler does not support the Bessel functions (intrinsic functions in Fortran 2008)
+
+@chk_g0_format
+The compiler does not support the G0 format
+
+@chk_array_bound_static
+The compiler does a static check on array bounds
+
+@chk_end_of_line
+The compiler does not support stream access
+This program cannot check this particular feature
