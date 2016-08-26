@@ -19,10 +19,9 @@
 #     - static check on integer values exceeding the limit
 #     - warnings and questionable aspects such as unused variables
 #       and dummy arguments
-#     - flush
+#     - Not-a-number
 #     - use, intrinsic
 #     - new intrinsic routines (Bessel functions for instance - for now: Bessel implemented)
-#     - ADVANCE=
 #     - stream access
 #     - reading incomplete text files
 #     - real(dp) with "accurate" single-precision constant
@@ -32,9 +31,14 @@
 #     - move_alloc
 #     - handling files CRLF or LF
 #     - unit for direct access record length
+#     - character(len=:) function
+#     - protected attribute
+#     - support for DECIMAL, ROUND and SIGN
 #     - "all" features in the overview tables from Fortran Forum
 #
 #     - array constructor like ['A', 'BC', 'DEF'] - force a length?
+#
+#     - extend chk_flush_check - check that the file is not flushed if no flush used.
 #
 @chk_newunit
 The compiler does not support OPEN( NEWUNIT = ... )
@@ -93,3 +97,29 @@ The compiler does a static check on array bounds
 @chk_end_of_line
 The compiler does not support stream access
 This program cannot check this particular feature
+
+@chk_flush
+The compiler does not support the FLUSH statement
+
+@chk_flush_check
+The compiler does not support the FLUSH statement or it does not
+support the intrinsic routines get_command_argument or execute_command_line
+(see the program code)
+
+@chk_advance_no
+The compiler does not support the ADVANCE= option to the WRITE statement
+
+@chk_get_env
+The compiler does not support the GET_ENVIRONMENT_VARIABLE subroutine
+
+@chk_fortran_env
+The compiler does not support the ISO_FORTRAN_ENV intrinsic module
+
+@chk_allocate_source
+The compiler does not support the SOURCE argument to ALLOCATE
+
+@chk_allocate_mold
+The compiler does not support the MOLD argument to ALLOCATE
+
+@chk_decimal_io
+The compiler does not support the DECIMAL specifier in READ/WRITE statements
