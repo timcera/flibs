@@ -9,7 +9,7 @@
 # builds a program from a given Fortran source file. For instance:
 #
 # compile:
-# gfortran -o $1.exe $1.f90 $2
+# gfortran -o $1.exe $1.f90 $2 $3 $4 $5 $6 $7 $8 $9
 #
 # where $1 is the name of the source file (no extension) and $2 any additional flags
 #
@@ -26,6 +26,14 @@
 
 echo Start checking procedure ...
 
+if [ "$1" == "" ]; then
+    echo Note:
+    echo No compiler options given
+else
+    echo Note:
+    echo Compiler options: $1 $2 $3 $4 $5 $6 $7 $8
+fi
+
 rm -f *.exe
 
 ./compile buildscript
@@ -33,6 +41,6 @@ rm -f *.exe
 ./buildscript.exe
 chmod +x runfeatures.sh
 
-./runfeatures.sh >features.out 2>&1
+./runfeatures.sh $1 $2 $3 $4 $5 $6 $7 $8 >features.out 2>&1
 
 echo Done - results in features.out

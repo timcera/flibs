@@ -4,41 +4,38 @@
 #     a negative thing - the compiler may be checking questionable practices)
 #
 #     TODO:
-#     - allow compiler options via $2 $3 $4 ...
 #     - maybe a descriptive string after the file name?
 #
-#     - submodules
 #     - execute_command_line
 #     - array operations on large arrays (temporaries can exhaust the stack)
 #     - UNICODE
-#     - object-oriented features
+#     - object-oriented features (a.o. finalisers)
 #     - parametrised derived types
 #     - user-defined derived type output
 #     - type(integer)
 #     - ISO_C_BINDING, IO_FORTRAN_ENV, IEEE_ARITHMETIC (details)
-#     - static check on integer values exceeding the limit
-#     - warnings and questionable aspects such as unused variables
-#       and dummy arguments
-#     - Not-a-number
+#     - IEEE_ARITHMETIC: which features are supported?
 #     - use, intrinsic
-#     - new intrinsic routines (Bessel functions for instance - for now: Bessel implemented)
-#     - stream access
+#     - new intrinsic routines (most mathematical functions implemented - norm2 and hypot still to be done)
 #     - reading incomplete text files
 #     - real(dp) with "accurate" single-precision constant
 #     - real(sp) with double-precision constant
-#     - contiguous
-#     - allocate - source and mold
-#     - move_alloc
 #     - handling files CRLF or LF
-#     - unit for direct access record length
-#     - character(len=:) function
-#     - protected attribute
 #     - support for DECIMAL, ROUND and SIGN
+#     - (diagnostic) array size mismatch with subroutine (using fixed size in subroutine)
+#     - (diagnostic) character length size mismatch with subroutine (using fixed length in subroutine)
+#     - (diagnostic) interface check for subroutine (in same file, not in module)
+#     - (diagnostic) external subroutine versus external function
+#     - (diagnostic) Holleriths
+#     - automatic definition derived types: type x; integer :: y = 1 end type - reset on entry into a subroutine?
+#     - Z format to get "strange" characters in?
 #     - "all" features in the overview tables from Fortran Forum
+#     - static versus automatic for local variables
 #
 #     - array constructor like ['A', 'BC', 'DEF'] - force a length?
 #
 #     - extend chk_flush_check - check that the file is not flushed if no flush used.
+#     - extend chk_stream_access - position, determine unit of position
 #
 @chk_newunit
 The compiler does not support OPEN( NEWUNIT = ... )
@@ -88,6 +85,15 @@ The compiler statically detects type errors in the format to a WRITE statement
 @chk_bessel
 The compiler does not support the Bessel functions (intrinsic functions in Fortran 2008)
 
+@chk_erf
+The compiler does not support all of the error functions (intrinsic functions in Fortran 2008)
+
+@chk_gamma
+The compiler does not support the Gamma functions (intrinsic functions in Fortran 2008)
+
+@chk_norm2_hypot
+The compiler does not support the NORM2 or HYPOT functions (intrinsic functions in Fortran 2008)
+
 @chk_g0_format
 The compiler does not support the G0 format
 
@@ -115,6 +121,18 @@ The compiler does not support the GET_ENVIRONMENT_VARIABLE subroutine
 @chk_fortran_env
 The compiler does not support the ISO_FORTRAN_ENV intrinsic module
 
+@chk_iso_fortran_kinds
+The compiler does not support the ISO_FORTRAN_ENV intrinsic module or it does
+not support the kinds arrays defined by Fortran 2008
+
+@chk_iso_fortran_storage
+The compiler does not support the ISO_FORTRAN_ENV intrinsic module or it does
+not support the storage parameters defined by Fortran 2008
+
+@chk_compiler_version
+The compiler does not support the intrinsic routines COMPILER_VERSION
+and COMPILER_OPTIONS
+
 @chk_allocate_source
 The compiler does not support the SOURCE argument to ALLOCATE
 
@@ -123,3 +141,41 @@ The compiler does not support the MOLD argument to ALLOCATE
 
 @chk_decimal_io
 The compiler does not support the DECIMAL specifier in READ/WRITE statements
+
+@chk_stream_access
+The compiler does not support stream accesss
+
+@chk_protected
+The compiler does not support the PROTECTED attribute
+
+@chk_protected_set
+The compiler either does not support the PROTECTED attribute or
+it flags attempts to set protected module variables as errors
+
+@chk_character_func
+The compiler does not support functions returning strings with
+allocatable length
+
+@chk_unused_variable
+The compiler seems to regard unused variables as an error
+
+@chk_unused_argument
+The compiler seems to regard unused arguments as an error
+
+@chk_interface_mismatch
+The compiler seems to regard interface mismatches to be an error
+
+@chk_contiguous
+The compiler does not support the CONTIGUOUS attribute
+
+@chk_constructor_mismatch
+The compiler regards shape mismatches at array assignment as an error
+
+@chk_move_alloc
+The compiler does not support the MOVE_ALLOC intrinsic subroutine
+
+@chk_submodule
+The compiler does not support submodules
+
+@chk_int_too_large
+The compiler does not accept integer values exceeding the limits

@@ -26,6 +26,15 @@ rem
 
 echo Start checking procedure ...
 
+if /%1 == / goto nooptions
+    echo Note:
+    echo Compiler options: %1 %2 %3 %4 %5 %6 %7 %8
+    goto run
+:nooptions
+    echo Note:
+    echo No compiler options
+
+:run
 del *.exe
 
 call compile buildscript

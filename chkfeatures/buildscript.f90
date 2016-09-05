@@ -66,8 +66,8 @@ program buildscript
             write( lunscr, '(a,a)' ) 'echo -------------'
             write( lunbat, '(a,a)' ) 'echo .'
             write( lunscr, '(a,a)' ) 'echo .'
-            write( lunbat, '(a,a)' ) 'call compile ', trim(line(2:))
-            write( lunscr, '(a,a)' ) './compile ', trim(line(2:))
+            write( lunbat, '(3a)'  ) 'call compile ', trim(line(2:)), ' %1 %2 %3 %4 %5 %6 %7 %8'
+            write( lunscr, '(3a)' ) './compile ', trim(line(2:)), ' $1 $2 $3 $4 $5 $6 $7 $8'
             write( lunbat, '(a,a)' ) 'echo .'
             write( lunscr, '(a,a)' ) 'echo .'
 
