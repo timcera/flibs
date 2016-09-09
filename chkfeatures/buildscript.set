@@ -5,8 +5,10 @@
 #
 #     TODO:
 #     - maybe a descriptive string after the file name?
+#     - count the number of sucessfully created programs
 #
 #     - execute_command_line
+#     - get_command_argument
 #     - array operations on large arrays (temporaries can exhaust the stack)
 #     - UNICODE
 #     - object-oriented features (a.o. finalisers)
@@ -28,9 +30,11 @@
 #     - (diagnostic) external subroutine versus external function
 #     - (diagnostic) Holleriths
 #     - automatic definition derived types: type x; integer :: y = 1 end type - reset on entry into a subroutine?
+#       --> extend this program
 #     - Z format to get "strange" characters in?
 #     - "all" features in the overview tables from Fortran Forum
 #     - static versus automatic for local variables
+#     - tab characters in input - how does it react?
 #
 #     - array constructor like ['A', 'BC', 'DEF'] - force a length?
 #
@@ -179,3 +183,18 @@ The compiler does not support submodules
 
 @chk_int_too_large
 The compiler does not accept integer values exceeding the limits
+
+@chk_real_literal
+Please check the error messages - the code should be acceptable
+
+@chk_dim_7
+The compiler does not support arrays with seven dimensions or more
+
+@chk_dim_15
+The compiler does not support arrays with 15 dimensions or more
+
+@chk_long_statement
+The compiler does not support statements of 40 lines or longer
+
+@chk_init_derived
+Please check the error messages - the code should be acceptable
