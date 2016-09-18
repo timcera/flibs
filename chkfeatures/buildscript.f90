@@ -11,7 +11,13 @@ program buildscript
     integer :: lunbat = 21
     integer :: lunscr = 22
 
+    integer :: number_features    = 0
+    integer :: number_diagnostics = 0
+    integer :: number_probes      = 0
+    integer :: number_extensions  = 0
+
     character(len=80) :: line
+    character(len=20) :: type_program
 
     open( lunin, file = 'buildscript.set', status = 'old' , iostat = ierr )
 
@@ -58,6 +64,20 @@ program buildscript
         endif
 
         if ( line(1:1) == '@' ) then
+            read(  lunin, * ) type_program
+            select case ( type_program )
+                case( 'FEATURE' )
+                    number_features = number_features + 1
+                case( 'DIAGNOSTIC' )
+                    number_diagnostics = number_diagnostics + 1
+                case( 'EXTENSION' )
+                    number_extensions = number_extensions + 1
+                case( 'PROBE' )
+                    number_probes = number_probes + 1
+                case default
+                    write( *, '(2a)' ) 'Error: unknown program type - ', trim(type_program)
+            end select
+
             write( lunbat, '(a,a)' ) 'echo .'
             write( lunscr, '(a,a)' ) 'echo .'
             write( lunbat, '(a,a)' ) 'echo Check program: ', trim(line(2:))
@@ -91,4 +111,8 @@ program buildscript
     write( lunscr, '(a)'  ) 'fi'
 
     write( *, '(/,a,i0)' ) 'Number of tests to run: ', label
+    write( *, '(a,i0)' )   '    Number of feature checks:                 ', number_features
+    write( *, '(a,i0)' )   '    Number of diagnostic checks:              ', number_diagnostics
+    write( *, '(a,i0)' )   '    Number of checks on behaviour/properties: ', number_probes
+    write( *, '(a,i0)' )   '    Number of checks on compiler extensions:  ', number_extensions
 end program buildscript
