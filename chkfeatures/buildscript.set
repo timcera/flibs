@@ -13,6 +13,8 @@
 #       EXTENSION  - test for a well-known extension
 #     - more feedback to the user during the run
 #
+#     - last write with advance = 'no': file closed with newline anyway?
+#
 #     - execute_command_line
 #     - array operations on large arrays (temporaries can exhaust the stack)
 #     - UNICODE
@@ -41,6 +43,9 @@
 #
 #     - extend chk_flush_check - check that the file is not flushed if no flush used.
 #     - extend chk_stream_access - position, determine unit of position
+#
+#     - check: i0 for input? Is that standard?
+#     - check: recursive IO (two levels - 2003 and 2008)
 #
 @chk_newunit
 FEATURE
@@ -121,6 +126,10 @@ The compiler does not support the NORM2 or HYPOT functions (intrinsic functions 
 @chk_g0_format
 FEATURE
 The compiler does not support the G0 format
+
+#@chk_i0_format
+#EXTENSION
+#The compiler does not allow the I0 format for input
 
 @chk_array_bound_static
 PROBE
@@ -345,3 +354,48 @@ Please check the error messages - the code should be acceptable
 @chk_non_intrinsic
 FEATURE
 The compiler does not support the NON_INTRINSIC keyword for the USE statement
+
+@chk_recursive_alloc
+FEATURE
+The compiler does not support types with a recursive allocatable component
+
+@chk_pointer_dim
+FEATURE
+The compiler does not support associated multidimensional pointers with
+one-dimensional arrays
+
+@chk_pointer_init
+FEATURE
+The compiler does not support pointer initialisation
+
+@chk_type_intrinsic
+FEATURE
+The compiler does not support the type(intrinsic) syntax
+
+@chk_index_long
+FEATURE
+The compiler does not support the use of indices of non-default kind
+
+@chk_lbound_long_error
+DIAGNOSTIC
+The compiler does a range check on the LBOUND function
+
+@chk_alloc_long
+FEATURE
+The compiler does not support array allocation with indices of non-default kind
+
+#
+# This program must be called twice to identify the behaviour of the random number generator,
+# more specifically: how it is initialised.
+#
+@chk_random_number
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_random_number
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_inquire_size
+FEATURE
+The compiler does not support the SIZE= keyword in the INQUIRE statement

@@ -15,6 +15,7 @@ PROGRAMS	=	test_token$(EXEEXT) \
 		test_keyvars$(EXEEXT) \
 		test_translation$(EXEEXT) \
 		mktranslation$(EXEEXT) \
+		test_flexoutput$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -115,6 +116,15 @@ test_translation$(OBJEXT):	test_translation.f90 translation$(OBJEXT)
 
 test_translation$(EXEEXT):	test_translation$(OBJEXT) translation$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_translation$(OBJEXT) translation$(OBJEXT)
+
+flexoutput$(OBJEXT):	../../src/strings/flexoutput.f90
+	$(FC) $(FFLAGS) ../../src/strings/flexoutput.f90
+
+test_flexoutput$(OBJEXT):	test_flexoutput.f90 flexoutput$(OBJEXT)
+	$(FC) $(FFLAGS) test_flexoutput.f90
+
+test_flexoutput$(EXEEXT):	test_flexoutput$(OBJEXT) flexoutput$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_flexoutput$(OBJEXT) flexoutput$(OBJEXT)
 
 
 
