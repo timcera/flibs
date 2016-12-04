@@ -16,6 +16,7 @@ PROGRAMS	=	test_token$(EXEEXT) \
 		test_translation$(EXEEXT) \
 		mktranslation$(EXEEXT) \
 		test_flexoutput$(EXEEXT) \
+		test_command_args$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -125,6 +126,15 @@ test_flexoutput$(OBJEXT):	test_flexoutput.f90 flexoutput$(OBJEXT)
 
 test_flexoutput$(EXEEXT):	test_flexoutput$(OBJEXT) flexoutput$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_flexoutput$(OBJEXT) flexoutput$(OBJEXT)
+
+command_args$(OBJEXT):	../../src/strings/command_args.f90
+	$(FC) $(FFLAGS) ../../src/strings/command_args.f90
+
+test_command_args$(OBJEXT):	test_command_args.f90 command_args$(OBJEXT)
+	$(FC) $(FFLAGS) test_command_args.f90
+
+test_command_args$(EXEEXT):	test_command_args$(OBJEXT) command_args$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_command_args$(OBJEXT) command_args$(OBJEXT)
 
 
 

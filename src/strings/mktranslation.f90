@@ -1,6 +1,10 @@
 ! mktranslation.f90 --
 !     Auxiliary program to turn a "translations" file into source code
 !
+!     TODO:
+!     - Check length of keys and description
+!     - Check for duplicate keys
+!
 program mktranslation
     character(len=10)  :: lang, default
     character(len=40)  :: key
@@ -116,7 +120,7 @@ program mktranslation
             write( 20, '(a,i0,3a)' ) 'data entry(', idx, ')%text / "', trim(text), '"/'
         else
             write( 20, '(a,i0,3a)' ) 'data entry(', idx, ')%text / "', text(1:80), '&'
-            write( 20, '(a,i0,3a)' ) '    &', text(1:80), '"'
+            write( 20, '(3a)' )      '    &', text(81:160), '"/'
         endif
     enddo
 

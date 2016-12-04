@@ -5,13 +5,14 @@
 #
 #     TODO:
 #     - maybe a descriptive string after the file name?
-#     - count the number of sucessfully created programs
+#     - count the number of successfully created programs
 #       requires a category (FEATURE, DIAGNOSTIC, ... or some such)
 #       FEATURE    - test for a particular syntactic feature
 #       DIAGNOSTIC - test if the compiler recognises certain (deliberate) coding error
 #       PROBE      - test the behaviour of the program
 #       EXTENSION  - test for a well-known extension
 #     - more feedback to the user during the run
+#     - summary of failed programs
 #
 #     - last write with advance = 'no': file closed with newline anyway?
 #
@@ -38,6 +39,8 @@
 #     - ieee_value
 #     - does the compiler give warnings on functions that do not set the value?
 #     - CHARACTER*10 length mismatch
+#     - warnings about inappropriate use of dummy arguments (setting intent(in) arguments,
+#       using intent(out) arguments before they are set)
 #
 #     - array constructor like ['A', 'BC', 'DEF'] - force a length?
 #
@@ -243,6 +246,15 @@ The compiler seems to regard interface mismatches to be an error
 FEATURE
 The compiler does not support the CONTIGUOUS attribute
 
+@chk_is_contiguous
+FEATURE
+The compiler does not support the IS_CONTIGUOUS intrinsic function
+
+@chk_contiguous_non
+DIAGNOSTIC
+The compiler does not support the CONTIGUOUS attribute or it detected
+that the arrays passed to the subroutine are not contiguous
+
 @chk_constructor_mismatch
 DIAGNOSTIC
 The compiler regards shape mismatches at array assignment as an error
@@ -328,7 +340,7 @@ The compiler does not support the encoding keyword
 
 @chk_findloc
 FEATURE
-The compiler does not support the findloc function
+The compiler does not support the FINDLOC function
 
 @chk_char_maxval
 FEATURE
@@ -399,3 +411,36 @@ Please check the error messages - the code should be acceptable
 @chk_inquire_size
 FEATURE
 The compiler does not support the SIZE= keyword in the INQUIRE statement
+
+# This is a F2003 feature - F2008 extends it
+@chk_pointer_rank
+FEATURE
+The compiler does not allow a 2D pointer to be associated with a 1D array
+
+@chk_implied_shape
+FEATURE
+The compiler does not support implied shape arrays (parameter arrays with automatic size)
+
+@chk_pointer_function
+FEATURE
+The compiler does not support pointer functions
+
+@chk_unlimited_format
+FEATURE
+The compiler does not support the unlimited format feature
+
+@chk_exit_if
+FEATURE
+The compiler does not support EXIT from any named construct
+
+@chk_bitwise_compare
+FEATURE
+The compiler does not support the bitwise comparison functions (BGE etc.)
+
+@chk_maxloc_backward
+FEATURE
+The compiler does not support the BACK argument to the MINLOC or MAXLOC functions
+
+@chk_null_as_absent
+FEATURE
+The compiler does not support NULL pointers as representing a missing argument
