@@ -18,7 +18,7 @@ program chk_protected_set
     write( *, '(a,i0)' ) 'Original value:                        ', 123
 
     if ( readonly /= 123 ) then
-        write( *, '(a)'    ) 'NOTE: this is unexoected - it defies the purpose of PROTECTED'
+        write( *, '(a)'    ) 'NOTE: this is unexpected - it defies the purpose of PROTECTED'
     else
         write( *, '(a)'    ) 'NOTE: apparently the compiler does not regard this as an error'
         write( *, '(a)'    ) '      but at run-time it is refused'

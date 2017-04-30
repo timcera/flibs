@@ -16,14 +16,10 @@
 #
 #     - last write with advance = 'no': file closed with newline anyway?
 #
-#     - execute_command_line
-#     - array operations on large arrays (temporaries can exhaust the stack)
+#     - array operations on large arrays (temporaries can exhaust the stack - automatic array done)
 #     - UNICODE
 #     - object-oriented features (a.o. finalisers)
-#     - user-defined derived type output
-#     - type(integer)
-#     - ISO_C_BINDING, IO_FORTRAN_ENV
-#     - new intrinsic routines (most mathematical functions implemented - norm2 and hypot still to be done)
+#     - new intrinsic routines (most mathematical functions implemented)
 #     - real(dp) with "accurate" single-precision constant
 #     - real(sp) with double-precision constant
 #     - (diagnostic) array size mismatch with subroutine (using fixed size in subroutine)
@@ -35,20 +31,18 @@
 #     - Z format to get "strange" characters in?
 #     - "all" features in the overview tables from Fortran Forum
 #     - static versus automatic for local variables
-#     - tab characters in input - how does it react?
 #     - ieee_value
-#     - does the compiler give warnings on functions that do not set the value?
 #     - CHARACTER*10 length mismatch
 #     - warnings about inappropriate use of dummy arguments (setting intent(in) arguments,
 #       using intent(out) arguments before they are set)
-#
-#     - array constructor like ['A', 'BC', 'DEF'] - force a length?
 #
 #     - extend chk_flush_check - check that the file is not flushed if no flush used.
 #     - extend chk_stream_access - position, determine unit of position
 #
 #     - check: i0 for input? Is that standard?
 #     - check: recursive IO (two levels - 2003 and 2008)
+#
+#     - opening a file on unit 6, does that prevent output to screen?
 #
 @chk_newunit
 FEATURE
@@ -90,9 +84,21 @@ The compiler does not support derived types with allocatable-length character st
 PROBE
 Error compiling the program - check the code
 
+@chk_read_tabs
+PROBE
+Please check the error messages - the program should be acceptable
+
 @chk_diff_lengths
 EXTENSION
 The compiler does not support array constructors containing strings of different lengths
+
+@chk_extra_long_line
+EXTENSION
+The compiler does not support line lengths exceeding the 132-characters maximum
+
+@chk_logical_eq
+EXTENSION
+The compiler does not support the use of arithmetic comparison (.EQ. and such) for logicals
 
 @chk_do_concurrent
 FEATURE
@@ -104,11 +110,15 @@ The compiler does not support square brackets for array constructors
 
 @chk_internal_routine_arg
 FEATURE
-The compiler does not support passign internal routines as actual arguments
+The compiler does not support passing internal routines as actual arguments
 
 @chk_format_static
 PROBE
 The compiler statically detects type errors in the format to a WRITE statement
+
+@chk_default_filename
+PROBE
+Please check the error messages - the program should be acceptable
 
 @chk_bessel
 FEATURE
@@ -150,6 +160,11 @@ The compiler does not support the GET_COMMAND_ARGUMENT routine
 @chk_flush
 FEATURE
 The compiler does not support the FLUSH statement
+
+@chk_execute_cmdline
+FEATURE
+The compiler does not support the intrinsic routines get_command_argument or execute_command_line
+(see the program code)
 
 @chk_flush_check
 FEATURE
@@ -255,6 +270,17 @@ DIAGNOSTIC
 The compiler does not support the CONTIGUOUS attribute or it detected
 that the arrays passed to the subroutine are not contiguous
 
+@chk_pointer_1_to_n
+FEATURE
+The compiler does not support the Fortran 2003 feature of associating a
+n-dimensional pointer with an array of one dimension
+
+@chk_pointer_simply_contiguous
+FEATURE
+The compiler does not support the Fortran 2008 feature of associating a
+n-dimensional pointer with a simply contiguous section of an n-dimensional
+array
+
 @chk_constructor_mismatch
 DIAGNOSTIC
 The compiler regards shape mismatches at array assignment as an error
@@ -296,6 +322,15 @@ Please check the error messages - the code should be acceptable
 PROBE
 Please check the error messages - the code should be acceptable
 
+@chk_iso_c_binding
+FEATURE
+The compiler does not support the ISO_C_BINDING module or the BIND attribute.
+This hampers interfacing with C (sub)programs
+
+@chk_c_sizeof
+FEATURE
+The compiler does not support the Fortran 2008 function C_SIZEOF (or the ISO_C_BINDING module)
+
 @chk_isnan
 FEATURE
 The compiler does not support the ieee_is_nan function
@@ -330,7 +365,7 @@ The compiler does not support parameterised derived types
 FEATURE
 The compiler does not seem to accept Hollerith constants
 
-@chk_charset
+@chk_charsets
 FEATURE
 The compiler does not support the selected_char_kind function
 
@@ -359,7 +394,7 @@ The compiler does not support public entities with a private type
 FEATURE
 The compiler does not support the ERRMSG keyword for the allocate statement
 
-@chk_io_infinity
+@chk_io_infinite
 PROBE
 Please check the error messages - the code should be acceptable
 
@@ -391,6 +426,10 @@ The compiler does not support the use of indices of non-default kind
 @chk_lbound_long_error
 DIAGNOSTIC
 The compiler does a range check on the LBOUND function
+
+@chk_function_unset
+DIAGNOSTIC
+The compiler does a check for functions that do not return a value
 
 @chk_alloc_long
 FEATURE
@@ -437,6 +476,10 @@ The compiler does not support EXIT from any named construct
 FEATURE
 The compiler does not support the bitwise comparison functions (BGE etc.)
 
+@chk_bit_functions
+FEATURE
+The compiler does not support all Fortran 2008 bit functions
+
 @chk_maxloc_backward
 FEATURE
 The compiler does not support the BACK argument to the MINLOC or MAXLOC functions
@@ -444,3 +487,65 @@ The compiler does not support the BACK argument to the MINLOC or MAXLOC function
 @chk_null_as_absent
 FEATURE
 The compiler does not support NULL pointers as representing a missing argument
+
+@chk_signed_zero
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_cray_pointer
+EXTENSION
+The compiler does not support Cray pointers
+
+@chk_uddtio
+FEATURE
+The compiler does not support user-defined I/O for derived types
+
+@chk_open_action
+FEATURE
+The compiler does not support the ACTION= specifier
+
+@chk_dir_separator
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_backslash
+EXTENSION
+The compiler seems to treat backslashes in literal strings as escape characters
+
+@chk_automatic_array
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_source_tab
+EXTENSION
+The compiler does not accept soure code containing tabs
+
+@chk_recursive_io
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_parity
+FEATURE
+The compiler does not support the Fortran 2008 parity function
+
+@chk_location
+FEATURE
+The compiler does not support the Fortran 2008 BACK= argument to MAXLOC/MINLOC
+or the FINDLOC function
+
+@chk_locate_string
+FEATURE
+The compiler does not support the FINDLOC function or using it on strings
+
+@chk_compiler_info
+FEATURE
+The compiler does not support the COMPILER_OPTIONS or COMPILER_VERSION functions
+
+@chk_impure_elemental
+FEATURE
+The compiler does not support impure elemental functions/subroutines
+
+@chk_generic_distinct
+FEATURE
+The compiler does not allow specific routines to be distinguished by pointer or
+allocatable attributes only

@@ -16,6 +16,9 @@ program buildscript
     integer :: number_probes      = 0
     integer :: number_extensions  = 0
 
+    logical :: exists
+    logical :: end_program
+
     character(len=80) :: line
     character(len=20) :: type_program
 
@@ -33,6 +36,7 @@ program buildscript
     write( lunscr, '(a)' ) '#!/bin/sh'
 
     label = 0
+    end_program = .false.
 
     do
         read( lunin, '(a)', iostat = ierr ) line
@@ -57,13 +61,15 @@ program buildscript
             cycle
         endif
 
-        if ( line == ' ' ) then
+        if ( line == ' ' .and. end_program ) then
+            end_program = .false.
             write( lunbat, '(a,i0)'  ) ':skip', label
             write( lunscr, '(a)'     ) 'fi'
             cycle
         endif
 
         if ( line(1:1) == '@' ) then
+            end_program = .true.
             read(  lunin, * ) type_program
             select case ( type_program )
                 case( 'FEATURE' )
@@ -77,6 +83,11 @@ program buildscript
                 case default
                     write( *, '(2a)' ) 'Error: unknown program type - ', trim(type_program)
             end select
+
+            inquire( file = trim(line(2:))//'.f90', exist = exists )
+            if ( .not. exists ) then
+                write( *, '(a,a)' ) 'Problem: the file does not exist - ', trim(line(2:))
+            endif
 
             write( lunbat, '(a,a)' ) 'echo .'
             write( lunscr, '(a,a)' ) 'echo .'
