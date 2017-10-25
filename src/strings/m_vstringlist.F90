@@ -121,6 +121,7 @@ module m_vstringlist
   public :: vstrlist_search
   public :: vstrlist_lsearch
   public :: vstrlist_sort
+  public :: vstrlist_remove
   !
   ! t_vstringlist --
   !   A list of vstrings is implemented as an array of vstrings.
@@ -1072,7 +1073,7 @@ contains
   !
 #define _QSORTARRAY_TYPE t_vstring
 #define _QSORTARRAY_MODULE m_vstring
-#include "qsortarray_template.f90"
+#include "qsortarray_template.F90"
   !
   ! vstrlist_sort_basic --
   !   This command sorts the elements of list and returns a new list in sorted order.
@@ -1479,7 +1480,43 @@ contains
     vstringlist_stoponerror = stoponerror
     call vstring_set_stoponerror ( stoponerror )
   end subroutine vstringlist_set_stoponerror
+  !
+  ! vstrlist_remove --
+  !   Returns a new vstrlist by removing the vstring at the given index 
+  !   "icomponent" in the list.
+  !   Generates an error if the given index "icomponent" does not exist, that is,
+  !   is lower than 1 or greater than the number of strings in the list.
+  !
+  subroutine vstrlist_remove ( this , icomponent )
+    type ( t_vstringlist ) , intent(inout) :: this
+    integer , intent(in) :: icomponent
+    integer :: status
+    character ( len = 500 ) :: message
+    type ( t_vstringlist ) :: oldlist
+    call vstrlist_checkindex ( this , icomponent , status )
+    if ( status /= VSTRINGLIST_ERROR_OK ) then
+       write ( message , * ) "Wrong item index #", icomponent, " in current list"
+       call vstrlist_error ( this , message )
+       return
+    endif
+    !
+    ! Compute the new length and create the new list.
+    !
+    call vstrlist_new ( oldlist , vstrlist_length ( this ) - 1 )
+    if((icomponent > 1) .AND. (icomponent < vstrlist_length (this)))then
+        oldlist = vstrlist_concat( vstrlist_range ( this, 1, icomponent - 1 ), &
+                                 & vstrlist_range ( this, icomponent + 1,      &
+                                 &                  vstrlist_length ( this )))
+    elseif((icomponent == 1) .AND. (vstrlist_length (this) >= 2))then
+        oldlist = vstrlist_range ( this, 2, vstrlist_length ( this ))
+    elseif((icomponent == 1) .AND. (vstrlist_length (this) == 1))then
+        call vstrlist_free ( oldlist )
+        call vstrlist_new ( oldlist )
+    elseif(icomponent == vstrlist_length ( this ))then
+        oldlist = vstrlist_range ( this, 1, vstrlist_length ( this ) - 1)
+    endif
+    call vstrlist_free ( this )
+    this = oldlist
+    call vstrlist_free ( oldlist )
+  end subroutine vstrlist_remove
 end module m_vstringlist
-	
-
-
