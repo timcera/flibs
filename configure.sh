@@ -22,7 +22,6 @@ if test @$1 = "@-help" -o @$1 = "@-?" ;then
 fi
 
 cd config
-makefilecfg='../make/makefile/Makefile-cfg'
 
 #
 # Clean up
@@ -44,11 +43,17 @@ fi
 if test @$1 == "@-optimise" -o @$2 == "@-optimise" ;then
     options=optimise
 fi
-#
-# Copy build options
-#
+
 cp $options.mk options.mk
-sed -i "s|VERSION = .*$|VERSION = $options|g" $makefilecfg
+
+#
+# Identify the platform
+#
+if test "$OSTYPE" != "linux-gnu" ;then
+   platform=windows
+else
+   platform=linux
+fi
 
 #
 # Identify the compiler
@@ -78,7 +83,11 @@ if test $found -eq 0 -a \( "$check" == "" -o "$check" == "gfortran" \) ;then
     gfortran idc.f90
     if test $? -eq 0 ;then
         found=1
-        compiler=gfortran
+        if test "$platform" = "linux" ;then
+            compiler=gfortran
+        else
+            compiler=gfortranwin
+        fi
     fi
 fi
 
@@ -124,10 +133,6 @@ fi
 if test $found -eq 1 ;then
     echo Compiler: $compiler
     cp $compiler.mk config.mk
-    # Ugly; this is to avoid replacing Makefile-linux/win32-NT
-    sed -i "s|include Makefile-gfortran|include Makefile-$compiler|g" $makefilecfg
-    sed -i "s|include Makefile-g95|include Makefile-$compiler|g" $makefilecfg
-    sed -i "s|include Makefile-ifort|include Makefile-$compiler|g" $makefilecfg
 else
     echo No suitable compiler found!
 fi

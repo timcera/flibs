@@ -2,12 +2,68 @@ Compiling the Fortran interface to the Sqlite3 library
 ------------------------------------------------------
 
 The makefile in this directory contains an explanation
-of how to build a library from the sources. This 
+of how to build a library from the sources. This
 explanation is geared to:
 - UNIX/Linux type platforms (includes Cygwin and MingW
   under Windows and OSX)
 - It explains the creation of a static library only
 
-Some of this information is useful for compiling under 
+Some of this information is useful for compiling under
 MS Windows as well, but the file names are typical for
 the UNIX-type platform.
+
+
+dd. 8 march 2018
+
+***Update***
+
+Solved the two problems that I encountered:
+
+- On Windows nmake would fail, building the test programs.
+  This was due to the use of the macro "LIB" - this upset
+  the list of directories used by the Intel Fortran compiler
+  to determine where to get the runtime libraries from
+
+- On Linux extra libraries are required for gfortran -
+  libpthread.so and libdl.so. By providing a dedicated
+  version of the configuration file for gfortran this is
+  now taken care of (the macro EXTRALIBS - it is empty
+  for the other platforms)
+
+
+dd. 6 march 2018
+
+***Update***
+
+I have adjusted the interfaces from Fortran to C so that
+the calling convention/name mangling is no longer of
+importance, thanks to the C/Fortran interface features
+that were introduced in Fortran 2003.
+
+This makes the building of the library quite a bit simpler.
+
+Furthermore the source for SQLite is now included in the
+distribution - version 3.22.0. The most recent version may
+of course be found on http://www.sqlite.org
+
+
+dd. 7 february 2018
+
+***Update***
+
+As compilers and OSes develop, most notably the move from
+32 bits to 64 bits, things can change a lot. The information
+in the makefile is partly deprecated. To accommodate for the
+Intel Fortran compiler on Windows and the above mentioned
+changes, I made some adjustments to the interfacing code.
+
+The practical consequences:
+- Define the macro LOWERCASE for compiling csqlite.c for
+  the gcc C compiler (Linux, Cygwin and MinGW) in combination
+  with the gfortran and Intel Fortran compilers.
+- Define the macro UPPERCASE (actually the default) for the
+  combination MSVC C/C++ and Intel Fortran compiler on Windows.
+
+(I have not encountered the double underscore convention in
+a long time and other variants that were catered for via
+the INBETWEEN and FTNCALL macros are no longer abundant either.)

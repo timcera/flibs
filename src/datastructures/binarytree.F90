@@ -104,10 +104,10 @@ end function btree_count
 ! Result:
 !
 function btree_child_node( btree, right ) result(child)
-    type(BINARY_TREE), pointer :: btree
-    logical, intent(in)        :: right
+    type(BINARY_TREE), intent(in) :: btree
+    logical, intent(in)           :: right
 
-    type(BINARY_TREE), pointer :: child
+    type(BINARY_TREE), pointer    :: child
 
     if ( right ) then
        child => btree %right
@@ -126,11 +126,11 @@ end function btree_child_node
 !     right      Append right or left
 !
 subroutine btree_append_data( btree, data, right )
-    type(BINARY_TREE), pointer  :: btree
-    type(TREE_DATA), intent(in) :: data
-    logical, intent(in)        :: right
+    type(BINARY_TREE), intent(inout) :: btree
+    type(TREE_DATA), intent(in)      :: data
+    logical, intent(in)              :: right
 
-    type(BINARY_TREE), pointer :: new
+    type(BINARY_TREE), pointer       :: new
 
     if ( right .and. associated(btree%right) ) then
         return
@@ -139,7 +139,7 @@ subroutine btree_append_data( btree, data, right )
         return
     endif
 
-    call btree_create(new, data )
+    call btree_create( new, data )
 
     if ( right ) then
         btree%right => new
@@ -157,9 +157,9 @@ end subroutine btree_append_data
 !     right      Append right or left
 !
 subroutine btree_append_subtree( btree, subtree, right )
-    type(BINARY_TREE), pointer  :: btree
-    type(BINARY_TREE), pointer  :: subtree
-    logical, intent(in)        :: right
+    type(BINARY_TREE), intent(inout) :: btree
+    type(BINARY_TREE), pointer       :: subtree
+    logical, intent(in)              :: right
 
     if ( right .and. associated(btree%right) ) then
         return
@@ -184,16 +184,16 @@ end subroutine btree_append_subtree
 !     right      Append right or left
 !
 subroutine btree_remove_subtree( btree, subtree, right )
-    type(BINARY_TREE), pointer  :: btree
-    type(BINARY_TREE), pointer  :: subtree
-    logical, intent(in)        :: right
+    type(BINARY_TREE), intent(inout) :: btree
+    type(BINARY_TREE), pointer       :: subtree
+    logical, intent(in)              :: right
 
     subtree => null()
 
-    if ( right .and. associated(btree%right) ) then
+    if ( right .and. .not. associated(btree%right) ) then
         return
     endif
-    if ( .not. right .and. associated(btree%left) ) then
+    if ( .not. right .and. .not. associated(btree%left) ) then
         return
     endif
 
@@ -212,9 +212,9 @@ end subroutine btree_remove_subtree
 !     node       Tree node
 !
 function btree_get_data( node ) result(data)
-    type(BINARY_TREE), pointer :: node
+    type(BINARY_TREE), intent(in) :: node
 
-    type(TREE_DATA)            :: data
+    type(TREE_DATA)               :: data
 
     data = node%data
 end function btree_get_data
@@ -226,8 +226,8 @@ end function btree_get_data
 !     data       The data to be stored
 !
 subroutine btree_put_data( node, data )
-    type(BINARY_TREE), pointer  :: node
-    type(TREE_DATA), intent(in) :: data
+    type(BINARY_TREE), intent(inout) :: node
+    type(TREE_DATA), intent(in)      :: data
 
     node%data = data
 end subroutine btree_put_data

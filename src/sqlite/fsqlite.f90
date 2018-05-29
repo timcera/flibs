@@ -94,7 +94,6 @@ module sqlite
       module procedure sqlite3_get_column_char
    end interface
 
-
 contains
 
 
@@ -381,9 +380,10 @@ subroutine sqlite3_open( fname, db )
    character(len=len(fname)+1) :: fnamec
 
    interface
-      integer function sqlite3_open_c( fnamec, handle )
-         character(len=*)      :: fnamec
-         integer, dimension(*) :: handle
+      integer function sqlite3_open_c( fnamec, handle, len_fnamec ) bind(C, name = 'sqlite3_open_c' )
+         character(len=1), dimension(*) :: fnamec
+         integer, dimension(*)          :: handle
+         integer, value                 :: len_fnamec
       end function sqlite3_open_c
    end interface
 
@@ -394,7 +394,7 @@ subroutine sqlite3_open( fname, db )
    fnamec = fname
    call stringtoc( fnamec )
 
-   db%error = sqlite3_open_c( fnamec, db%db_handle )
+   db%error = sqlite3_open_c( fnamec, db%db_handle, len(fnamec) )
 end subroutine sqlite3_open
 
 
@@ -410,7 +410,7 @@ subroutine sqlite3_close( db )
    type(SQLITE_DATABASE) :: db
 
    interface
-      integer function sqlite3_close_c( handle )
+      integer function sqlite3_close_c( handle ) bind(C, name = 'sqlite3_close_c')
          integer, dimension(*) :: handle
       end function sqlite3_close_c
    end interface
@@ -438,10 +438,12 @@ subroutine sqlite3_do( db, command )
    character(len=*)      :: command
 
    interface
-      integer function sqlite3_do_c( handle, command, errmsg )
-         integer, dimension(*) :: handle
-         character(len=*)      :: command
-         character(len=*)      :: errmsg
+      integer function sqlite3_do_c( handle, command, errmsg, len_command, len_errmsg ) bind(C, name = 'sqlite3_do_c')
+         integer, dimension(*)          :: handle
+         character(len=1), dimension(*) :: command
+         character(len=1), dimension(*) :: errmsg
+         integer, value                 :: len_command
+         integer, value                 :: len_errmsg
       end function sqlite3_do_c
    end interface
 
@@ -452,7 +454,7 @@ subroutine sqlite3_do( db, command )
    call stringtoc( commandc )
 
    db%errmsg = ' '
-   db%error  = sqlite3_do_c( db%db_handle, commandc, db%errmsg )
+   db%error  = sqlite3_do_c( db%db_handle, commandc, db%errmsg, len(commandc), len(db%errmsg) )
 
 end subroutine sqlite3_do
 
@@ -542,6 +544,7 @@ subroutine sqlite3_create_table( db, tablename, columns, primary )
 
    character(len=20+80*size(columns)) :: command
    character(len=40)                  :: primary_
+   character(len=40)                  :: format
    integer                            :: i
    integer                            :: ncols
 
@@ -551,7 +554,8 @@ subroutine sqlite3_create_table( db, tablename, columns, primary )
    endif
 
    ncols = size(columns)
-   write( command, '(100a)' ) 'create table ', tablename, ' (', &
+   write( format, '(a,i0,a)' ) '(', 4 + 4 * ncols, 'a)'
+   write( command, format ) 'create table ', tablename, ' (', &
       ( trim(columns(i)%name), ' ', trim(typename(columns(i), primary_)), ', ', &
            i = 1,ncols-1 ), &
       trim(columns(ncols)%name), ' ', trim(typename(columns(ncols),primary_)), ')'
@@ -579,6 +583,7 @@ subroutine sqlite3_prepare_select( db, tablename, columns, stmt, extra_clause )
    type(SQLITE_STATEMENT), intent(out)         :: stmt
 
    character(len=20+80*size(columns))          :: command
+   character(len=40)                           :: format
    integer                                     :: nocols
    integer                                     :: i
 
@@ -588,7 +593,8 @@ subroutine sqlite3_prepare_select( db, tablename, columns, stmt, extra_clause )
    ! TODO: expand the syntax!!
    !
    nocols = size(columns)
-   write( command, '(100a)' ) 'select ', &
+   write( format, '(a,i0,a)' ) '(', 4 + 2 * nocols, 'a)'
+   write( command, format ) 'select ', &
       (trim(column_func(columns(i))), ',', i = 1,nocols-1), &
        trim(column_func(columns(nocols))), &
       ' from ', trim(tablename)
@@ -619,6 +625,7 @@ subroutine sqlite3_insert( db, tablename, columns )
    character(len=*)                            :: tablename
    type(SQLITE_COLUMN), dimension(:), target   :: columns
    character(len=20+80*size(columns))          :: command
+   character(len=40)                           :: format
 
    type(SQLITE_COLUMN), dimension(:), pointer  :: prepared_columns
    type(SQLITE_STATEMENT)                      :: stmt
@@ -626,14 +633,15 @@ subroutine sqlite3_insert( db, tablename, columns )
    integer                                     :: rc
 
    interface
-      subroutine sqlite3_errmsg_c( handle, errmsg )
-         integer, dimension(*) :: handle
-         character(len=*)      :: errmsg
+      subroutine sqlite3_errmsg_c( handle, errmsg, len_errmsg ) bind(C, name = 'sqlite3_errmsg_c')
+         integer, dimension(*)          :: handle
+         character(len=1), dimension(*) :: errmsg
+         integer, value                 :: len_errmsg
       end subroutine sqlite3_errmsg_c
    end interface
 
    interface
-      integer function sqlite3_bind_int_c( handle, colidx, value )
+      integer function sqlite3_bind_int_c( handle, colidx, value ) bind(C, name = 'sqlite3_bind_int_c')
          integer, dimension(*) :: handle
          integer               :: colidx
          integer               :: value
@@ -641,7 +649,7 @@ subroutine sqlite3_insert( db, tablename, columns )
    end interface
 
    interface
-      integer function sqlite3_bind_double_c( handle, colidx, value )
+      integer function sqlite3_bind_double_c( handle, colidx, value ) bind(C, name = 'sqlite3_bind_double_c')
          use sqlite_types
          integer, dimension(*) :: handle
          integer               :: colidx
@@ -650,17 +658,19 @@ subroutine sqlite3_insert( db, tablename, columns )
    end interface
 
    interface
-      integer function sqlite3_bind_text_c( handle, colidx, value )
-         integer, dimension(*) :: handle
-         integer               :: colidx
-         character(len=*)      :: value
+      integer function sqlite3_bind_text_c( handle, colidx, value, len_value ) bind(C, name = 'sqlite3_bind_text_c')
+         integer, dimension(*)          :: handle
+         integer                        :: colidx
+         character(len=1), dimension(*) :: value
+         integer, value                 :: len_value
       end function sqlite3_bind_text_c
    end interface
 
    !
    ! Prepare the insert statement for this table
    !
-   write( command, '(100a)' ) 'insert into ', trim(tablename), ' values(', &
+   write( format, '(a,i0,a)' ) '(', 4 + 2 * size(columns), 'a)'
+   write( command, format ) 'insert into ', trim(tablename), ' values(', &
       ('?,', i = 1,size(columns)-1), '?)'
 
    call stringtoc( command )
@@ -677,11 +687,11 @@ subroutine sqlite3_insert( db, tablename, columns )
       case (SQLITE_DOUBLE)
          rc = sqlite3_bind_double_c( stmt%stmt_handle, i, columns(i)%double_value )
       case (SQLITE_CHAR)
-         rc = sqlite3_bind_text_c( stmt%stmt_handle, i, trim(columns(i)%char_value) )
+         rc = sqlite3_bind_text_c( stmt%stmt_handle, i, trim(columns(i)%char_value), len_trim(columns(i)%char_value) )
       end select
       if ( rc .ne. 0 ) then
          db%error = rc
-         call sqlite3_errmsg_c( db%db_handle, db%errmsg )
+         call sqlite3_errmsg_c( db%db_handle, db%errmsg, len(db%errmsg) )
          call stringtof( db%errmsg )
       endif
    enddo
@@ -708,7 +718,7 @@ subroutine sqlite3_next_row( stmt, columns, finished )
    logical                           :: finished
 
    interface
-      integer function sqlite3_column_int_c( handle, colidx, value )
+      integer function sqlite3_column_int_c( handle, colidx, value ) bind(C, name = 'sqlite3_column_int_c')
          integer, dimension(*) :: handle
          integer               :: colidx
          integer               :: value
@@ -716,7 +726,7 @@ subroutine sqlite3_next_row( stmt, columns, finished )
    end interface
 
    interface
-      integer function sqlite3_column_double_c( handle, colidx, value )
+      integer function sqlite3_column_double_c( handle, colidx, value ) bind(C, name = 'sqlite3_column_double_c')
          use sqlite_types
          integer, dimension(*) :: handle
          integer               :: colidx
@@ -725,10 +735,11 @@ subroutine sqlite3_next_row( stmt, columns, finished )
    end interface
 
    interface
-      integer function sqlite3_column_text_c( handle, colidx, value )
-         integer, dimension(*) :: handle
-         integer               :: colidx
-         character(len=*)      :: value
+      integer function sqlite3_column_text_c( handle, colidx, value, len_value ) bind(C, name = 'sqlite3_column_text_c')
+         integer, dimension(*)          :: handle
+         integer                        :: colidx
+         character(len=1), dimension(*) :: value
+         integer, value                 :: len_value
       end function sqlite3_column_text_c
    end interface
 
@@ -752,7 +763,7 @@ subroutine sqlite3_next_row( stmt, columns, finished )
          case (SQLITE_REAL,SQLITE_DOUBLE)
             rc = sqlite3_column_double_c( stmt%stmt_handle, i-1, columns(i)%double_value )
          case (SQLITE_CHAR)
-            rc = sqlite3_column_text_c( stmt%stmt_handle, i-1, columns(i)%char_value )
+            rc = sqlite3_column_text_c( stmt%stmt_handle, i-1, columns(i)%char_value, len(columns(i)%char_value) )
             call stringtof( columns(i)%char_value )
          end select
         ! if ( rc .ne. 0 ) then
@@ -811,6 +822,12 @@ end subroutine sqlite3_query_table
 subroutine sqlite3_finalize( stmt )
    type(SQLITE_STATEMENT)                      :: stmt
 
+   interface
+      subroutine sqlite3_finalize_c( stmt ) bind(C, name = 'sqlite3_finalize_c')
+         integer, dimension(*) :: stmt
+      end subroutine sqlite3_finalize_c
+   end interface
+
    call sqlite3_finalize_c( stmt%stmt_handle )
 
 end subroutine sqlite3_finalize
@@ -824,6 +841,12 @@ end subroutine sqlite3_finalize
 !
 subroutine sqlite3_reset( stmt )
    type(SQLITE_STATEMENT)                      :: stmt
+
+   interface
+      subroutine sqlite3_reset_c( stmt ) bind(C, name = 'sqlite3_reset_c')
+         integer, dimension(*) :: stmt
+      end subroutine sqlite3_reset_c
+   end interface
 
    call sqlite3_reset_c( stmt%stmt_handle )
 
@@ -842,12 +865,11 @@ subroutine sqlite3_step( stmt, completion )
    integer, intent(out)                        :: completion
 
    interface
-      subroutine sqlite3_step_c( stmt, completion )
+      subroutine sqlite3_step_c( stmt, completion ) bind(C, name = 'sqlite3_step_c')
          integer, dimension(*) :: stmt
          integer               :: completion
       end subroutine sqlite3_step_c
    end interface
-
 
    call sqlite3_step_c( stmt%stmt_handle, completion )
 
@@ -866,26 +888,38 @@ subroutine sqlite3_prepare( db, command, stmt, columns )
    type(SQLITE_COLUMN), dimension(:), pointer  :: columns     ! On return: actual columns!
 
    interface
-      integer function sqlite3_prepare_c( db, command, stmt )
-         integer, dimension(*) :: db
-         character(len=*)      :: command
-         integer, dimension(*) :: stmt
+      subroutine sqlite3_errmsg_c( handle, errmsg, len_errmsg ) bind(C, name = 'sqlite3_errmsg_c')
+         integer, dimension(*)          :: handle
+         character(len=1), dimension(*) :: errmsg
+         integer, value                 :: len_errmsg
+      end subroutine sqlite3_errmsg_c
+   end interface
+
+   interface
+      integer function sqlite3_prepare_c( db, command, stmt, len_command ) bind(C, name = 'sqlite3_prepare_c')
+         integer, dimension(*)          :: db
+         character(len=1), dimension(*) :: command
+         integer, dimension(*)          :: stmt
+         integer, value                 :: len_command
       end function sqlite3_prepare_c
    end interface
 
    interface
-      subroutine sqlite3_column_count_c( handle, count )
+      subroutine sqlite3_column_count_c( handle, count ) bind(C, name = 'sqlite3_column_count_c')
          integer, dimension(*) :: handle
          integer               :: count
       end subroutine sqlite3_column_count_c
    end interface
 
    interface
-      subroutine sqlite3_column_name_type_c( handle, colidx, name, type )
-         integer, dimension(*) :: handle
-         integer               :: colidx
-         character(len=*)      :: name
-         character(len=*)      :: type
+      subroutine sqlite3_column_name_type_c( handle, colidx, name, type, &
+            len_name, len_type ) bind(C, name = 'sqlite3_column_name_type_c')
+         integer, dimension(*)          :: handle
+         integer                        :: colidx
+         character(len=1), dimension(*) :: name
+         character(len=1), dimension(*) :: type
+         integer, value                 :: len_name
+         integer, value                 :: len_type
       end subroutine sqlite3_column_name_type_c
    end interface
 
@@ -895,7 +929,7 @@ subroutine sqlite3_prepare( db, command, stmt, columns )
 
    commandc = command
    call stringtoc( commandc )
-   db%error = sqlite3_prepare_c( db%db_handle, commandc, stmt%stmt_handle )
+   db%error = sqlite3_prepare_c( db%db_handle, commandc, stmt%stmt_handle, len(commandc) )
 
    if ( db%error .eq. 0 ) then
       if ( associated(columns) ) return ! Assumption: they are already known
@@ -906,7 +940,7 @@ subroutine sqlite3_prepare( db, command, stmt, columns )
 
       do i = 1,count
          call sqlite3_column_name_type_c( stmt%stmt_handle, i-1, &
-            columns(i)%name, columns(i)%type )
+            columns(i)%name, columns(i)%type, len(columns(i)%name), len(columns(i)%type) )
          call stringtof( columns(i)%name )
          call stringtof( columns(i)%type )
 
@@ -921,7 +955,7 @@ subroutine sqlite3_prepare( db, command, stmt, columns )
 
       enddo
    else
-      call sqlite3_errmsg_c( db%db_handle, db%errmsg )
+      call sqlite3_errmsg_c( db%db_handle, db%errmsg, len(db%errmsg) )
    endif
 
 end subroutine sqlite3_prepare
@@ -958,20 +992,23 @@ subroutine sqlite3_get_table( db, command, result, errmsg )
 
    interface
       integer function sqlite3_get_table_1_c( handle, commandc, ncol, &
-         nrow, errmsg )
-         integer, dimension(*) :: handle
-         character(len=*)      :: commandc
-         integer               :: ncol
-         integer               :: nrow
-         character(len=*)      :: errmsg
+            nrow, errmsg, len_commandc, len_errmsg ) bind(C, name = 'sqlite3_get_table_1_c')
+         integer, dimension(*)          :: handle
+         character(len=1), dimension(*) :: commandc
+         integer                        :: ncol
+         integer                        :: nrow
+         character(len=1), dimension(*) :: errmsg
+         integer, value                 :: len_commandc
+         integer, value                 :: len_errmsg
       end function sqlite3_get_table_1_c
    end interface
 
    interface
-      subroutine sqlite3_get_table_2_c( ncol, nrow, result )
+      subroutine sqlite3_get_table_2_c( ncol, nrow, result, len_result ) bind(C, name = 'sqlite3_get_table_2_c' )
          integer                       :: ncol
          integer                       :: nrow
-         character(len=*),dimension(*) :: result
+         character(len=1),dimension(*) :: result
+         integer, value                :: len_result
       end subroutine sqlite3_get_table_2_c
    end interface
 
@@ -979,12 +1016,13 @@ subroutine sqlite3_get_table( db, command, result, errmsg )
    commandc = command
    call stringtoc( commandc )
 
-   db%error  = sqlite3_get_table_1_c( db%db_handle, commandc, ncol, nrow, db%errmsg )
+   db%error  = sqlite3_get_table_1_c( db%db_handle, commandc, ncol, nrow, db%errmsg, &
+                   len(commandc), len(db%errmsg) )
 
    nullify( result )
    if ( db%error == 0 ) then
        allocate( result(ncol,nrow+1) )
-       call sqlite3_get_table_2_c( ncol, nrow, result )
+       call sqlite3_get_table_2_c( ncol, nrow, result, len(result) )
    endif
 
    errmsg = db%errmsg
