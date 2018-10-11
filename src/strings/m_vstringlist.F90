@@ -122,6 +122,10 @@ module m_vstringlist
   public :: vstrlist_lsearch
   public :: vstrlist_sort
   public :: vstrlist_remove
+  public :: vstrlist_iterator
+  public :: vstrlist_iterator_reset
+  public :: vstrlist_pop_last
+  public :: vstrlist_pop_first
   !
   ! t_vstringlist --
   !   A list of vstrings is implemented as an array of vstrings.
@@ -141,6 +145,7 @@ module m_vstringlist
 #ifdef _VSTRINGLIST_POINTER
      type ( t_vstring ) , dimension (:), pointer :: array
 #endif
+     integer :: iterator_counter = -1
   end type t_vstringlist
   !
   ! vstrlist_new --
@@ -1491,6 +1496,7 @@ contains
     type ( t_vstringlist ) , intent(inout) :: this
     integer , intent(in) :: icomponent
     integer :: status
+    integer :: length
     character ( len = 500 ) :: message
     type ( t_vstringlist ) :: oldlist
     call vstrlist_checkindex ( this , icomponent , status )
@@ -1502,21 +1508,75 @@ contains
     !
     ! Compute the new length and create the new list.
     !
-    call vstrlist_new ( oldlist , vstrlist_length ( this ) - 1 )
-    if((icomponent > 1) .AND. (icomponent < vstrlist_length (this)))then
+    length = vstrlist_length( this )
+    call vstrlist_new ( oldlist , length - 1 )
+    if((icomponent > 1) .AND. (icomponent < length))then
         oldlist = vstrlist_concat( vstrlist_range ( this, 1, icomponent - 1 ), &
                                  & vstrlist_range ( this, icomponent + 1,      &
-                                 &                  vstrlist_length ( this )))
-    elseif((icomponent == 1) .AND. (vstrlist_length (this) >= 2))then
-        oldlist = vstrlist_range ( this, 2, vstrlist_length ( this ))
-    elseif((icomponent == 1) .AND. (vstrlist_length (this) == 1))then
-        call vstrlist_free ( oldlist )
-        call vstrlist_new ( oldlist )
-    elseif(icomponent == vstrlist_length ( this ))then
-        oldlist = vstrlist_range ( this, 1, vstrlist_length ( this ) - 1)
+                                 &                  length))
+    elseif((icomponent == 1) .AND. (length == 1))then
+        continue
+    elseif((icomponent == 1) .AND. (length >= 2))then
+        oldlist = vstrlist_range ( this, 2, length)
+    elseif(icomponent == length)then
+        oldlist = vstrlist_range ( this, 1, length - 1)
     endif
     call vstrlist_free ( this )
     this = oldlist
     call vstrlist_free ( oldlist )
   end subroutine vstrlist_remove
+  ! vstrlist_iterator_reset -- 
+  !   Resets the iteration of a vstrlist
+  !   
+  subroutine vstrlist_iterator_reset ( this ) 
+    type ( t_vstringlist ) , intent(inout) :: this
+    this % iterator_counter = -1
+  end subroutine vstrlist_iterator_reset
+  !
+  ! vstrlist_iterator -- 
+  !   Returns a vstring in order.
+  !   
+  !   First time called returns the first string, second time called returns the
+  !   second string, ...etc.  Similar to READing a file.
+  !
+  function vstrlist_iterator ( this ) result ( newstring )
+    type ( t_vstringlist ) , intent(inout) :: this
+    type ( t_vstring ) :: newstring
+    if (this % iterator_counter < 0) then
+       this % iterator_counter = 1
+    else
+       this % iterator_counter = this % iterator_counter + 1
+    end if
+    if (this % iterator_counter > vstrlist_length( this )) then
+       this % iterator_counter = 0
+       return
+    end if
+    call vstring_new ( newstring , this % array ( this % iterator_counter) )
+  end function vstrlist_iterator
+  !
+  ! vstrlist_pop_last -- 
+  !   Return and delete the last string in the list.
+  !
+  function vstrlist_pop_last ( this ) result ( newstring )
+    type ( t_vstringlist ), intent(inout) :: this
+    type ( t_vstring ) :: newstring
+    if (vstrlist_length( this ) .eq. 0) then
+      return
+    end if
+    newstring = vstrlist_index( this, vstrlist_length( this ) )
+    call vstrlist_remove ( this, vstrlist_length( this ))
+  end function vstrlist_pop_last
+  !
+  ! vstrlist_pop_first -- 
+  !   Return and delete the first string in the list.
+  !
+  function vstrlist_pop_first ( this ) result ( newstring )
+    type ( t_vstringlist ), intent(inout) :: this
+    type ( t_vstring ) :: newstring
+    if (vstrlist_length( this ) .eq. 0) then
+      return
+    end if
+    newstring = vstrlist_index( this, 1 )
+    call vstrlist_remove ( this, 1 )
+  end function vstrlist_pop_first
 end module m_vstringlist
