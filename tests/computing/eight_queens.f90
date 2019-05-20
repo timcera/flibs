@@ -5,14 +5,10 @@
 !
 !    This illustrates the use of the backtracking module.
 !
-module backtracking_data
-    implicit none
-    type SOLUTION_DATA
-        integer, dimension(8) :: row
-    end type SOLUTION_DATA
-
-end module backtracking_data
-
+!    Note:
+!    gfortran complained about free being an intrinsic routine,
+!    so I added the prefix "queens_"
+!
 module eight_queens
     use backtracking_data
     implicit none
@@ -34,7 +30,7 @@ contains
 !     To keep the memory management clear, the subroutine
 !     "free" cleans up the array of feasible solutions.
 !
-subroutine generate( base, stage, solutions )
+subroutine queens_generate( base, stage, solutions )
     type(SOLUTION_DATA), intent(in)             :: base
     integer, intent(in)                         :: stage
     type(SOLUTION_DATA), dimension(:), pointer  :: solutions
@@ -57,20 +53,20 @@ subroutine generate( base, stage, solutions )
     !
     solutions(:)            = base
     solutions(:)%row(stage) = (/ (i, i=1,8 ) /)
-end subroutine generate
+end subroutine queens_generate
 
-! free --
+! queens_free --
 !     Subroutine to clean up the memory used by the intermediate
 !     solutions
 ! Arguments:
 !     solutions   Array of solutions that need to be cleaned up
 !
-subroutine free( solutions )
+subroutine queens_free( solutions )
     type(SOLUTION_DATA), dimension(:), pointer  :: solutions
 
     deallocate( solutions )
 
-end subroutine free
+end subroutine queens_free
 
 ! acceptable --
 !     Function to check if a possible solution is acceptable
@@ -80,7 +76,7 @@ end subroutine free
 ! Returns:
 !     .true. if the solution is acceptable, .false. otherwise
 !
-logical function acceptable( solution, stage )
+logical function queens_acceptable( solution, stage )
     type(SOLUTION_DATA), intent(in) :: solution
     integer, intent(in)             :: stage
 
@@ -105,9 +101,9 @@ logical function acceptable( solution, stage )
         clash = clash .or. ( diff .eq. (stage-i) )
     enddo
 
-    acceptable = .not. clash
+    queens_acceptable = .not. clash
 
-end function acceptable
+end function queens_acceptable
 
 ! collect --
 !     Subroutine to collect all solutions (or do something else)
@@ -115,7 +111,7 @@ end function acceptable
 !     solution    Solution that was found
 !     stop        Flag that indicates whether to stop or not
 !
-subroutine collect( solution, stop )
+subroutine queens_collect( solution, stop )
     type(SOLUTION_DATA), intent(in) :: solution
     logical, intent(out)            :: stop
 
@@ -131,7 +127,7 @@ subroutine collect( solution, stop )
     deallocate( all_solutions )
     all_solutions => new
 
-end subroutine collect
+end subroutine queens_collect
 
 end module eight_queens
 
@@ -153,7 +149,7 @@ program eightq
 
     nostage = 8
 
-    call bt_solve( base, nostage, generate, acceptable, free, collect )
+    call bt_solve( base, nostage, queens_generate, queens_acceptable, queens_free, queens_collect )
 
     !
     ! Now print the solutions ...

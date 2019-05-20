@@ -3,7 +3,7 @@
 !
 !     Note: most probably just a warning, but the program is likely to crash
 !
-!     Note: the purpose of this check is to see if the compiler lookd at
+!     Note: the purpose of this check is to see if the compiler looks at
 !           interfaces in the same source file, but outside any module. It is
 !           a matter of quality, not of standard compliance
 !

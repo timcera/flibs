@@ -13,6 +13,7 @@
 #       EXTENSION  - test for a well-known extension
 #     - more feedback to the user during the run
 #     - summary of failed programs
+#     - check read/write status for files that are opened twice (chk_opentwice.f90)
 #
 #     - last write with advance = 'no': file closed with newline anyway?
 #
@@ -43,6 +44,51 @@
 #     - check: recursive IO (two levels - 2003 and 2008)
 #
 #     - opening a file on unit 6, does that prevent output to screen?
+#
+#     - how many files can be opened at once?
+#
+#     - what is the record length for formatted direct-access files? Do you have to do the
+#       record delimiters yourself?
+#
+#     - how does random_number cooperate with OpenMP - same sequence or not?
+#     - how to set the random number seed
+#     - check if random_seed without arguments reinitialises the series in a "random" way or not
+#
+#     - check the use of formats like "F" and "I" - are they really accepted by some compilers?
+#     - when are incorrect formats detected?
+#
+#     - check if reading more from a file (read an array that is larger than the file itself)
+#       leads to an end-of-file condition or to a read error
+#
+#     - check writing to the same file from different threads (OpenMP)
+#
+#     - check if "OPEN(NEWUNIT = ...)" without file= or status= works.
+#
+#     - check support for OpenMP 3.0, 4.0 and 5.0
+#
+#     - check behaviour of MIN() with NaN as one of the arguments
+#
+#     - check behaviour of f0.3 - does it include a leading zero? (done)
+#
+#     - keyword NON_RECURSIVE (F2018) (done)
+#
+#     - stop and error stop with variable
+#
+#     - unreachable statement
+#
+#     - warning about misalign fields in SEQUENCE derived types
+#
+#     - BLOCK/END BLOCK with implictly typed variables - problematic implementations
+#
+#     - character kinds: more emphasis
+#
+#     - optimisation issue: protection of parentheses (think of dqfun)
+#
+#     - unattractive extension: if ( ival .and. .true. ) (allows sloppiness)
+#     - unattractive extension: a*-1.0
+#     - unattractive extension: a(1.1) = ...
+#
+#     - check definition of C_PRTDIFF_T in ISO_C_BINDING
 #
 @chk_newunit
 FEATURE
@@ -103,6 +149,10 @@ The compiler does not support the use of arithmetic comparison (.EQ. and such) f
 @chk_do_concurrent
 FEATURE
 The compiler does not support the DO CONCURRENT ... ENDDO construct
+
+@chk_do_concurrent_f2018
+FEATURE
+The compiler does not support the DO CONCURRENT locality clauses (Fortran 2018)
 
 @chk_square_brackets
 FEATURE
@@ -460,6 +510,10 @@ The compiler does not allow a 2D pointer to be associated with a 1D array
 FEATURE
 The compiler does not support implied shape arrays (parameter arrays with automatic size)
 
+@chk_implied_char_length
+FEATURE
+The compiler does not support implied lengths for character string parameters
+
 @chk_pointer_function
 FEATURE
 The compiler does not support pointer functions
@@ -549,3 +603,51 @@ The compiler does not support impure elemental functions/subroutines
 FEATURE
 The compiler does not allow specific routines to be distinguished by pointer or
 allocatable attributes only
+
+@chk_many_open_files
+PROBE
+Please check the error messages - the code should be acceptable
+
+@chk_non_recursive
+FEATURE
+The compiler does not support the Fortran 2018 keyword NON_RECURSIVE
+
+@chk_format_f03
+FEATURE
+The compiler does not support the "f0.d" format
+
+@chk_assumed_rank
+FEATURE
+The compiler does not support the Fortran 2018 feature of assumed ranks
+
+@chk_assumed_type
+FEATURE
+The compiler does not support the Fortran 2018 feature of assumed types (C interoperability)
+
+@chk_assumed_size_f2018
+FEATURE
+The compiler does not support the Fortran 2018 convention regarding assumed-size arrays
+
+@chk_ieee_f2018
+FEATURE
+The compiler does not support the Fortran 2018 extended support for the IEEE standard
+
+@chk_reduce
+FEATURE
+The compiler does not support the Fortran 2018 intrinsic reduce
+
+@chk_random_init
+FEATURE
+The compiler does not support the Fortran 2018 intrinsic random_init
+
+@chk_semicolon
+EXTENSION
+The compiler should have accepted the program - please check
+
+@chk_coarrays_image
+FEATURE
+The compiler does not seem to support coarrays or requires a specific option
+
+@chk_c_ptrdiff_t
+FEATURE
+The compiler does not support the kind C_PTRDIFF_T for the difference between memory addresses

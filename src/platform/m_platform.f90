@@ -1,17 +1,17 @@
 !
 ! m_platform.f90 --
 !   The m_platform module contains parameters to identify the
-!   platform the program is running on and provides 
+!   platform the program is running on and provides
 !   several routines to interact with the operating system.
 !
 !   OVERVIEW
 !
 !   The goal is to make the client source code as independent as possible
-!   from the particular environment, that is 
-!   - independent from the operating system (OS), so that the 
+!   from the particular environment, that is
+!   - independent from the operating system (OS), so that the
 !   binaries can be used under Windows, Linux or any other
 !   specific OS without modifying the source code,
-!   - independent from the fortran compiler, so that the 
+!   - independent from the fortran compiler, so that the
 !   binaries can be generated with gfortran Intel Fortran, Absoft,
 !   or any other specific compiler without modifying the source code.
 !
@@ -20,11 +20,11 @@
 !   and unnecessary complexity. Here the dependencies are concentrated
 !   in m_platform so that the client code is much simpler and clearer.
 !
-!   The function platform_get_os() returns an integer which identifies 
-!   the operating system and the function platform_get_platform() identifies 
+!   The function platform_get_os() returns an integer which identifies
+!   the operating system and the function platform_get_platform() identifies
 !   the general category.
 !   For example, the file separator is different on windows ("\"),
-!   unix ("/") and Mac (":"). In the following example, extracted from the 
+!   unix ("/") and Mac (":"). In the following example, extracted from the
 !   m_vfile module included with flibs, the platform_get_platform()
 !   function is used to configure the separator for the current platform.
 !
@@ -48,14 +48,14 @@
 !       return
 !     end select
 !
-!   The subroutine platform_system() allows to execute an external program at the 
+!   The subroutine platform_system() allows to execute an external program at the
 !   system level. This routine is generally provided by the fortran compiler as an
 !   extension to standard fortran. But some compilers provide the feature
-!   as a subroutine (for example gfortran), while other compilers provide the 
+!   as a subroutine (for example gfortran), while other compilers provide the
 !   feature as a function (for example Intel Fortran). In the following example,
-!   one execute a Monte-Carlo simulation with no dependency on the specific 
+!   one execute a Monte-Carlo simulation with no dependency on the specific
 !   compiler.
-! 
+!
 !      use m_platform, only platform_system
 !      call platform_system ( "montecarlo.exe" , status )
 !
@@ -70,33 +70,33 @@
 !
 !   Pre-processing macros
 !
-!   The source code of m_platform is based on pre-processing macro, 
+!   The source code of m_platform is based on pre-processing macro,
 !   which must be configured for the specific couple (OS,compiler) at use.
-!   With most compilers, defining a pre-processing macro simply 
-!   consists in enabling the pre-processing with a specific 
+!   With most compilers, defining a pre-processing macro simply
+!   consists in enabling the pre-processing with a specific
 !   option and adding "-D<macro>" options on the command-line.
 !
-!   The only mandatory pre-processing macro which must be defined is 
+!   The only mandatory pre-processing macro which must be defined is
 !   the _PLATFORM_OS_<your OS> macro.
-!   Optionnaly, other pre-processing macros may be defined so that 
+!   Optionnaly, other pre-processing macros may be defined so that
 !   the client code may access to additionnal features.
-!   If a feature is used and the associated macros have not 
+!   If a feature is used and the associated macros have not
 !   been defined, the "status" integer of the associated routine
 !   will have the value PLATFORM_ERROR_UNDEFINED_SERVICE.
 !
 !   Compile
 !
-!   The "make" directory provided with flibs should help the 
-!   use to compile m_platform. The "make/makefile" contains all the 
+!   The "make" directory provided with flibs should help the
+!   use to compile m_platform. The "make/makefile" contains all the
 !   makefiles necessary for the project, include specific settings
-!   for several compilers. the "make/visualstudio" directory include 
-!   all projects .nfproj and solutions .sln files necessary to 
+!   for several compilers. the "make/visualstudio" directory include
+!   all projects .nfproj and solutions .sln files necessary to
 !   compile the project with Intel Fortran 8 and Visual Studio 2003.
 !
 ! Operating System dependency
 !
-! The m_platform module MUST be informed of the specific OS for which 
-! it is compiled. One of the following pre-processing macros MUST be 
+! The m_platform module MUST be informed of the specific OS for which
+! it is compiled. One of the following pre-processing macros MUST be
 ! defined to set the spefic OS at use :
 ! _PLATFORM_OS_WINDOWS_95
 ! _PLATFORM_OS_WINDOWS_NT
@@ -131,27 +131,27 @@
 ! _PLATFORM_FORTRAN_2003
 !
 ! Change directory fortran extension
-! Depending on the compiler, the "CHDIR" fortran extension is provided 
-! as a subroutine or a function. 
-! To inform the m_platform module of the particular CHDIR extension, 
+! Depending on the compiler, the "CHDIR" fortran extension is provided
+! as a subroutine or a function.
+! To inform the m_platform module of the particular CHDIR extension,
 ! one of the following pre-processing macro MAY be defined :
 ! _PLATFORM_CHDIR_SUBROUTINE
 ! _PLATFORM_CHDIR_FUNCTION
-! See in your manual for the specific 
+! See in your manual for the specific
 ! settings.
-! For example, this is a short list of compilers and their particular 
+! For example, this is a short list of compilers and their particular
 ! CHDIR provided :
 ! - function : Intel Fortran, g95, gfortran
 ! - subroutine : gfortran
 !
 ! File stat fortran extension
-! Depending on the compiler, the "STAT" fortran extension is 
+! Depending on the compiler, the "STAT" fortran extension is
 ! provided as a subroutine or a function.
-! For example, this is a short list of compilers and their particular 
+! For example, this is a short list of compilers and their particular
 ! STAT provided :
 ! - function : Intel Fortran, g95
 ! - subroutine : gfortran
-! To inform the m_platform module of the particular STAT extension, 
+! To inform the m_platform module of the particular STAT extension,
 ! one of the following pre-processing macro MAY be defined :
 ! _PLATFORM_STAT_SUBROUTINE
 ! _PLATFORM_STAT_FUNCTION
@@ -180,7 +180,7 @@
 ! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
 ! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
-! $Id$
+! $Id: m_platform.f90,v 1.7 2008-06-17 12:46:07 relaxmike Exp $
 !
 module m_platform
 #ifdef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
@@ -191,7 +191,7 @@ module m_platform
   !
   ! The name of the operating system running on this machine, such as Windows 95,
   ! Windows NT, MacOS, or SunOS. On UNIX machines, this is the value returned by
-  ! uname -s. 
+  ! uname -s.
   !
   integer, parameter, public :: PLATFORM_OS_UNKNOWN = 0
   integer, parameter, public :: PLATFORM_OS_WINDOWS_95 = 1
@@ -280,6 +280,7 @@ contains
     character (len=*), intent(in) :: command
     integer, intent ( out ), optional :: status
     integer :: local_status
+    character(len=80) :: message
 #ifdef _PLATFORM_SYSTEM_SUBROUTINE
     call system ( command , local_status )
 #endif
@@ -305,11 +306,11 @@ contains
   end subroutine platform_system
   !
   ! platform_get_os --
-  !   Returns the operating system running on the current machine, 
+  !   Returns the operating system running on the current machine,
   !   one of: PLATFORM_OS_WINDOWS_95, PLATFORM_OS_WINDOWS_NT,
   !   PLATFORM_OS_MACOS, PLATFORM_OS_SUNOS, PLATFORM_OS_LINUX,
   !   PLATFORM_OS_UNIX.
-  !   The actual integer value should not be used directly ; instead, it 
+  !   The actual integer value should not be used directly ; instead, it
   !   should be compared against the PLATFORM_OS_* public variables.
   ! Arguments:
   !   No argument
@@ -319,8 +320,8 @@ contains
   end function platform_get_os
   !
   ! platform_osstring --
-  !   Returns a string containing the current operating system running 
-  !   on the current machine, one of "Windows 95", "Windows NT", "MacOS", "SunOS", 
+  !   Returns a string containing the current operating system running
+  !   on the current machine, one of "Windows 95", "Windows NT", "MacOS", "SunOS",
   !   "Linux" or "Unix".
   ! Arguments:
   !   currentos, output : the current operating system string
@@ -345,9 +346,9 @@ contains
   end subroutine platform_osstring
   !
   ! platform_get_platform --
-  !   Returns the general operating system running on the current machine, 
+  !   Returns the general operating system running on the current machine,
   !   one of: PLATFORM_PLATFORM_WINDOWS, PLATFORM_PLATFORM_MAC, PLATFORM_PLATFORM_UNIX
-  !   The actual integer value should not be used directly ; instead, it 
+  !   The actual integer value should not be used directly ; instead, it
   !   should be compared against the PLATFORM_PLATFORM_* public variables.
   ! Arguments:
   !   No argument
@@ -379,9 +380,11 @@ contains
   !   Returns the operating system running on the current machine
   ! Arguments:
   !   No argument
-  subroutine platform_get_environment_variable ( envvar , value )
+  subroutine platform_get_environment_variable ( envvar , value , status )
     character (len=*), intent(in) :: envvar
     character (len=*), intent(out) :: value
+    integer, optional, intent(out) :: status
+    character(len=80) :: message
 #ifdef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
     integer :: environment_variable_length
 #endif
@@ -407,7 +410,7 @@ contains
   end subroutine platform_get_environment_variable
   !
   ! platform_cd --
-  !   Change working directory to "dirname". 
+  !   Change working directory to "dirname".
   ! Arguments:
   !   dirname   Name of the directory in which to enter
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
@@ -417,6 +420,7 @@ contains
     character(len=*), intent(in)             :: dirname
     integer, intent(out) , optional :: status
     integer :: local_status
+    character(len=80) :: message
 #ifdef _PLATFORM_CHDIR_SUBROUTINE
     call chdir ( dirname , local_status )
 #endif
@@ -467,6 +471,7 @@ contains
     integer, dimension (1:13) , intent(out)  :: statarray
     integer, intent(out) , optional :: status
     integer  :: local_status
+    character(len=80) :: message
 #ifdef _PLATFORM_STAT_SUBROUTINE
     call stat ( filename , statarray , local_status )
 #endif

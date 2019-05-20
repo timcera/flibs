@@ -9,6 +9,9 @@ FFLAGS_NORMAL	=	/c
 FFLAGS_DEBUG	=	/c /debug
 FFLAGS_OPTIMISE	=	/c /fast
 
+PREPROCESS=	=	/fpp
+PLATFORM	=	_PLATFORM_OS_WINDOWS_NT
+
 CC	=	cl
 CFLAGS	=	/c
 

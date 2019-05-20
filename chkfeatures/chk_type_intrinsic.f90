@@ -8,7 +8,12 @@ program chk_type_intrinsic
     implicit none
 
     type(integer) :: value
+    type(real(kind=kind(1.0))) :: rvalue
 
     value = 1
-    write(*, '(a,i0)') 'Value: ', value
+    rvalue = 1.0
+    write(*, '(a)')    'Declaration of integer and real variables via TYPE(...) works:'
+    write(*, '(a,i0)') 'Integer value: ', value
+    write(*, '(a,g0)') 'Real value:    ', rvalue
+
 end program chk_type_intrinsic

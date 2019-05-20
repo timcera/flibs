@@ -12,7 +12,7 @@ program csvdata
    character(len=100)              :: line
    character(len=40)               :: string
    character(len=20), dimension(6) :: station = &
-      (/ 'NW1', 'NW2', 'OS30', 'DH', 'DO', 'Ah111' /)
+      (/ 'NW1  ', 'NW2  ', 'OS30 ', 'DH   ', 'DO   ', 'Ah111' /)
 
    open( lun, file = 'somedata.csv' )
    write( lun, * ) 'station,date,salinity,temperature'

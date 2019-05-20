@@ -18,8 +18,8 @@
 !
 ! Overview
 !
-!   This component allows to manage the file system, by providing 
-!   services to create, move and destroy files and directories, and 
+!   This component allows to manage the file system, by providing
+!   services to create, move and destroy files and directories, and
 !   to get informations about files and directories.
 !   The services provided are based either on standard fortran,
 !   or on fortran extensions.
@@ -27,30 +27,30 @@
 ! Portability
 !
 !   One of the main interest of this component is to separate
-!   the client-side application from platform-specific file 
-!   management or from compiler-specific fortran extensions. 
+!   the client-side application from platform-specific file
+!   management or from compiler-specific fortran extensions.
 !
 !   This separation is possible because m_filedir
 !   deals for the platform directly, by using the m_platform
-!   module. This allows to design a client source code which 
+!   module. This allows to design a client source code which
 !   portable on several operating systems (for example windows,
-!   linux) without any change. For example, the several file 
+!   linux) without any change. For example, the several file
 !   separators used on the various operating systems are taken
-!   into account internally : "/" on linux systems, "\" on 
+!   into account internally : "/" on linux systems, "\" on
 !   windows systems and ":" on Mac OS.
 !
-!   The portability is also ensured with respect to the 
+!   The portability is also ensured with respect to the
 !   fortran compiler used to create the executable.
 !   All fortran compilers provide commands to rename the files
 !   or get the working directory. But not all fortran compilers
 !   define these commands the same way : some provide subroutines,
-!   some provide functions, etc... The current component can 
+!   some provide functions, etc... The current component can
 !   be configured at compile-time with pre-processing commands.
-!   This allows to configure the component with compiler 
+!   This allows to configure the component with compiler
 !   specific settings, to make so that the component know
 !   what features your particular compiler knows about.
 !
-!     <your application> 
+!     <your application>
 !            |
 !        m_filedir -> (operating system , fortran compiler)
 !            |
@@ -59,14 +59,14 @@
 ! How to use it
 !
 !   Before using this component, it must be initialized with
-!   filedir_init. This allows to initialize platform-specific 
+!   filedir_init. This allows to initialize platform-specific
 !   internal settings.
 !
 !   The commands filedir_delete, filedir_copy, filedir_rename
 !   allow to delete, copy and rename files or directories.
-!   To inquire about a file or directory, one can use 
+!   To inquire about a file or directory, one can use
 !   filedir_exists or filedir_isdirectory.
-!  
+!
 !   In the following example, one creates a new file with filedir_touch,
 !   rename that file and finally delete it.
 !
@@ -75,42 +75,42 @@
 !   call filedir_rename ( "foo.txt" , "toto.txt" )
 !   call filedir_delete ( "toto.txt" )
 !
-!   The filedir_separator returns the platform-specific character 
+!   The filedir_separator returns the platform-specific character
 !   used on the current operating system.
 !
 !   The commands filedir_nativename , filedir_normalize , filedir_pathtype
 !   provide ways to manage file names and paths.
-!   The filedir_nativename function returns the platform-specific name of the file. 
-!   The filedir_pathtype command returns one of FS_PATHTYPE_ABSOLUTE, 
-!   FS_PATHTYPE_RELATIVE, FS_PATHTYPE_VOLUMERELATIVE which correspond to 
-!   the current file. The FS_PATHTYPE_VOLUMERELATIVE only exist on 
-!   windows. The filedir_normalize command returns a unique normalized 
-!   path representation for the file-system object (file, directory, link, 
+!   The filedir_nativename function returns the platform-specific name of the file.
+!   The filedir_pathtype command returns one of FS_PATHTYPE_ABSOLUTE,
+!   FS_PATHTYPE_RELATIVE, FS_PATHTYPE_VOLUMERELATIVE which correspond to
+!   the current file. The FS_PATHTYPE_VOLUMERELATIVE only exist on
+!   windows. The filedir_normalize command returns a unique normalized
+!   path representation for the file-system object (file, directory, link,
 !   etc), whose string value can be used as a unique identifier for it.
 !
 !   The filedir_split and filedir_join services allows to separate
 !   or concatenate the components of a file. This can be useful
 !   when dealing with relative file or directories.
-!   The filedir_split command splits a file into pieces each time 
+!   The filedir_split command splits a file into pieces each time
 !   the platform-specific separator is found.
-!   The filedir_join command concatenate a list of strings with 
+!   The filedir_join command concatenate a list of strings with
 !   the platform-specific separator and returns the concatenated
 !   file name.
 !
-!   One particularly useful command when dealing with files is 
+!   One particularly useful command when dealing with files is
 !   filedir_findByPattern. The command takes a string as an input
 !   file pattern. It then computes the list of all files which
 !   match that pattern.
 !
 ! Error management
 !
-!   The file management may raise errors, for example when the 
+!   The file management may raise errors, for example when the
 !   user want to rename a file which does not exist.
-!   Many of the provided commands have an optional integer output 
-!   argument "status" which is zero when no error occured 
+!   Many of the provided commands have an optional integer output
+!   argument "status" which is zero when no error occured
 !   and non-zero in case of error.
 !   If the status argument is not provided and an error is generated,
-!   then the program stops and a message is displayed on standard 
+!   then the program stops and a message is displayed on standard
 !   output.
 !   These are the public error flags that the current component may generate :
 !     FS_ERROR_OK = 0
@@ -128,20 +128,20 @@
 !   without any database of file units in the library/software.
 !   In the following example, one opens a file with a dynamical
 !   file unit.
-! 
+!
 !     integer :: fileunit
 !     fileunit = filedir_get_unit ()
 !     open ( unit = fileunit , file = "data.txt" )
 !     [etc...]
 !
-!   If several files are to be opened, the "filedir_get_unit" 
+!   If several files are to be opened, the "filedir_get_unit"
 !   method has to be inserted between the "open" statements.
 !   This is because two consecutive calls to "filedir_get_unit"
 !   will return the same integer, as expected : if a unit is available
 !   the first time, it will also be available the second time.
 !   In the following example, several files are opened and connected
 !   to several files.
-! 
+!
 !     integer :: fileunit1
 !     integer :: fileunit2
 !     fileunit1 = filedir_get_unit ()
@@ -150,16 +150,16 @@
 !     open ( unit = fileunit2 , file = "data2.txt" )
 !     [etc...]
 !
-!   In a large fortran software, it may be difficult to see if some 
+!   In a large fortran software, it may be difficult to see if some
 !   bug has been introduced in the file management, especially
 !   when the software is the composition of several libraries.
-!   The subroutines filedir_getallopenunits , filedir_closeallopenunits , 
-!   filedir_reportunit , filedir_displayopenunits allow to manage for 
+!   The subroutines filedir_getallopenunits , filedir_closeallopenunits ,
+!   filedir_reportunit , filedir_displayopenunits allow to manage for
 !   the units currently used in the software.
-!   The filedir_getallopenunits returns an array of integers which 
+!   The filedir_getallopenunits returns an array of integers which
 !   contains all the currently opened units. The filedir_closeallopenunits
 !   subroutine close all currently opened units. The filedir_reportunit
-!   displays a full report about a given unit number by using the 
+!   displays a full report about a given unit number by using the
 !   "inquire" fortran intrinsic statement.
 !
 !   Several methods of this component are based on Fortran extensions,
@@ -168,9 +168,9 @@
 !   IFPORT.F90 file in the Intel release for details on the interfaces provided.
 !
 !   File rename fortran extension.
-!   Depending on the compiler, the "RENAME" fortran extension is 
+!   Depending on the compiler, the "RENAME" fortran extension is
 !   provided as a subroutine or a function.
-!   For example, this is a short list of compilers and their particular 
+!   For example, this is a short list of compilers and their particular
 !   RENAME provided :
 !   - function : Intel Fortran, g95
 !   - subroutine : gfortran
@@ -195,7 +195,7 @@
 ! Copyright (c) 2008 Arjen Markus arjenmarkus@sourceforge.net
 ! Copyright (c) 2008 Michael Baudin michael.baudin@gmail.com
 !
-!   $Id$
+!   $Id: m_filedir.f90,v 1.7 2013-12-30 09:30:19 knystrom Exp $
 !
 module m_filedir
 #ifdef _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
@@ -641,7 +641,7 @@ contains
     !
     ! Process options
     !
-    if ( present ( trimline ) ) then 
+    if ( present ( trimline ) ) then
        trimline_real = trimline
     else
        trimline_real = .true.
@@ -725,9 +725,11 @@ contains
   ! Arguments:
   !   cwd : the current working directory
   !
-  subroutine filedir_pwd ( cwd )
+  subroutine filedir_pwd ( cwd, status )
     character(len=*), intent ( out ) :: cwd
+    integer, intent ( out ), optional :: status
     integer :: local_status
+    character(len=50) :: message
 #ifdef _FS_GETCWD_FUNCTION
     local_status = GETCWD ( cwd )
 #endif
@@ -766,7 +768,7 @@ contains
   end function filedir_exists
   !
   ! filedir_delete_with_force --
-  !   Removes the file or directory specified by each pathname argument. 
+  !   Removes the file or directory specified by each pathname argument.
   !   Non-empty directories will be removed only if the force option is specified.
   ! Arguments:
   !   filename   Name of the file to be examined
@@ -1248,9 +1250,9 @@ contains
   end function filedir_first_separator_index
   !
   ! filedir_tempfile --
-  !   The command generates a temporary file name suitable for writing to, and the 
-  !   associated file. The file name will be unique, and the file will be writable and 
-  !   contained in the appropriate system specific temp directory. The name of the file 
+  !   The command generates a temporary file name suitable for writing to, and the
+  !   associated file. The file name will be unique, and the file will be writable and
+  !   contained in the appropriate system specific temp directory. The name of the file
   !   will be returned as the result of the command.
   ! Arguments:
   !   tempfile   Name of the temporary file
@@ -1314,7 +1316,7 @@ contains
   end subroutine filedir_tempfile
   !
   ! filedir_touch --
-  !   Implementation of touch. Alter the atime and mtime of the specified files. 
+  !   Implementation of touch. Alter the atime and mtime of the specified files.
   ! Arguments:
   !   filename   Name of the file to touch
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
@@ -1403,11 +1405,11 @@ contains
   end function filedir_isdirectory
   !
   ! filedir_pathtype --
-  !   Returns one of FS_PATHTYPE_ABSOLUTE, FS_PATHTYPE_RELATIVE, FS_PATHTYPE_VOLUMERELATIVE. 
-  !   If name refers to a specific file on a specific volume, the path 
-  !   type will be absolute. If name refers to a file relative to the current 
-  !   working directory, then the path type will be relative. If name refers to 
-  !   a file relative to the current working directory on a specified volume, or to 
+  !   Returns one of FS_PATHTYPE_ABSOLUTE, FS_PATHTYPE_RELATIVE, FS_PATHTYPE_VOLUMERELATIVE.
+  !   If name refers to a specific file on a specific volume, the path
+  !   type will be absolute. If name refers to a file relative to the current
+  !   working directory, then the path type will be relative. If name refers to
+  !   a file relative to the current working directory on a specified volume, or to
   !   a specific file on the current working volume, then the path type is volumerelative.
   ! Arguments:
   !   filename   Name of the file to be examined
@@ -1450,7 +1452,7 @@ contains
   end function filedir_pathtype
   !
   ! filedir_mkdir --
-  !   
+  !
   ! Arguments:
   !   dirname   Name of the directory to create
   !   status, optional : if supplied, it contains 0 on success or nonzero error code
@@ -1479,8 +1481,8 @@ contains
   end subroutine filedir_mkdir
   !
   ! filedir_nativename --
-  !   Returns the platform-specific name of the file. 
-  !   This is useful if the filename is needed to pass to a platform-specific 
+  !   Returns the platform-specific name of the file.
+  !   This is useful if the filename is needed to pass to a platform-specific
   !   call, such as exec under Windows or AppleScript on the Macintosh.
   ! Arguments:
   !   filename   Name of the file name to make platform-specific
@@ -1588,7 +1590,7 @@ contains
   end subroutine filedir_getallopenunits
   !
   ! filedir_displayopenunits --
-  !   Displays on unit "unitnumber" the full list of opened units and their associated 
+  !   Displays on unit "unitnumber" the full list of opened units and their associated
   !   filenames.
   ! Input :
   !   reportunitnumber : the unit number on which the report is displayed
@@ -1738,14 +1740,14 @@ contains
        stop
     endif
   end subroutine filedir_error
-  ! 
+  !
   ! filedir_set_stoponerror --
-  !   Configure the behaviour of the component whenever an 
+  !   Configure the behaviour of the component whenever an
   !   error is met.
   !   If stoponerror is true, then the execution stops if an error is encountered.
   !   If stoponerror is false, then the execution continues if an error is encountered.
   !   In both cases, a message is displayed on standard output.
-  ! 
+  !
   subroutine filedir_set_stoponerror ( stoponerror )
     logical , intent(in) :: stoponerror
     filedir_stoponerror = stoponerror

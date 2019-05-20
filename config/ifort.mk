@@ -9,6 +9,9 @@ FFLAGS_NORMAL	=	-c
 FFLAGS_DEBUG	=	-c -g
 FFLAGS_OPTIMISE	=	-c -fast
 
+PREPROCESS	=	-fpp
+PLATFORM	=	_PLATFORM_OS_LINUX
+
 CC	=	gcc
 CFLAGS	=	-c
 

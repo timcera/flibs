@@ -4,6 +4,9 @@
 !     Note: there is a whole list of such special functions defined for the Fortran 2008 standard, not
 !     all of them are tested here
 !
+!     For an extensive discussion of the calculation of the Euclidean norm:
+!     https://www.researchgate.net/publication/298896236
+!
 program chk_norm2_hypot
     implicit none
 
@@ -18,7 +21,7 @@ program chk_norm2_hypot
     write( *, '(a,f10.4)' )        'Euclidean norm of the vector:', norm2(vector)
 
     !
-    ! Special attention to very large values
+    ! Special attention to very large values - ideally there should be no overflow
     !
     vector(1:2) = (/ (3.0/10.0) * huge(x), (4.0/10.0) * huge(x) /)
 
@@ -26,5 +29,15 @@ program chk_norm2_hypot
     write( *, '(a,2e14.4)' )       'Vector:        ', vector(1:2)
     write( *, '(a,e14.4)' )        'Euclidean norm:', norm2(vector(1:2))
     write( *, '(a,e14.4)' )        'Expected:      ', (5.0/10.0) * huge(x)
+
+    !
+    ! Special attention to very small values - ideally there should be no underflow
+    !
+    vector(1:2) = (/ 30.0 * tiny(x), 40.0 * tiny(x) /)
+
+    write( *, '(a)' )              '2-norm of a vector with very large components:'
+    write( *, '(a,2e14.4)' )       'Vector:        ', vector(1:2)
+    write( *, '(a,e14.4)' )        'Euclidean norm:', norm2(vector(1:2))
+    write( *, '(a,e14.4)' )        'Expected:      ', 50.0 * tiny(x)
 
 end program chk_norm2_hypot

@@ -1,73 +1,71 @@
-# makefile --
-#     Makefile for the test_report and test_logging programs
+# Makefile for "reporting" tests and examples
 #
-#     For Compaq Visual Fortran we can use:
-#     df x.f90 /link /exe:x.exe
+# $Id: makefile,v 1.11 2013-12-30 07:16:26 arjenmarkus Exp $
 #
-#     -ox.exe is supported by g95 and gfortran
-#
-# For Compaq Visual Fortran:
-#FC	=	df
-#FCOPTS	=	
-#EXEEXT	=	.exe
-#OBJEXT	=	.obj
-#OUTPUT	=	/link /exe:
-#RM	=	del
-#
-#
-#FC	=	g95
-FC	=	gfortran
-FCOPTS	=	-c
-FPPOPTS=-D_ASSERT_ENABLE -cpp
-EXEEXT	=	.exe
-OBJEXT	=	.o
-MODEXT	=	.mod
-OUTPUT	=	-o # Trick: add a trailing blank to the OUTPUT macro
-RM	=	rm
+include ../../config/config.mk
+include ../../config/options.mk
 
-all	:	test_m_logger$(EXEEXT) test_m_exception$(EXEEXT) test_m_throwable$(EXEEXT) test_m_assert$(EXEEXT) \
-      test_m_multilog$(EXEEXT)
+PROGRAMS	=	test_m_exception$(EXEEXT) \
+	test_m_throwable$(EXEEXT) \
+	test_m_logger$(EXEEXT) \
+	test_m_assert$(EXEEXT) \
+	test_m_multilog$(EXEEXT) \
 
-test_m_logger$(EXEEXT)	:	test_m_logger.f90 m_logger$(OBJEXT)
-	$(FC) test_m_logger.f90 m_logger$(OBJEXT) $(OUTPUT)test_m_logger$(EXEEXT)
+FFLAGS	+=	-D_ASSERT_ENABLE
 
-m_logger$(OBJEXT)	:	../../src/reporting/m_logger.f90
-	$(FC) $(FCOPTS) ../../src/reporting/m_logger.f90
+all:	$(PROGRAMS)
 
-test_m_multilog$(EXEEXT)	:	test_m_multilog.f90 m_multilog$(OBJEXT)
-	$(FC) test_m_multilog.f90 m_multilog$(OBJEXT) $(OUTPUT)test_m_multilog$(EXEEXT)
 
-m_multilog$(OBJEXT)	:	../../src/reporting/m_multilog.f90
-	$(FC) $(FCOPTS) ../../src/reporting/m_multilog.f90
+test_m_exception$(EXEEXT):	test_m_exception$(OBJEXT)  m_exception$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_exception$(OBJEXT)  m_exception$(OBJEXT)
 
-test_m_exception$(EXEEXT)	:	test_m_exception.f90 m_exception$(OBJEXT)
-	$(FC) test_m_exception.f90 m_exception$(OBJEXT) $(OUTPUT)test_m_exception$(EXEEXT)
+test_m_exception$(OBJEXT):	test_m_exception.f90  m_exception$(OBJEXT)
+	$(FC) $(FFLAGS) test_m_exception.f90
 
-m_exception$(OBJEXT)	:	../../src/reporting/m_exception.f90
-	$(FC) $(FCOPTS) ../../src/reporting/m_exception.f90
+m_exception$(OBJEXT):	../../src/reporting/m_exception.f90
+	$(FC) $(FFLAGS) ../../src/reporting/m_exception.f90
 
-test_m_assert$(EXEEXT)	:	test_m_assert.f90 m_assert$(OBJEXT)
-	$(FC) test_m_assert.f90 m_assert$(OBJEXT) m_exception$(OBJEXT) $(OUTPUT)test_m_assert$(EXEEXT)
+test_m_throwable$(EXEEXT):	test_m_throwable$(OBJEXT)  m_throwable$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_throwable$(OBJEXT)  m_throwable$(OBJEXT)
 
-m_assert$(OBJEXT)	:	../../src/reporting/m_assert.f90 m_exception$(OBJEXT)
-	$(FC) $(FCOPTS) ../../src/reporting/m_assert.f90 $(FPPOPTS)
+test_m_throwable$(OBJEXT):	test_m_throwable.f90  m_throwable$(OBJEXT)
+	$(FC) $(FFLAGS) test_m_throwable.f90
 
-test_m_throwable$(EXEEXT)	:	test_m_throwable.f90 m_throwable$(OBJEXT)
-	$(FC) test_m_throwable.f90 m_throwable$(OBJEXT) $(OUTPUT)test_m_throwable$(EXEEXT)
+m_throwable$(OBJEXT):	../../src/reporting/m_throwable.f90
+	$(FC) $(FFLAGS) ../../src/reporting/m_throwable.f90
 
-m_throwable$(OBJEXT)	:	../../src/reporting/m_throwable.f90
-	$(FC) $(FCOPTS) ../../src/reporting/m_throwable.f90
+test_m_logger$(EXEEXT):	test_m_logger$(OBJEXT)  m_logger$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_logger$(OBJEXT)  m_logger$(OBJEXT)
 
-#
-# Not yet enabled: requires generated include file
-#
-test_report$(EXEEXT)	:	test_report.f90 report$(OBJEXT)
-	$(FC) test_report.f90 report$(OBJEXT) $(OUTPUT)test_report$(EXEEXT)
+test_m_logger$(OBJEXT):	test_m_logger.f90  m_logger$(OBJEXT)
+	$(FC) $(FFLAGS) test_m_logger.f90
 
-report$(OBJEXT)	:	../../src/reporting/report.f90
-	$(FC) $(FCOPTS) ../../src/reporting/report.f90
+m_logger$(OBJEXT):	../../src/reporting/m_logger.f90
+	$(FC) $(FFLAGS) ../../src/reporting/m_logger.f90
+
+test_m_assert$(EXEEXT):	test_m_assert$(OBJEXT)  m_assert$(OBJEXT) m_exception$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_assert$(OBJEXT)  m_assert$(OBJEXT) m_exception$(OBJEXT)
+
+test_m_assert$(OBJEXT):	test_m_assert.f90  m_assert$(OBJEXT) m_exception$(OBJEXT)
+	$(FC) $(FFLAGS) test_m_assert.f90
+
+m_assert$(OBJEXT):	../../src/reporting/m_assert.f90 m_exception$(OBJEXT)
+	$(FC) $(FFLAGS) ../../src/reporting/m_assert.f90
+
+test_m_multilog$(EXEEXT):	test_m_multilog$(OBJEXT)  m_multilog$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_m_multilog$(OBJEXT)  m_multilog$(OBJEXT)
+
+test_m_multilog$(OBJEXT):	test_m_multilog.f90  m_multilog$(OBJEXT)
+	$(FC) $(FFLAGS) test_m_multilog.f90
+
+m_multilog$(OBJEXT):	../../src/reporting/m_multilog.f90
+	$(FC) $(FFLAGS) ../../src/reporting/m_multilog.f90
+
+
 
 clean:
-	$(RM) test_m_logger$(EXEEXT) test_m_expection$(EXEEXT) test_m_assertion$(EXEEXT) test_m_throwable$(EXEEXT) test_report$(EXEEXT) test_m_multilog$(EXEEXT)
-	$(RM) m_logger$(OBJEXT)      m_expection$(OBJEXT)      m_assertion$(OBJEXT)      m_throwable$(OBJEXT)      reporting$(OBJEXT)   m_multilog$(OBJEXT)
-	$(RM) m_logger$(MODEXT)      m_expection$(MODEXT)      m_assertion$(MODEXT) 
+	$(DELETE) *$(OBJEXT)
+	$(DELETE) $(PROGRAMS)
+	$(DELETE) *$(MODEXT)
+	$(DELETE) *.log
+	$(DELETE) *.out

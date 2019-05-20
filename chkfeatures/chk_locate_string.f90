@@ -10,5 +10,5 @@ program chk_locate_string
     character(len=5), dimension(5) :: array = (/ 'MIN  ', 'MAX  ', 'MEAN ', 'STDEV', 'COUNT' /)
 
     write( *, '(6a)' )   'Array of strings: ', array
-    write( *, '(a,i5)' ) 'The position of "MAX" is ', findloc(array)
+    write( *, '(a,i5)' ) 'The position of "MAX" is ', findloc(array, 'MAX')
 end program chk_locate_string

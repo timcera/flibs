@@ -31,4 +31,6 @@ test_password$(EXEEXT):	test_password$(OBJEXT) password$(OBJEXT) raw_password_wi
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_password$(OBJEXT) password$(OBJEXT) raw_password_windows$(OBJEXT)
 
 clean:
-	del *.o *.obj *.exe *.mod
+	$(DELETE) *$(OBJEXT)
+	$(DELETE) $(PROGRAMS)
+	$(DELETE) *$(MODEXT)

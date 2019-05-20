@@ -21,6 +21,8 @@ PROGRAMS	=	test_diff$(EXEEXT) \
 		test_traverse_grid$(EXEEXT) \
 		test_bobyqa$(EXEEXT) \
 		test_newuoa$(EXEEXT) \
+		test_timing$(EXEEXT) \
+		eight_queens$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -192,6 +194,29 @@ test_newuoa$(OBJEXT):	test_newuoa.f90 newuoa$(OBJEXT)
 
 test_newuoa$(EXEEXT):	test_newuoa$(OBJEXT) newuoa$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_newuoa$(OBJEXT) newuoa$(OBJEXT)
+
+
+timing$(OBJEXT):	../../src/computing/timing.f90
+	$(FC) $(FFLAGS) ../../src/computing/timing.f90
+
+test_timing$(OBJEXT):	test_timing.f90 timing$(OBJEXT)
+	$(FC) $(FFLAGS) test_timing.f90
+
+test_timing$(EXEEXT):	test_timing$(OBJEXT) timing$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_timing$(OBJEXT) timing$(OBJEXT)
+
+
+eight_queens_data$(MODEXT): eight_queens_data.f90
+	$(FC) $(FFLAGS) eight_queens_data.f90
+
+backtrack$(OBJEXT):	../../src/computing/backtrack.f90 eight_queens_data$(MODEXT)
+	$(FC) $(FFLAGS) ../../src/computing/backtrack.f90
+
+eight_queens$(OBJEXT):	eight_queens.f90 backtrack$(OBJEXT)
+	$(FC) $(FFLAGS) eight_queens.f90
+
+eight_queens$(EXEEXT):	eight_queens$(OBJEXT) backtrack$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) eight_queens$(OBJEXT) backtrack$(OBJEXT)
 
 
 clean:	
