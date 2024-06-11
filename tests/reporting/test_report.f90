@@ -1,7 +1,7 @@
 ! test_report.f90 --
 !     Small test program for the report module
 !
-!     $Id$
+!     $Id: test_report.f90,v 1.1 2008-03-25 05:23:36 arjenmarkus Exp $
 !
 program test_report
      use reporting

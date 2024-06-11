@@ -34,7 +34,7 @@ archive_flibs = $(PROJECTDIR)/bin/$(OS)/$(ARCH)/$(FC)/$(VERSION)/flibs.a
 all: $(archive) tests
 	$(ECHO) "Target all OK."
 
-archive: $(libdir) $(bindir) $(archive_flibs) 
+archive: $(libdir) $(bindir) $(archive_flibs)
 
 tests: $(libdir) $(bindir) $(archive_flibs) \
 $(EXE_TEST_FILSYS) \
@@ -44,13 +44,13 @@ $(EXE_TEST_VSTRINGLIST) \
 $(EXE_TEST_VFILE) \
 $(EXE_TEST_LOGGER)
 
-$(libdir): 
+$(libdir):
 	$(MKDIR) -p $(libdir)
 	
 $(bindir):
 	$(MKDIR) -p $(bindir)
 
-debug: 
+debug:
 	@echo "Project dir : $(PROJECTDIR)"
 	@echo "libdir:$(libdir)"
 	@echo "bindir:$(bindir)"
@@ -98,7 +98,7 @@ clean:
 	$(REMOVE) --force $(libdir)/*
 	$(REMOVE) --force $(bindir)/*
 	
-cleanall: clean 
+cleanall: clean
 	
 
 #

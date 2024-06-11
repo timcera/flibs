@@ -1,0 +1,198 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin flibs/strings n 1.1]
+[copyright {2019 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[moddesc flibs]
+[titledesc {String operations}]
+
+[description]
+
+The [strong string_operations] module implements a variety of string operations
+based on allocatable-length strings. The advantage is that the result can
+always be stored, instead of the user having to supply strings with sufficient
+length from the outset.
+
+[section ROUTINES]
+The module defines routines to replace substrings, to insert
+or delete them and several others others. The [term replace] subroutine
+may be used to replace several substrings in one call.
+
+[list_begin definitions]
+
+[call [cmd "use string_operations"]]
+To import the definitions, use this module.
+
+[call [cmd "type(pair)"]]
+A derived type used by [term replace] to define which substrings to
+replace by others:
+
+[example {
+    result = replace( 'RYeplace StRings', [pair('RY', 'XXXX'), pair('R', 'YY')] )
+}]
+
+This will replace the substring "RY" by "XXXX" and any substring "R" that is left
+by "YY".
+
+
+[call [cmd "result = replace( input, substring, replacement, mode )"]]
+Replace the substring in the input string by the new string. The argument
+[term mode] controls what substrings are exactly replaced. The result is
+an allocatable-length character string.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[arg_def "character(len=*)" substring]
+The substring which is to be replaced.
+
+[arg_def "character(len=*)" replacement]
+The string which is to replace the substring.
+
+[arg_def "integer" mode]
+The replacement mode. This argument is optional, if left out it defaults to
+"replace all".
+
+[list_begin bullet]
+[bullet]
+[term replace_all] specifies that all occurrences are to be replaced.
+[bullet]
+[term first_only] specifies that only the first occurrence is to be replaced.
+[bullet]
+[term last_only] specifies that only the last occurrence is to be replaced.
+[list_end]
+
+[list_end]
+
+
+[call [cmd "result = replace( input, pairs )"]]
+Replace several substrings at once. The substrings are sought one after another.
+The substring first in the input string that matches is replaced and then the
+next is sought. The procedure stops when all matches have been taken care of.
+Note that replaced substrings do not cause new matches.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[arg_def "type(pair), dimension(:)" pairs]
+The substrings to be relpaced and the strings they shoudl replaced by.
+
+[list_end]
+
+
+[call [cmd "result = insert( input, pos, string )"]]
+Insert a string at a given position into a string.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[arg_def "integer" pos]
+The position at which the string is to be inserted. Two special
+values:
+
+[list_begin bullet]
+[bullet]
+[term prepend] specifies that new string should come at the very start.
+[bullet]
+[term append] specifies that new string should be appended.
+[list_end]
+
+[arg_def "character(len=*)" string]
+The string to be inserted.
+
+[list_end]
+
+
+[call [cmd "result = delete( input, pos, length )"]]
+Delete a substring of given length.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[arg_def "integer" pos]
+The first position that is to be deleted.
+
+[arg_def "integer" length]
+The length of the substring to be deleted.
+
+[list_end]
+
+
+[call [cmd "result = tolower( input )"]]
+Return a string with all lower case letters.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[list_end]
+
+
+[call [cmd "result = toupper( input )"]]
+Return a string with all upper case letters.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[list_end]
+
+
+[call [cmd "result = trimx( input, set )"]]
+Return a string with all trailing characters in the given set removed.
+It is an extension of the [term trim()] intrinsic function.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[arg_def "character(len=*)" set]
+The set of characters that should be removed at the end.
+
+[list_end]
+
+
+[call [cmd "result = trimxleft( input, set )"]]
+Return a string with all leading characters in the given set removed.
+It is an extension of the [term trim()] intrinsic function.
+
+[list_begin arg]
+
+[arg_def "character(len=*)" input]
+The input string which is to be edited.
+
+[arg_def "character(len=*)" set]
+The set of characters that should be removed at the start.
+
+[list_end]
+
+
+[call [cmd "call read_line_from_file( lun, text, eof )"]]
+Read a complete line from a file, regardless of the length.
+
+[list_begin arg]
+
+[arg_def "integer" lun]
+Logical unit number of the file to be read.
+
+[arg_def "character(len=:), allocatable, intent(out)" text]
+The line of text that was read or an empty string if the end of
+the file was reached.
+
+[arg_def "logical, intent(out)" eof]
+Indication whether the end of file was reached.
+
+[list_end]
+
+[list_end]
+
+[manpage_end]

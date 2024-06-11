@@ -25,7 +25,7 @@
 	background: 	transparent;
 	text-align:		left;
     }
-    H1.title {
+    H1.doctools_title {
 	text-align: center;
     }
     UL,OL {
@@ -42,11 +42,11 @@
     DT {
 	padding-top: 	1ex;
     }
-    UL.toc,UL.toc UL, UL.toc UL UL {
+    UL.doctools_toc,UL.doctools_toc UL, UL.doctools_toc UL UL {
 	font:		normal 12pt/14pt sans-serif;
 	list-style:	none;
     }
-    LI.section, LI.subsection {
+    LI.doctools_section, LI.doctools_subsection {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
@@ -63,18 +63,18 @@
 	padding-right:	1ex;
 	width:		100%;
     }
-    PRE.example {
+    PRE.doctools_example {
 	color: 		black;
 	background: 	#f5dcb3;
 	border:		1px solid black;
     }
-    UL.requirements LI, UL.syntax LI {
+    UL.doctools_requirements LI, UL.doctools_syntax LI {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
 	padding:	0em;
     }
-    DIV.synopsis {
+    DIV.doctools_synopsis {
 	color: 		black;
 	background: 	#80ffff;
 	border:		1px solid black;
@@ -82,11 +82,11 @@
 	margin-top: 	1em;
 	margin-bottom: 	1em;
     }
-    UL.syntax {
+    UL.doctools_syntax {
 	margin-top: 	1em;
 	border-top:	1px solid black;
     }
-    UL.requirements {
+    UL.doctools_requirements {
 	margin-bottom: 	1em;
 	border-bottom:	1px solid black;
     }
@@ -96,43 +96,43 @@
    -->
 <! -- Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com   -- Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net
    -->
-<! -- CVS: $Id$ flibs/m_vstrings.n
+<! -- flibs/m_vstrings.n
    -->
 <body><div class="doctools">
-<h1 class="title">flibs/m_vstrings(n) 1.0  &quot;flibs&quot;</h1>
-<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<h1 class="doctools_title">flibs/m_vstrings(n) 1.0  &quot;flibs&quot;</h1>
+<div id="name" class="doctools_section"><h2><a name="name">Name</a></h2>
 <p>flibs/m_vstrings - Processing strings</p>
 </div>
-<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
-<ul class="toc">
-<li class="section"><a href="#toc">Table Of Contents</a></li>
-<li class="section"><a href="#synopsis">Synopsis</a></li>
-<li class="section"><a href="#section1">Description</a></li>
-<li class="section"><a href="#section2">OVERVIEW</a>
+<div id="toc" class="doctools_section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="doctools_toc">
+<li class="doctools_section"><a href="#toc">Table Of Contents</a></li>
+<li class="doctools_section"><a href="#synopsis">Synopsis</a></li>
+<li class="doctools_section"><a href="#section1">Description</a></li>
+<li class="doctools_section"><a href="#section2">OVERVIEW</a>
 <ul>
-<li class="subsection"><a href="#subsection1">Creating a string</a></li>
-<li class="subsection"><a href="#subsection2">Concatenate two strings</a></li>
-<li class="subsection"><a href="#subsection3">Modify the case</a></li>
-<li class="subsection"><a href="#subsection4">Pattern matching</a></li>
-<li class="subsection"><a href="#subsection5">Validating a string</a></li>
-<li class="subsection"><a href="#subsection6">Allocatable or pointer</a></li>
-<li class="subsection"><a href="#subsection7">Dynamic or static buffer</a></li>
-<li class="subsection"><a href="#subsection8">Design</a></li>
-<li class="subsection"><a href="#subsection9">Limitations</a></li>
-<li class="subsection"><a href="#subsection10">Preprocessing</a></li>
-<li class="subsection"><a href="#subsection11">History</a></li>
+<li class="doctools_subsection"><a href="#subsection1">Creating a string</a></li>
+<li class="doctools_subsection"><a href="#subsection2">Concatenate two strings</a></li>
+<li class="doctools_subsection"><a href="#subsection3">Modify the case</a></li>
+<li class="doctools_subsection"><a href="#subsection4">Pattern matching</a></li>
+<li class="doctools_subsection"><a href="#subsection5">Validating a string</a></li>
+<li class="doctools_subsection"><a href="#subsection6">Allocatable or pointer</a></li>
+<li class="doctools_subsection"><a href="#subsection7">Dynamic or static buffer</a></li>
+<li class="doctools_subsection"><a href="#subsection8">Design</a></li>
+<li class="doctools_subsection"><a href="#subsection9">Limitations</a></li>
+<li class="doctools_subsection"><a href="#subsection10">Preprocessing</a></li>
+<li class="doctools_subsection"><a href="#subsection11">History</a></li>
 </ul>
 </li>
-<li class="section"><a href="#section3">METHODS</a></li>
-<li class="section"><a href="#section4">INTERFACE TO STANDARD FORTRAN</a></li>
-<li class="section"><a href="#section5">STATIC METHODS</a></li>
-<li class="section"><a href="#section6">TODO</a></li>
-<li class="section"><a href="#copyright">Copyright</a></li>
+<li class="doctools_section"><a href="#section3">METHODS</a></li>
+<li class="doctools_section"><a href="#section4">INTERFACE TO STANDARD FORTRAN</a></li>
+<li class="doctools_section"><a href="#section5">STATIC METHODS</a></li>
+<li class="doctools_section"><a href="#section6">TODO</a></li>
+<li class="doctools_section"><a href="#copyright">Copyright</a></li>
 </ul>
 </div>
-<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
-<div class="synopsis">
-<ul class="syntax">
+<div id="synopsis" class="doctools_section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="doctools_synopsis">
+<ul class="doctools_syntax">
 <li><a href="#1"><b class="method">vstring_new</b> <i class="arg">(this ?args?)</i></a></li>
 <li><a href="#2"><b class="method">vstring_new</b> (<i class="arg">this</i>)</a></li>
 <li><a href="#3"><b class="method">vstring_new</b> <i class="arg">(this,char_string)</i></a></li>
@@ -190,7 +190,7 @@
 </ul>
 </div>
 </div>
-<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<div id="section1" class="doctools_section"><h2><a name="section1">Description</a></h2>
 <p>The module <em>m_vstring</em> provides OO services to manage strings of dynamic length.
 The goal of the current component is to provide higher-level
 services that the standard fortran currently provides.
@@ -201,14 +201,14 @@ matching methods.
 See in test_m_vstring to see a complete example of the
 services provided.</p>
 </div>
-<div id="section2" class="section"><h2><a name="section2">OVERVIEW</a></h2>
+<div id="section2" class="doctools_section"><h2><a name="section2">OVERVIEW</a></h2>
 <p>A vstring is an array of characters.
   The simplest way to create a vstring is with vstring_new
   from a &quot;character(len=&lt;something&gt;)&quot; string.
   The length of the vstring is computed dynamically,
   depending on the current number of characters, with vstring_length.
   In the following example, the length is 9.</p>
-<pre class="example">
+<pre class="doctools_example">
     use m_vstring, only : &amp;
       vstring_new, &amp;
       vstring_free, &amp;
@@ -220,27 +220,27 @@ services provided.</p>
     length = vstring_length (string1)
     call vstring_free( string1 )
 </pre>
-<div id="subsection1" class="subsection"><h3><a name="subsection1">Creating a string</a></h3>
+<div id="subsection1" class="doctools_subsection"><h3><a name="subsection1">Creating a string</a></h3>
 <p>With vstring_new, one can also create a new vstring as a copy
   of an existing vstring.
   With vstring_new, one can also create a new vstring with an
   array of characters or with a repeated copy of an existing vstring.
   Destroy the vstring with vstring_free.</p>
 </div>
-<div id="subsection2" class="subsection"><h3><a name="subsection2">Concatenate two strings</a></h3>
+<div id="subsection2" class="doctools_subsection"><h3><a name="subsection2">Concatenate two strings</a></h3>
 <p>Two vstrings can be concatenated in two ways.
   The vstring_concat method returns a new vstring computed by the
   concatenation of the two strings.
   The vstring_append allows to add the characters of the 2nd vstring
   at the end of the current string.
   In the following example, the string3 is &quot;my string is very interesting&quot;.</p>
-<pre class="example">
+<pre class="doctools_example">
     call vstring_new ( string1 , &quot;my string&quot; )
     call vstring_new ( string2 , &quot; is very interesting&quot; )
     string3 = vstring_concat ( string1 , string2 )
 </pre>
 </div>
-<div id="subsection3" class="subsection"><h3><a name="subsection3">Modify the case</a></h3>
+<div id="subsection3" class="doctools_subsection"><h3><a name="subsection3">Modify the case</a></h3>
 <p>The user can modify the case of a vstring.
   The vstring_tolower creates a new vstring with lower case characters.
   The vstring_toupper creates a new vstring with upper case characters.
@@ -252,25 +252,25 @@ services provided.</p>
   One can transform one vstring into a new one using a map with
   vstring_map.</p>
 </div>
-<div id="subsection4" class="subsection"><h3><a name="subsection4">Pattern matching</a></h3>
+<div id="subsection4" class="doctools_subsection"><h3><a name="subsection4">Pattern matching</a></h3>
 <p>The vstring_match method provides string-matching services in the glob-style.
   It manages &quot;*&quot; pattern (which matches 0 or more characters),
   the &quot;?&quot; pattern (which matches exactly one character),
   escape sequences and character ranges.
   The following example show how to compare a file name against a pattern :</p>
-<pre class="example">
+<pre class="doctools_example">
     call vstring_new ( string1 , &quot;m_vstring.f90&quot; )
     call vstring_new ( pattern , 'm_*.f90' )
     match = vstring_match ( string1 , pattern )
 </pre>
 </div>
-<div id="subsection5" class="subsection"><h3><a name="subsection5">Validating a string</a></h3>
+<div id="subsection5" class="doctools_subsection"><h3><a name="subsection5">Validating a string</a></h3>
 <p>The vstring_is method provides a way of validating data by
   computing whether the vstring is in a class of data, for example
   integer, real, digit, alphanumeric, etc...
   In the following example, the user can check whether the
   string read on standard input is an integer :</p>
-<pre class="example">
+<pre class="doctools_example">
     read ( 5 , * ) charstring
     call vstring_new ( string1 , charstring )
     isinteger = call vstring_is ( string1 , &quot;integer&quot; )
@@ -289,11 +289,11 @@ services provided.</p>
   interfaces to make them generic.
   The last choice ease the work of the client of the current component,
   which can use directly standard fortran constant strings (for example,</p>
-<pre class="example">
+<pre class="doctools_example">
     equals = vstring_equals ( string1 , &quot;toto&quot; )
 </pre>
 <p>instead of</p>
-<pre class="example">
+<pre class="doctools_example">
     type ( t_vstring ) :: string2
     call vstring_new ( string2 , &quot;toto&quot; )
     equals = vstring_equals ( string1 , string2 )
@@ -321,9 +321,9 @@ services provided.</p>
   Several methods are designed this way, for example, vstring_equals,
   vstring_compare, vstring_append, vstring_concat and others.</p>
 </div>
-<div id="subsection6" class="subsection"><h3><a name="subsection6">Allocatable or pointer</a></h3>
+<div id="subsection6" class="doctools_subsection"><h3><a name="subsection6">Allocatable or pointer</a></h3>
 <p>Two implementation of m_vstring are provided, depending on the compiler used :</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>the allocatable array of characters with the pre-processing macro _VSTRING_ALLOCATABLE,</p></li>
 <li><p>the pointer array of characters with the pre-processing macro _VSTRING_POINTER</p></li>
 </ul>
@@ -337,7 +337,7 @@ services provided.</p>
   created).
   The current version of m_vstring has been tested with the
   following compilers and versions:</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>Intel Visual Fortran 8 : tested with _VSTRING_ALLOCATABLE and _VSTRING_POINTER
       But the allocatable version allows to debug more easily.</p></li>
 <li><p>gfortran 2007/04/16 : tested with _VSTRING_POINTER (works fine,
@@ -345,7 +345,7 @@ services provided.</p>
 <li><p>g95 May  3 2007 : tested with _VSTRING_POINTER, OK</p></li>
 </ul>
 </div>
-<div id="subsection7" class="subsection"><h3><a name="subsection7">Dynamic or static buffer</a></h3>
+<div id="subsection7" class="doctools_subsection"><h3><a name="subsection7">Dynamic or static buffer</a></h3>
 <p>The internal algorithms provided by m_vstrings are based on
   basic fortran character strings. In several situations, the
   dynamic vstring has to be converted into a basic fortran character
@@ -354,7 +354,7 @@ services provided.</p>
   character ( len = &lt;something&gt;) ). Two solutions are provided,
   and the user can define the pre-processing macro
   _VSTRING_STATIC_BUFFER to configure that :</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>the first solution is to set the size of the buffer statically,
     to a constant integer value VSTRING_BUFFER_SIZE.</p></li>
 <li><p>the second solution is to compute the size
@@ -371,7 +371,7 @@ services provided.</p>
   by the compiler at hand. For example, problems with the dynamic
   length character string have been experienced with Intel Fortran 8.</p>
 </div>
-<div id="subsection8" class="subsection"><h3><a name="subsection8">Design</a></h3>
+<div id="subsection8" class="doctools_subsection"><h3><a name="subsection8">Design</a></h3>
 <p>This component has been designed with OO principles in mind.
    This is why the first argument of every method is named &quot;this&quot;,
    which is the current object.
@@ -381,8 +381,8 @@ services provided.</p>
    This component is meant to evolve following the fortran 2003 standard
    and OO type-bound procedures.</p>
 </div>
-<div id="subsection9" class="subsection"><h3><a name="subsection9">Limitations</a></h3>
-<ul class="itemized">
+<div id="subsection9" class="doctools_subsection"><h3><a name="subsection9">Limitations</a></h3>
+<ul class="doctools_itemized">
 <li><p>No regular expression algorithm is provided.
 But vstring_match allows to do string matching in glob-style.</p></li>
 <li><p>The vstring_match does not work with gfortran 2007/04/16 because
@@ -396,59 +396,59 @@ in the implementation of len = pure function value in IVF8.</p></li>
 <li><p>Fortran does not allow to manage character encodings such as UTF8.</p></li>
 </ul>
 </div>
-<div id="subsection10" class="subsection"><h3><a name="subsection10">Preprocessing</a></h3>
+<div id="subsection10" class="doctools_subsection"><h3><a name="subsection10">Preprocessing</a></h3>
 <p>The following preprocessing macro must be considered :</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>_VSTRING_STATIC_BUFFER : see  the section &quot;Dynamic or static buffer&quot;</p></li>
 <li><p>_VSTRING_ALLOCATABLE or _VSTRING_POINTER : see the section &quot;Allocatable or pointer&quot;</p></li>
 </ul>
 </div>
-<div id="subsection11" class="subsection"><h3><a name="subsection11">History</a></h3>
+<div id="subsection11" class="doctools_subsection"><h3><a name="subsection11">History</a></h3>
 <p>This module was originally based on the iso_varying_string.f90 module
    by Rich Townsend.</p>
 </div>
 </div>
-<div id="section3" class="section"><h2><a name="section3">METHODS</a></h2>
+<div id="section3" class="doctools_section"><h2><a name="section3">METHODS</a></h2>
 <p>In the following definitions, the <i class="arg">this</i> argument has,
 depending on the method, one of the the following definitions :</p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(inout) ::</b> <i class="arg">this</i></dt>
 <dd></dd>
 </dl>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">this</i></dt>
 <dd></dd>
 </dl>
 <p>The &quot;intent(in)&quot; or &quot;intent(inout)&quot; declaration depends on the
 method and is what it is expected to be (if not, it is a bug).</p>
-<dl class="definitions">
+<dl class="doctools_definitions">
 <dt><a name="1"><b class="method">vstring_new</b> <i class="arg">(this ?args?)</i></a></dt>
 <dd><p>Generic constructor. Creates the new vstring &quot;this&quot;.</p></dd>
 <dt><a name="2"><b class="method">vstring_new</b> (<i class="arg">this</i>)</a></dt>
 <dd><p>Creates a vstring with 0 characters and 0 length.</p></dd>
 <dt><a name="3"><b class="method">vstring_new</b> <i class="arg">(this,char_string)</i></a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(LEN=*), intent(in) ::</b> <i class="arg">char_string</i></dt>
 <dd></dd>
 </dl>
 <p>The new vstring is filled with the
 characters found in &quot;char_string&quot;.</p></dd>
 <dt><a name="4"><b class="method">vstring_new</b> <i class="arg">(this,vstring)</i></a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">vstring</i></dt>
 <dd></dd>
 </dl>
 <p>The new vstring is filled with the
 characters found in the dynamic string &quot;vstring&quot;.</p></dd>
 <dt><a name="5"><b class="method">vstring_new</b> <i class="arg">(this,chararray)</i></a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=1), dimension(:), intent(in) ::</b> <i class="arg">chararray</i></dt>
 <dd></dd>
 </dl>
 <p>The new vstring is filled with the
 characters found in the array of characters &quot;chararray&quot;.</p></dd>
 <dt><a name="6"><b class="method">vstring_new</b> <i class="arg">(this, ncount ?, vstring?)</i></a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">ncount</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) , intent(in), optional ::</b> <i class="arg">vstring</i></dt>
@@ -471,13 +471,13 @@ This can be considered as an implementation of &quot;vstring_repeat&quot;.</p></
      additional pointers, that aren't going out of scope, with the
      same target as the one that is.&quot;</p></dd>
 <dt><a name="8"><b class="method">vstring_exists</b> (<i class="arg">this</i>) result ( exists )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">logical ::</b> <i class="arg">exists</i></dt>
 <dd></dd>
 </dl>
 <p>Returns .true. if the string is allocated.</p></dd>
 <dt><a name="9"><b class="method">vstring_equals </b> <i class="arg">(this, stringb ?, nocase,length?)</i> result (equals)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">stringb</i></dt>
 <dd></dd>
 <dt><b class="type">logical , intent (in), optional ::</b> <i class="arg">nocase</i></dt>
@@ -493,7 +493,7 @@ This can be considered as an implementation of &quot;vstring_repeat&quot;.</p></
      The default behaviour is to take into account for case of characters.
      If length is specified, then only the first length characters are used in the comparison.</p></dd>
 <dt><a name="10"><b class="method">vstring_equals </b> <i class="arg">(this, string2 ?, nocase,length?)</i> result (equals)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*), intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">logical , intent (in), optional ::</b> <i class="arg">nocase</i></dt>
@@ -507,7 +507,7 @@ This can be considered as an implementation of &quot;vstring_repeat&quot;.</p></
 <dt><a name="11"><b class="method">vstring_cast</b> (<i class="arg">this</i> <span class="opt">?, args?</span>)</a></dt>
 <dd><p>Convert a dynamic string into another fortran data type.</p></dd>
 <dt><a name="12"><b class="method">vstring_cast</b> (<i class="arg">this</i> <i class="arg">, length</i> <i class="arg">, charstring</i>)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">length</i></dt>
 <dd></dd>
 <dt><b class="type">character ( LEN = length ) , intent(out) ::</b> <i class="arg">charstring</i></dt>
@@ -519,7 +519,7 @@ If the number of characters in the target charstring
 is not large enough, the target charstring is truncated, that is,
 contains only the first characters of the current dynamic string.</p></dd>
 <dt><a name="13"><b class="method">vstring_cast</b> (<i class="arg">this</i> <i class="arg">, charstring</i>)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character ( LEN = * ) , intent(out) ::</b> <i class="arg">charstring</i></dt>
 <dd></dd>
 </dl>
@@ -529,31 +529,31 @@ If the number of characters in the target charstring
 is not large enough, the target charstring is truncated, that is,
 contains only the first characters of the current dynamic string.</p></dd>
 <dt><a name="14"><b class="method">vstring_cast</b> (<i class="arg">this</i> <i class="arg">, value</i>)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(out) ::</b> <i class="arg">value</i></dt>
 <dd></dd>
 </dl>
 <p>Returns the integer stored in the current string.</p></dd>
 <dt><a name="15"><b class="method">vstring_cast</b> (<i class="arg">this</i> <i class="arg">, value</i>)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">real, intent(out) ::</b> <i class="arg">value</i></dt>
 <dd></dd>
 </dl>
 <p>Returns the real stored in the current string.</p></dd>
 <dt><a name="16"><b class="method">vstring_cast</b> (<i class="arg">this</i> <i class="arg">, value</i>)</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">double precision, intent(out) ::</b> <i class="arg">value</i></dt>
 <dd></dd>
 </dl>
 <p>Returns the double precision stored in the current string.</p></dd>
 <dt><a name="17"><b class="method">vstring_length</b> (<i class="arg">this</i>) result ( length )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer ::</b> <i class="arg">length</i></dt>
 <dd></dd>
 </dl>
 <p>Returns the length of the current dynamic string.</p></dd>
 <dt><a name="18"><b class="method">vstring_concat</b> <i class="arg">(this,string2)</i> result ( concat_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">concat_string</i></dt>
@@ -561,7 +561,7 @@ contains only the first characters of the current dynamic string.</p></dd>
 </dl>
 <p>Returns a new dynamic string made by the concatenation of two dynamic strings.</p></dd>
 <dt><a name="19"><b class="method">vstring_concat</b> <i class="arg">(this,string2)</i> result ( concat_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">concat_string</i></dt>
@@ -570,7 +570,7 @@ contains only the first characters of the current dynamic string.</p></dd>
 <p>Returns a new string made by the concatenation of the current dynamic string
 and the given character(len=*) string.</p></dd>
 <dt><a name="20"><b class="method">vstring_append</b> <i class="arg">(this,string2)</i></a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 </dl>
@@ -581,13 +581,13 @@ after the call to vstring_append.
 Note : that method can be called as a convenient alternative to vstring_concat,
 when the concat is to be done &quot;in place&quot;.</p></dd>
 <dt><a name="21"><b class="method">vstring_append</b> <i class="arg">(this,string2)</i></a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 </dl>
 <p>Same as previous, but with a character(len=*) string2.</p></dd>
 <dt><a name="22"><b class="method">vstring_map</b> <i class="arg">(this , map_old , map_new ?, nocase?)</i> result ( stringmap )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , dimension( : ), intent(in) ::</b> <i class="arg">map_old</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) , dimension( : ), intent(in) ::</b> <i class="arg">map_new</i></dt>
@@ -608,18 +608,18 @@ Replacement is done in an ordered manner, so the old string appearing first
 in the list will be checked first, and so on. The current string is only iterated over once,
 so earlier replacements will have no affect for later matches.
 For example,</p>
-<pre class="example">
+<pre class="doctools_example">
   vstring_map 1abcaababcabababc [abc,ab,a,1] [1,2,3,0]
 </pre>
 <p>will return the string 01321221.
 Note that if an earlier key is a prefix of a later one, it will completely
 mask the later one. So if the previous example is reordered like this,</p>
-<pre class="example">
+<pre class="doctools_example">
   vstring_map 1abcaababcabababc [1,ab,a,abc] [0,2,3,1]
 </pre>
 <p>it will return the string 02c322c222c.</p></dd>
 <dt><a name="23"><b class="method">vstring_replace</b> <i class="arg">(this , first , last ?, newstring?)</i> result ( stringreplace )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">first</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">last</i></dt>
@@ -634,7 +634,7 @@ index is first and ending with the character whose index is last. An index of 1 
 the first character of the string.
 If newstring is specified, then it is placed in the removed character range.</p></dd>
 <dt><a name="24"><b class="method">vstring_compare</b> <i class="arg">(this,string2?, nocase , length?)</i> result ( compare )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">logical , intent (in), optional ::</b> <i class="arg">nocase</i></dt>
@@ -652,7 +652,7 @@ The default behaviour is to take into account for case of characters.
 If length is specified, then only the first length characters are used in the comparison.</p>
 <p>A value of 999 means that either string was not properly initialized.</p></dd>
 <dt><a name="25"><b class="method">vstring_compare</b> <i class="arg">(this,string2?, nocase , length?)</i> result ( compare )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character (len=*) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">logical , intent (in), optional ::</b> <i class="arg">nocase</i></dt>
@@ -664,7 +664,7 @@ If length is specified, then only the first length characters are used in the co
 </dl>
 <p>Same as previous, but with a character(len=*) string2.</p></dd>
 <dt><a name="26"><b class="method">vstring_trim</b> <i class="arg">(this ?, chars?)</i> result ( trim_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in), optional ::</b> <i class="arg">chars</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">trim_string</i></dt>
@@ -675,7 +675,7 @@ from the set given by chars are removed.
 If chars is not specified then white space is removed (spaces, tabs,
 newlines, and carriage returns).</p></dd>
 <dt><a name="27"><b class="method">vstring_trim</b> <i class="arg">(this ?, chars?)</i> result ( trim_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character (len=*) , intent(in), optional ::</b> <i class="arg">chars</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">trim_string</i></dt>
@@ -683,7 +683,7 @@ newlines, and carriage returns).</p></dd>
 </dl>
 <p>Same as previous, but with a character(len=*) string &quot;chars&quot;.</p></dd>
 <dt><a name="28"><b class="method">vstring_trimleft</b> <i class="arg">(this ?, chars?)</i> result ( trim_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in), optional ::</b> <i class="arg">chars</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">trim_string</i></dt>
@@ -694,7 +694,7 @@ from the set given by chars are removed.
 If chars is not specified then white space is removed
 (spaces, tabs, newlines, and carriage returns).</p></dd>
 <dt><a name="29"><b class="method">vstring_trimleft</b> <i class="arg">(this ?, chars?)</i> result ( trim_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character (len=*) , intent(in), optional ::</b> <i class="arg">chars</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">trim_string</i></dt>
@@ -702,7 +702,7 @@ If chars is not specified then white space is removed
 </dl>
 <p>Same as previous, but with a character(len=*) string &quot;chars&quot;.</p></dd>
 <dt><a name="30"><b class="method">vstring_trimright</b> <i class="arg">(this ?, chars?)</i> result ( trim_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in), optional ::</b> <i class="arg">chars</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">trim_string</i></dt>
@@ -711,7 +711,7 @@ If chars is not specified then white space is removed
 <p>Returns a value equal to string except that any trailing characters from the set given by chars are removed.
 If chars is not specified then white space is removed (spaces, tabs, newlines, and carriage returns).</p></dd>
 <dt><a name="31"><b class="method">vstring_trimright</b> <i class="arg">(this ?, chars?)</i> result ( trim_string )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character (len=*) , intent(in), optional ::</b> <i class="arg">chars</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">trim_string</i></dt>
@@ -719,7 +719,7 @@ If chars is not specified then white space is removed (spaces, tabs, newlines, a
 </dl>
 <p>Same as previous, but with a character(len=*) string &quot;chars&quot;.</p></dd>
 <dt><a name="32"><b class="method">vstring_first</b> <i class="arg">(this ?, string2 , first?)</i> result ( firstIndex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in)   ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in), optional ::</b> <i class="arg">first</i></dt>
@@ -733,7 +733,7 @@ If not found, return 0.
 If first is specified, then the search is constrained to start with the character
 in the current string specified by the index.</p></dd>
 <dt><a name="33"><b class="method">vstring_first</b> <i class="arg">(this ?, string2 , first?)</i> result ( firstIndex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*) , intent(in)   ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in), optional ::</b> <i class="arg">first</i></dt>
@@ -743,7 +743,7 @@ in the current string specified by the index.</p></dd>
 </dl>
 <p>Same as previous, but with a character(len=*) string &quot;string2&quot;.</p></dd>
 <dt><a name="34"><b class="method">vstring_last</b> <i class="arg">(this ?, string2 , last?)</i> result ( lastIndex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in)   ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in), optional ::</b> <i class="arg">last</i></dt>
@@ -757,7 +757,7 @@ If not found, return 0.
 If last is specified, then the search is constrained to start with the character in the current
 string specified by the index.</p></dd>
 <dt><a name="35"><b class="method">vstring_last</b> <i class="arg">(this ?, string2 , last?)</i> result ( lastIndex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*) , intent(in) ::</b> <i class="arg">string2</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in), optional ::</b> <i class="arg">last</i></dt>
@@ -767,7 +767,7 @@ string specified by the index.</p></dd>
 </dl>
 <p>Same as previous, but with a character(len=*) string &quot;string2&quot;.</p></dd>
 <dt><a name="36"><b class="method">vstring_range</b> (<i class="arg">this</i><i class="arg">, first</i><i class="arg">, last</i>) result ( string_range )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">first</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">last</i></dt>
@@ -782,7 +782,7 @@ If first is less than 1 then an error is generated.
 If last is greater than or equal to the length of the string then an error is generated.
 If first is greater than last then an error is generated.</p></dd>
 <dt><a name="37"><b class="method">vstring_index</b> <i class="arg">(this , charIndex )</i> result ( string_index )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">charIndex</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">string_index</i></dt>
@@ -793,7 +793,7 @@ A charIndex of 1 corresponds to the first character of the string.
 If charIndex is less than 1 or greater than or equal to the length of the string
 then an error is generated.</p></dd>
 <dt><a name="38"><b class="method">vstring_toupper</b> (<i class="arg">this</i><span class="opt">?, first?</span><span class="opt">?, last?</span>) result ( new_upper )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">first</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">last</i></dt>
@@ -806,7 +806,7 @@ converted to upper case. If first is specified, it refers to the first char inde
 to start modifying. If last is specified, it refers to the char index in the string to stop
 at (inclusive).</p></dd>
 <dt><a name="39"><b class="method">vstring_tolower</b> (<i class="arg">this</i><span class="opt">?, first?</span><span class="opt">?, last?</span>) result ( new_lower )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in)         ::</b> <i class="arg">first</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in)         ::</b> <i class="arg">last</i></dt>
@@ -819,7 +819,7 @@ converted to lower case. If first is specified, it refers to the first char inde
 to start modifying. If last is specified, it refers to the char index in the string to stop
 at (inclusive).</p></dd>
 <dt><a name="40"><b class="method">vstring_totitle</b> (<i class="arg">this</i><span class="opt">?, first?</span><span class="opt">?, last?</span>) result ( new_title )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in)         ::</b> <i class="arg">first</i></dt>
 <dd></dd>
 <dt><b class="type">integer, intent(in)         ::</b> <i class="arg">last</i></dt>
@@ -832,13 +832,13 @@ to upper case, and the rest of the string is converted to lower case. If first i
 to the first char index in the string to start modifying. If last is specified, it refers
 to the char index in the string to stop at (inclusive).</p></dd>
 <dt><a name="41"><b class="method">vstring_reverse</b> (<i class="arg">this</i>) result ( new_reverse )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">new_reverse</i></dt>
 <dd></dd>
 </dl>
 <p>Return a string that has all characters in reverse order.</p></dd>
 <dt><a name="42"><b class="method">vstring_random</b> (<i class="arg">this</i>) result ( new_random )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent(in) ::</b> <i class="arg">length</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">new_random</i></dt>
@@ -846,7 +846,7 @@ to the char index in the string to stop at (inclusive).</p></dd>
 </dl>
 <p>Fill a string with required length and randomized characters.</p></dd>
 <dt><a name="43"><b class="method">vstring_match</b> (<i class="arg">this</i> <i class="arg">, pattern</i> <span class="opt">?, nocase?</span>) result ( match )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">pattern</i></dt>
 <dd></dd>
 <dt><b class="type">logical , intent(in) , optional ::</b> <i class="arg">nocase</i></dt>
@@ -859,7 +859,7 @@ If <i class="arg">nocase</i> is specified and true, then the pattern attempts to
 string in a case insensitive manner.
 For the two strings to match, their contents must be identical except
 that the following special sequences may appear in pattern:</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>*
 Matches any sequence of characters in string, including a null string.</p></li>
 <li><p>?
@@ -878,7 +878,7 @@ This provides a way of avoiding the special interpretation of the characters *?[
 </ul>
 <p>The following example is extracted from the unit tests
 provided with flibs. In the following example, &quot;match&quot; is true.</p>
-<pre class="example">
+<pre class="doctools_example">
     type ( t_vstring ) :: string1
     logical :: match
     call vstring_new ( string1 , &quot;m_vstring.f90&quot; )
@@ -887,7 +887,7 @@ provided with flibs. In the following example, &quot;match&quot; is true.</p>
 </pre>
 </dd>
 <dt><a name="44"><b class="method">vstring_match</b> (<i class="arg">this</i> <i class="arg">, pattern</i> <span class="opt">?, nocase?</span>) result ( match )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*) , intent(in) ::</b> <i class="arg">pattern</i></dt>
 <dd></dd>
 <dt><b class="type">logical , intent(in) , optional ::</b> <i class="arg">nocase</i></dt>
@@ -897,7 +897,7 @@ provided with flibs. In the following example, &quot;match&quot; is true.</p>
 </dl>
 <p>Same as previous, with character(len=*) as <i class="arg">pattern</i>.</p></dd>
 <dt><a name="45"><b class="method">vstring_is</b> (<i class="arg">this</i> <i class="arg">, class</i> <span class="opt">?, strict?</span> <span class="opt">?, failindex?</span>) result ( isinclass )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">character(len=*) , intent(in) ::</b> <i class="arg">class</i></dt>
 <dd></dd>
 <dt><b class="type">logical, intent(in) , optional ::</b> <i class="arg">strict</i></dt>
@@ -914,7 +914,7 @@ provided with flibs. In the following example, &quot;match&quot; is true.</p>
      If failindex is provided, then if the function returns .false., the index in the
      string where the class was no longer valid will be stored in the variable failindex.
      The following character classes are recognized (the class name can be abbreviated):</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>alpha           Any alphabet character, that is [a-zA-Z].</p></li>
 <li><p>alnum           Any alphabet or digit character, that is [a-zA-Z0-9].</p></li>
 <li><p>ascii
@@ -954,19 +954,19 @@ provided with flibs. In the following example, &quot;match&quot; is true.</p>
 </ul></dd>
 </dl>
 </div>
-<div id="section4" class="section"><h2><a name="section4">INTERFACE TO STANDARD FORTRAN</a></h2>
+<div id="section4" class="doctools_section"><h2><a name="section4">INTERFACE TO STANDARD FORTRAN</a></h2>
 <p>These methods or routines are simply an interface of standard fortran
 string processing routines.</p>
-<dl class="definitions">
+<dl class="doctools_definitions">
 <dt><a name="46"><b class="method">vstring_iachar</b> (<i class="arg">this</i>) result ( new_iachar )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer ::</b> <i class="arg">new_iachar</i></dt>
 <dd></dd>
 </dl>
 <p>Returns the code for the ASCII character in the character position of C.
 Example : If this is &quot;@&quot;, then iachar is 64.</p></dd>
 <dt><a name="47"><b class="method">vstring_ichar</b> (<i class="arg">this</i>) result ( new_ichar )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer ::</b> <i class="arg">new_ichar</i></dt>
 <dd></dd>
 </dl>
@@ -974,7 +974,7 @@ Example : If this is &quot;@&quot;, then iachar is 64.</p></dd>
 in the system&acirc;€™s native character set.
 This is an interface to the standard fortran.</p></dd>
 <dt><a name="48"><b class="method">vstring_charindex</b> (<i class="arg">this</i> <i class="arg">, substring</i> <span class="opt">?, back?</span>) result ( charindex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">substring</i></dt>
 <dd></dd>
 <dt><b class="type">logical, intent(in), optional ::</b> <i class="arg">back</i></dt>
@@ -988,7 +988,7 @@ in the current string, zero is returned. If the back argument is present and tru
 return value is the start of the last occurrence rather than the first.
 Note: this is a simple interface to the standard fortran intrinsic &quot;index&quot;.</p></dd>
 <dt><a name="49"><b class="method">vstring_scan</b> (<i class="arg">this</i><i class="arg">, substring</i><span class="opt">?, back?</span>) result ( charindex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">substring</i></dt>
 <dd></dd>
 <dt><b class="type">logical, intent(in), optional ::</b> <i class="arg">back</i></dt>
@@ -1002,7 +1002,7 @@ false, the position of the leftmost such character is returned. If back is prese
 with value true, the position of the rightmost such character is returned.
 Note: this is a simple interface to the standard fortran intrinsic &quot;index&quot;.</p></dd>
 <dt><a name="50"><b class="method">vstring_verify</b> (<i class="arg">this</i><i class="arg">, substring</i><span class="opt">?, back?</span>) result ( charindex )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) , intent(in) ::</b> <i class="arg">substring</i></dt>
 <dd></dd>
 <dt><b class="type">logical, intent(in), optional ::</b> <i class="arg">back</i></dt>
@@ -1017,7 +1017,7 @@ the position of the left-most such character is returned. If back is
 present with value true, the position of the rightmost such character is returned.
 Note: this is a simple interface to the standard fortran intrinsic &quot;verify&quot;.</p></dd>
 <dt><a name="51"><b class="method">vstring_adjustl</b> (<i class="arg">this</i>) result ( newstring )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">newstring</i></dt>
 <dd></dd>
 </dl>
@@ -1025,7 +1025,7 @@ Note: this is a simple interface to the standard fortran intrinsic &quot;verify&
 all leading blanks and inserting the same number of trailing blanks.
 Note : this is a simple interface to the standard fortran intrinsic &quot;adjustl&quot;.</p></dd>
 <dt><a name="52"><b class="method">vstring_adjustr</b> (<i class="arg">this</i>) result ( newstring )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">newstring</i></dt>
 <dd></dd>
 </dl>
@@ -1034,10 +1034,10 @@ all trailing blanks and inserting the same number of leading blanks.
 Note: this is a simple interface to the standard fortran intrinsic &quot;adjustr&quot;.</p></dd>
 </dl>
 </div>
-<div id="section5" class="section"><h2><a name="section5">STATIC METHODS</a></h2>
-<dl class="definitions">
+<div id="section5" class="doctools_section"><h2><a name="section5">STATIC METHODS</a></h2>
+<dl class="doctools_definitions">
 <dt><a name="53"><b class="method">vstring_achar</b> <i class="arg">(i)</i> result ( new_achar )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent (in) ::</b> <i class="arg">i</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">new_achar</i></dt>
@@ -1046,7 +1046,7 @@ Note: this is a simple interface to the standard fortran intrinsic &quot;adjustr
 <p>Returns the character located at position I in the ASCII collating sequence.
 This is an interface to the standard fortran.</p></dd>
 <dt><a name="54"><b class="method">vstring_char</b> <i class="arg">(i)</i> result ( new_achar )</a></dt>
-<dd><dl class="arguments">
+<dd><dl class="doctools_arguments">
 <dt><b class="type">integer, intent (in) ::</b> <i class="arg">i</i></dt>
 <dd></dd>
 <dt><b class="type">type ( t_vstring ) ::</b> <i class="arg">new_achar</i></dt>
@@ -1057,8 +1057,8 @@ This is an interface to the standard fortran.
 Example : If i is 64, then char is &quot;@&quot;.</p></dd>
 </dl>
 </div>
-<div id="section6" class="section"><h2><a name="section6">TODO</a></h2>
-<ul class="itemized">
+<div id="section6" class="doctools_section"><h2><a name="section6">TODO</a></h2>
+<ul class="doctools_itemized">
 <li><p>Refactor the component and use datastructures/vectors.f90</p></li>
 <li><p>vstring_read Returns the vstring which is read on the given unit number, or on the standard input if no unit is given.</p></li>
 <li><p>vstring_write Writes the current vstring on the given unit number, or on the standard output if no unit is given.</p></li>
@@ -1066,7 +1066,7 @@ Example : If i is 64, then char is &quot;@&quot;.</p></dd>
 <li><p>vstring_wordstart Returns the index of the first character in the word containing character charIndex of string.</p></li>
 </ul>
 </div>
-<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<div id="copyright" class="doctools_section"><h2><a name="copyright">Copyright</a></h2>
 <p>Copyright &copy; 2008 Michael Baudin michael.baudin@gmail.com<br>
 Copyright &copy; 2008 Arjen Markus arjenmarkus@sourceforge.net</p>
 </div>

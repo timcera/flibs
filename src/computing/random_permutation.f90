@@ -3,7 +3,7 @@
 !
 !     Derived from a posting on comp.lang.fortran by Bart Vanderwoestyne
 !
-!     $Id$
+!     $Id: random_permutation.f90,v 1.1 2012-12-23 10:18:12 arjenmarkus Exp $
 !
 module random_permutations
 

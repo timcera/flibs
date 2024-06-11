@@ -1,0 +1,59 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin flibs/strings n 1.1]
+[copyright {2019 Arjen Markus <arjenmarkus@sourceforge.net>}]
+[moddesc flibs]
+[titledesc {Encode/decode base64 strings}]
+
+[description]
+
+The [strong base64] module contains two routines, one to encode a sequence
+of bytes (stored as a character string) to a string of characters according
+to the [emph base64] scheme and one to convert a [emph base64] string back
+to the original bytes (again stored as a character string).
+
+
+[section ROUTINES]
+[list_begin definitions]
+
+[call [cmd "use base64"]]
+To import the definitions, use this module.
+
+[call [cmd "call encode( string, encoded_string )"]]
+Convert the input string [emph string] and return the base64 result in the second
+argument.
+
+[list_begin arg]
+
+[arg_def "character(len=*), intent(in)" string]
+The string to be converted
+
+[arg_def "character(len=:), allocatable, intent(out)" encoded_string]
+The string holding the encoding. Note that the string is automatically allocated to the
+right size. If necessary, padding ("=" characters) is added.
+
+[list_end]
+
+
+[call [cmd "call decode( encoded_string, output, error )"]]
+Convert the base64 input string [emph encoded_string] and return the decoded result in the second
+argument.
+
+[list_begin arg]
+
+[arg_def "character(len=*), intent(in)" encoded_string]
+The base64 string to be converted back to the original.
+
+[arg_def "character(len=:), allocatable, intent(out)" output]
+The string holding the original sequence of bytes. Note that the string is automatically allocated to the
+right size. Padding ("=" characters) is optional. Spaces in or surrounding the base64 string are ignored.
+
+[arg_def "logical, intent(out)" error]
+If the base64 string contains invalid characters, then this argument is set to true, otherwise it is to set to false
+and the output argument will contain the decoded sequence of bytes.
+
+[list_end]
+
+
+[list_end]
+
+[manpage_end]

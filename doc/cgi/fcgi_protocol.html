@@ -25,7 +25,7 @@
 	background: 	transparent;
 	text-align:		left;
     }
-    H1.title {
+    H1.doctools_title {
 	text-align: center;
     }
     UL,OL {
@@ -42,11 +42,11 @@
     DT {
 	padding-top: 	1ex;
     }
-    UL.toc,UL.toc UL, UL.toc UL UL {
+    UL.doctools_toc,UL.doctools_toc UL, UL.doctools_toc UL UL {
 	font:		normal 12pt/14pt sans-serif;
 	list-style:	none;
     }
-    LI.section, LI.subsection {
+    LI.doctools_section, LI.doctools_subsection {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
@@ -63,18 +63,18 @@
 	padding-right:	1ex;
 	width:		100%;
     }
-    PRE.example {
+    PRE.doctools_example {
 	color: 		black;
 	background: 	#f5dcb3;
 	border:		1px solid black;
     }
-    UL.requirements LI, UL.syntax LI {
+    UL.doctools_requirements LI, UL.doctools_syntax LI {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
 	padding:	0em;
     }
-    DIV.synopsis {
+    DIV.doctools_synopsis {
 	color: 		black;
 	background: 	#80ffff;
 	border:		1px solid black;
@@ -82,40 +82,40 @@
 	margin-top: 	1em;
 	margin-bottom: 	1em;
     }
-    UL.syntax {
+    UL.doctools_syntax {
 	margin-top: 	1em;
 	border-top:	1px solid black;
     }
-    UL.requirements {
+    UL.doctools_requirements {
 	margin-bottom: 	1em;
 	border-bottom:	1px solid black;
     }
 --></style>
 </head>
-<! -- Generated from file 'cgi/fcgi_protocol.man' by tcllib/doctools with format 'html'
+<! -- Generated from file 'fcgi_protocol.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2013 Ricolindo Carino &lt;ricolindo dot carion at gmail dot com&gt;   -- Copyright &copy; 2013 Arjen Markus &lt;arjenmarkus at sourceforge dot net&gt;
    -->
-<! -- CVS: $Id$ fcgi_protocol.n
+<! -- fcgi_protocol.n
    -->
 <body><div class="doctools">
-<h1 class="title">fcgi_protocol(n) 1.0  &quot;flibs&quot;</h1>
-<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<h1 class="doctools_title">fcgi_protocol(n) 1.0  &quot;flibs&quot;</h1>
+<div id="name" class="doctools_section"><h2><a name="name">Name</a></h2>
 <p>fcgi_protocol - Module for supporting the Internet Fast-CGI protocol</p>
 </div>
-<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
-<ul class="toc">
-<li class="section"><a href="#toc">Table Of Contents</a></li>
-<li class="section"><a href="#synopsis">Synopsis</a></li>
-<li class="section"><a href="#section1">Description</a></li>
-<li class="section"><a href="#section2">DATA TYPES AND ROUTINES</a></li>
-<li class="section"><a href="#section3">NOTES</a></li>
-<li class="section"><a href="#copyright">Copyright</a></li>
+<div id="toc" class="doctools_section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="doctools_toc">
+<li class="doctools_section"><a href="#toc">Table Of Contents</a></li>
+<li class="doctools_section"><a href="#synopsis">Synopsis</a></li>
+<li class="doctools_section"><a href="#section1">Description</a></li>
+<li class="doctools_section"><a href="#section2">DATA TYPES AND ROUTINES</a></li>
+<li class="doctools_section"><a href="#section3">NOTES</a></li>
+<li class="doctools_section"><a href="#copyright">Copyright</a></li>
 </ul>
 </div>
-<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
-<div class="synopsis">
-<ul class="syntax">
+<div id="synopsis" class="doctools_section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="doctools_synopsis">
+<ul class="doctools_syntax">
 <li><a href="#1"><b class="cmd">dict_struct</b></a></li>
 <li><a href="#2"><b class="cmd">dict_data</b></a></li>
 <li><a href="#3"><b class="cmd">call fcgip_accept_environment_variables()</b></a></li>
@@ -124,7 +124,7 @@
 </ul>
 </div>
 </div>
-<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<div id="section1" class="doctools_section"><h2><a name="section1">Description</a></h2>
 <p>When you want to create web applications, the Fast-CGI (fast common gateway
 interface) is one of the means to integrate your underlying programs
 with the web server. The protocol itself is, at least superficially,
@@ -139,7 +139,7 @@ the processing.</p>
 <p>The global structure of a program that uses this module to
 communicate with the web server is basically:</p>
 <p>Within a loop that starts with a call to the function <i class="term">fcip_accept_environment_variables</i>, do:</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>Get the data from the web server, via the subroutine <i class="term">fcgip_make_dictionary</i></p></li>
 <li><p>Write the HTML code that represents the answer to the request to an external file</p></li>
 <li><p>Notify the web server via the suboutine <i class="term">fcip_put_file</i></p></li>
@@ -147,9 +147,9 @@ communicate with the web server is basically:</p>
 <p>The module relies on the <i class="term">cgi_protocol</i> module and a library for fast-CGI support
 (see the detailed documentation on the subject).</p>
 </div>
-<div id="section2" class="section"><h2><a name="section2">DATA TYPES AND ROUTINES</a></h2>
+<div id="section2" class="doctools_section"><h2><a name="section2">DATA TYPES AND ROUTINES</a></h2>
 <p>The module defines the following data types:</p>
-<dl class="definitions">
+<dl class="doctools_definitions">
 <dt><a name="1"><b class="cmd">dict_struct</b></a></dt>
 <dd><p>A derived type holding a list of keyword-value pairs. Each value is of the
 type &quot;dict_data&quot; (see below). The routine <i class="term">fcgip_make_dictionary</i> fills such a
@@ -161,7 +161,7 @@ variable. It has one component: value, a string of 200 characters long
 can easily change it if this should prove necessary).</p></dd>
 </dl>
 <p>The module defines the following routines:</p>
-<dl class="definitions">
+<dl class="doctools_definitions">
 <dt><a name="3"><b class="cmd">call fcgip_accept_environment_variables()</b></a></dt>
 <dd><p>Routine to accept an incoming request from the web server. It
 prepares for the transfer of the data making up the request. It returns
@@ -172,7 +172,7 @@ so that the program continues to accept new requests.</p>
 <p>It has no arguments.</p></dd>
 <dt><a name="4"><b class="cmd">call fcgip_make_dictionary( dict, unitNo )</b></a></dt>
 <dd><p>Analyse the request data and make them available in the dictionary.</p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>type(dict_struct), pointer <i class="arg">dict</i></dt>
 <dd><p>Variable to hold alll the form variables and their values. You pass
 this variable to <em>cgi_get()</em> to retrieve these values. You can also
@@ -188,7 +188,7 @@ statements are filtered out.)</p></dd>
 <dt><a name="5"><b class="cmd">call fcgip_put_file( unitNo, mimetype )</b></a></dt>
 <dd><p>Copy the response to the request to the web server. This is then presented
 to the user.</p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>integer, intent(in) <i class="arg">unitNo</i></dt>
 <dd><p>The unit number of the opened file that contains the information that
 should be sent to the user. It is typically HTML text, but can actually
@@ -200,10 +200,10 @@ argument, this is used by default.</p></dd>
 </dl></dd>
 </dl>
 </div>
-<div id="section3" class="section"><h2><a name="section3">NOTES</a></h2>
+<div id="section3" class="doctools_section"><h2><a name="section3">NOTES</a></h2>
 <p>The test/demonstration programs illustrate several techniques to set
 up web services:</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>The program <i class="term">test_fcgi.f90</i> shows how a single program can respond
 to different requests by examining the <i class="term">DOCUMENT_URI</i> environment variable.
 This environment variable contains the value of the <i class="term">action</i> attribute of
@@ -227,7 +227,7 @@ An indirect approach must be taken.</p>
 <p><em>Still to be implemented as a demo</em></p></li>
 </ul>
 </div>
-<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<div id="copyright" class="doctools_section"><h2><a name="copyright">Copyright</a></h2>
 <p>Copyright &copy; 2013 Ricolindo Carino &lt;ricolindo dot carion at gmail dot com&gt;<br>
 Copyright &copy; 2013 Arjen Markus &lt;arjenmarkus at sourceforge dot net&gt;</p>
 </div>

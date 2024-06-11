@@ -25,7 +25,7 @@
 	background: 	transparent;
 	text-align:		left;
     }
-    H1.title {
+    H1.doctools_title {
 	text-align: center;
     }
     UL,OL {
@@ -42,11 +42,11 @@
     DT {
 	padding-top: 	1ex;
     }
-    UL.toc,UL.toc UL, UL.toc UL UL {
+    UL.doctools_toc,UL.doctools_toc UL, UL.doctools_toc UL UL {
 	font:		normal 12pt/14pt sans-serif;
 	list-style:	none;
     }
-    LI.section, LI.subsection {
+    LI.doctools_section, LI.doctools_subsection {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
@@ -63,18 +63,18 @@
 	padding-right:	1ex;
 	width:		100%;
     }
-    PRE.example {
+    PRE.doctools_example {
 	color: 		black;
 	background: 	#f5dcb3;
 	border:		1px solid black;
     }
-    UL.requirements LI, UL.syntax LI {
+    UL.doctools_requirements LI, UL.doctools_syntax LI {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
 	padding:	0em;
     }
-    DIV.synopsis {
+    DIV.doctools_synopsis {
 	color: 		black;
 	background: 	#80ffff;
 	border:		1px solid black;
@@ -82,39 +82,39 @@
 	margin-top: 	1em;
 	margin-bottom: 	1em;
     }
-    UL.syntax {
+    UL.doctools_syntax {
 	margin-top: 	1em;
 	border-top:	1px solid black;
     }
-    UL.requirements {
+    UL.doctools_requirements {
 	margin-bottom: 	1em;
 	border-bottom:	1px solid black;
     }
 --></style>
 </head>
-<! -- Generated from file 'strings/tokenize.man' by tcllib/doctools with format 'html'
+<! -- Generated from file 'tokenize.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
    -->
-<! -- CVS: $Id$ flibs/strings.n
+<! -- flibs/strings.n
    -->
 <body><div class="doctools">
-<h1 class="title">flibs/strings(n) 1.1  &quot;flibs&quot;</h1>
-<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<h1 class="doctools_title">flibs/strings(n) 1.1  &quot;flibs&quot;</h1>
+<div id="name" class="doctools_section"><h2><a name="name">Name</a></h2>
 <p>flibs/strings - Tokenizing strings</p>
 </div>
-<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
-<ul class="toc">
-<li class="section"><a href="#toc">Table Of Contents</a></li>
-<li class="section"><a href="#synopsis">Synopsis</a></li>
-<li class="section"><a href="#section1">Description</a></li>
-<li class="section"><a href="#section2">INTERFACE</a></li>
-<li class="section"><a href="#copyright">Copyright</a></li>
+<div id="toc" class="doctools_section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="doctools_toc">
+<li class="doctools_section"><a href="#toc">Table Of Contents</a></li>
+<li class="doctools_section"><a href="#synopsis">Synopsis</a></li>
+<li class="doctools_section"><a href="#section1">Description</a></li>
+<li class="doctools_section"><a href="#section2">INTERFACE</a></li>
+<li class="doctools_section"><a href="#copyright">Copyright</a></li>
 </ul>
 </div>
-<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
-<div class="synopsis">
-<ul class="syntax">
+<div id="synopsis" class="doctools_section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="doctools_synopsis">
+<ul class="doctools_syntax">
 <li><a href="#1"><b class="cmd">use tokenize</b></a></li>
 <li><a href="#2"><b class="cmd">call set_tokenizer( token, gaps, separators, delimiters )</b></a></li>
 <li><a href="#3"><b class="cmd">part = first_token( token, string, length)</b></a></li>
@@ -122,10 +122,10 @@
 </ul>
 </div>
 </div>
-<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<div id="section1" class="doctools_section"><h2><a name="section1">Description</a></h2>
 <p>The <em>tokenize</em> module provides a method to split a string
 into parts according to some simple rules:</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p>A string can be split into &quot;words&quot; by considering spaces and commas and
 such as separating the words. Two or more such characters are treated as
 a single such separator. In the terminology of the module they represent
@@ -142,7 +142,7 @@ input can not be used: for instance because the data are not separated
 by the standard characters or you need a finer control over the handling
 of the data.</p>
 </div>
-<div id="section2" class="section"><h2><a name="section2">INTERFACE</a></h2>
+<div id="section2" class="doctools_section"><h2><a name="section2">INTERFACE</a></h2>
 <p>The module contains three routines and it defines a single derived type
 and a few convenient parameters.</p>
 <p>The data type is <em>type(tokenizer)</em>, a derived type that holds all
@@ -151,14 +151,14 @@ the information needed for parsing the string. It is initialised via the
 the <em>first_token()</em> function. If you want to reuse it for a
 different string, but the same definition, simply use
 <em>first_token()</em> on the new string.</p>
-<dl class="definitions">
+<dl class="doctools_definitions">
 <dt><a name="1"><b class="cmd">use tokenize</b></a></dt>
 <dd><p>To import the definitions, use this module.</p></dd>
 <dt><a name="2"><b class="cmd">call set_tokenizer( token, gaps, separators, delimiters )</b></a></dt>
 <dd><p>Initialise the tokenizer &quot;token&quot; with various sets of characters
 controlling the splitting process.
 otherwise.</p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>type(tokenizer) <i class="arg">token</i></dt>
 <dd><p>The tokenizer to be initialised</p></dd>
 <dt>character(len=*) <i class="arg">gaps</i></dt>
@@ -175,7 +175,7 @@ Use &quot;token_empty&quot; if there are none.</p></dd>
 <dd><p>Find the first token of the string (also initialises the tokenisation
 for this string). Returns a string of the same length as the original
 one.</p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>type(tokenizer) <i class="arg">token</i></dt>
 <dd><p>The tokenizer to be used</p></dd>
 <dt>character(len=*) <i class="arg">string</i></dt>
@@ -187,7 +187,7 @@ one.</p>
 <dd><p>Find the first token of the string (also initialises the tokenisation
 for this string). Returns a string of the same length as the original
 one.</p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>type(tokenizer) <i class="arg">token</i></dt>
 <dd><p>The tokenizer to be used</p></dd>
 <dt>character(len=*) <i class="arg">string</i></dt>
@@ -197,7 +197,7 @@ one.</p>
 </dl></dd>
 </dl>
 <p>Convenient parameters:</p>
-<ul class="itemized">
+<ul class="doctools_itemized">
 <li><p><em>token_whitespace</em> - whitespace (a single character)</p></li>
 <li><p><em>token_tsv</em> - tab, useful for tab-separated values files</p></li>
 <li><p><em>token_csv</em> - comma, useful for comma-separated values files</p></li>
@@ -206,7 +206,7 @@ one.</p>
 arguments in the <em>set_tokenizer</em> routine.</p></li>
 </ul>
 </div>
-<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<div id="copyright" class="doctools_section"><h2><a name="copyright">Copyright</a></h2>
 <p>Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;</p>
 </div>
 </div></body></html>

@@ -25,7 +25,7 @@
 	background: 	transparent;
 	text-align:		left;
     }
-    H1.title {
+    H1.doctools_title {
 	text-align: center;
     }
     UL,OL {
@@ -42,11 +42,11 @@
     DT {
 	padding-top: 	1ex;
     }
-    UL.toc,UL.toc UL, UL.toc UL UL {
+    UL.doctools_toc,UL.doctools_toc UL, UL.doctools_toc UL UL {
 	font:		normal 12pt/14pt sans-serif;
 	list-style:	none;
     }
-    LI.section, LI.subsection {
+    LI.doctools_section, LI.doctools_subsection {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
@@ -63,18 +63,18 @@
 	padding-right:	1ex;
 	width:		100%;
     }
-    PRE.example {
+    PRE.doctools_example {
 	color: 		black;
 	background: 	#f5dcb3;
 	border:		1px solid black;
     }
-    UL.requirements LI, UL.syntax LI {
+    UL.doctools_requirements LI, UL.doctools_syntax LI {
 	list-style: 	none;
 	margin-left: 	0em;
 	text-indent:	0em;
 	padding:	0em;
     }
-    DIV.synopsis {
+    DIV.doctools_synopsis {
 	color: 		black;
 	background: 	#80ffff;
 	border:		1px solid black;
@@ -82,11 +82,11 @@
 	margin-top: 	1em;
 	margin-bottom: 	1em;
     }
-    UL.syntax {
+    UL.doctools_syntax {
 	margin-top: 	1em;
 	border-top:	1px solid black;
     }
-    UL.requirements {
+    UL.doctools_requirements {
 	margin-bottom: 	1em;
 	border-bottom:	1px solid black;
     }
@@ -96,25 +96,25 @@
    -->
 <! -- Copyright &copy; 2013 Arjen Markus &lt;arjenmarkus at sourceforge dot net&gt;
    -->
-<! -- CVS: $Id$ enum_space.n
+<! -- enum_space.n
    -->
 <body><div class="doctools">
-<h1 class="title">enum_space(n) 1.0  &quot;flibs&quot;</h1>
-<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<h1 class="doctools_title">enum_space(n) 1.0  &quot;flibs&quot;</h1>
+<div id="name" class="doctools_section"><h2><a name="name">Name</a></h2>
 <p>enum_space - Enumerate grid points in space</p>
 </div>
-<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
-<ul class="toc">
-<li class="section"><a href="#toc">Table Of Contents</a></li>
-<li class="section"><a href="#synopsis">Synopsis</a></li>
-<li class="section"><a href="#section1">Description</a></li>
-<li class="section"><a href="#section2">ROUTINES</a></li>
-<li class="section"><a href="#copyright">Copyright</a></li>
+<div id="toc" class="doctools_section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="doctools_toc">
+<li class="doctools_section"><a href="#toc">Table Of Contents</a></li>
+<li class="doctools_section"><a href="#synopsis">Synopsis</a></li>
+<li class="doctools_section"><a href="#section1">Description</a></li>
+<li class="doctools_section"><a href="#section2">ROUTINES</a></li>
+<li class="doctools_section"><a href="#copyright">Copyright</a></li>
 </ul>
 </div>
-<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
-<div class="synopsis">
-<ul class="syntax">
+<div id="synopsis" class="doctools_section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="doctools_synopsis">
+<ul class="doctools_syntax">
 <li><a href="#1"><b class="cmd">call enum_1dspace( index, x, update)</b></a></li>
 <li><a href="#2"><b class="cmd">call enum_2dspace( index, x, y, update)</b></a></li>
 <li><a href="#3"><b class="cmd">call enum_3dspace( index, x, y, z, update)</b></a></li>
@@ -123,7 +123,7 @@
 </ul>
 </div>
 </div>
-<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<div id="section1" class="doctools_section"><h2><a name="section1">Description</a></h2>
 <p>The <i class="term">enum_space</i> module provides a set of routines to enumerate the
 integer grid points in one-, two- or three-dimensional space.</p>
 <p><em>Motivation:</em>
@@ -131,12 +131,12 @@ When solving Diophantine equations with brute force (so simply try
 all combinations of integer values and see whether that gives a
 solution), one would like to search a limited region of the solution
 space and stop after, say, 100 solutions. For instance:</p>
-<pre class="example">
+<pre class="doctools_example">
     x**2 + y**2 = z**3 + 3*z**2
 </pre>
 <p>You never know in which region these solutions lie, so it may that
 you need to examine a very large range for all variables involved:</p>
-<pre class="example">
+<pre class="doctools_example">
     do z = 1,1000
         do y = 1,1000
             do x = 1,1000
@@ -153,7 +153,7 @@ may waste a lot of time.</p>
 makes it possible to enumerate the grid points around the origin
 in ever wider shells (square around the origin or an octaeder in 3D
 space):</p>
-<pre class="example">
+<pre class="doctools_example">
     |
     9
     |
@@ -169,14 +169,14 @@ is non-trivial to expand this to an arbitrary dimension.</p>
 <p>To cover both positive and negative integers, the module uses an
 alternating scheme: 0, 1, -1, 2, -2, 3, -3, ...</p>
 </div>
-<div id="section2" class="section"><h2><a name="section2">ROUTINES</a></h2>
+<div id="section2" class="doctools_section"><h2><a name="section2">ROUTINES</a></h2>
 <p>The module defines the following routines:</p>
-<dl class="definitions">
+<dl class="doctools_definitions">
 <dt><a name="1"><b class="cmd">call enum_1dspace( index, x, update)</b></a></dt>
 <dd><p>Enumerate the grid points on a line. It returns the x-coordinate of the grid point
 with the given index (alternatingly positive and negative coordinates).</p>
 <p><em>Note:</em> Initialise the index to <i class="term">start_enumeration</i></p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>integer <i class="arg">index</i></dt>
 <dd><p>The index of the grid point (updated to give the next
 index, unless you specify update = .false.)</p></dd>
@@ -189,7 +189,7 @@ index, unless you specify update = .false.)</p></dd>
 <dd><p>Enumerate the grid points on a plane. It returns the x- and y-coordinates of the
 grid point with the given index. The grid points cover the whole plane.</p>
 <p><em>Note:</em> Initialise the index to <i class="term">start_enumeration</i></p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>integer <i class="arg">index</i></dt>
 <dd><p>The index of the grid point (updated to give the next
 index, unless you specify update = .false.)</p></dd>
@@ -204,7 +204,7 @@ index, unless you specify update = .false.)</p></dd>
 <dd><p>Enumerate the grid points on a plane. It returns the x-, y- and z-coordinates of the
 grid point with the given index. The grid points cover the whole 3D space.</p>
 <p><em>Note:</em> Initialise the index to <i class="term">start_enumeration</i></p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>integer <i class="arg">index</i></dt>
 <dd><p>The index of the grid point (updated to give the next
 index, unless you specify update = .false.)</p></dd>
@@ -221,7 +221,7 @@ index, unless you specify update = .false.)</p></dd>
 <dd><p>Enumerate the grid points in the first quadrant of the plane. It returns the
 x- and y-coordinates of the grid point with the given index.</p>
 <p><em>Note:</em> Initialise the index to <i class="term">start_enumeration</i></p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>integer <i class="arg">index</i></dt>
 <dd><p>The index of the grid point (updated to give the next
 index, unless you specify update = .false.)</p></dd>
@@ -236,7 +236,7 @@ index, unless you specify update = .false.)</p></dd>
 <dd><p>Enumerate the grid points in the first 3D octant. It returns the x-, y- and z-coordinates of the
 grid point with the given index.</p>
 <p><em>Note:</em> Initialise the index to <i class="term">start_enumeration</i></p>
-<dl class="arguments">
+<dl class="doctools_arguments">
 <dt>integer <i class="arg">index</i></dt>
 <dd><p>The index of the grid point (updated to give the next
 index, unless you specify update = .false.)</p></dd>
@@ -251,7 +251,7 @@ index, unless you specify update = .false.)</p></dd>
 </dl></dd>
 </dl>
 </div>
-<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<div id="copyright" class="doctools_section"><h2><a name="copyright">Copyright</a></h2>
 <p>Copyright &copy; 2013 Arjen Markus &lt;arjenmarkus at sourceforge dot net&gt;</p>
 </div>
 </div></body></html>

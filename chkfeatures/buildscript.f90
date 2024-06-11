@@ -21,6 +21,7 @@ program buildscript
 
     character(len=80) :: line
     character(len=20) :: type_program
+    character(len=20) :: redirect = ' >>features.out 2>&1'
 
     open( lunin, file = 'buildscript.set', status = 'old' , iostat = ierr )
 
@@ -34,6 +35,8 @@ program buildscript
 
     write( lunbat, '(a)' ) '@echo off'
     write( lunscr, '(a)' ) '#!/bin/sh'
+    write( lunbat, '(2a)' ) 'echo Output of the checks >features.out'
+    write( lunscr, '(2a)' ) 'echo Output of the checks >features.out'
 
     label = 0
     end_program = .false.
@@ -89,31 +92,33 @@ program buildscript
                 write( *, '(a,a)' ) 'Problem: the file does not exist - ', trim(line(2:))
             endif
 
-            write( lunbat, '(a,a)' ) 'echo .'
-            write( lunscr, '(a,a)' ) 'echo .'
-            write( lunbat, '(a,a)' ) 'echo Check program: ', trim(line(2:))
-            write( lunscr, '(a,a)' ) 'echo Check program: ', trim(line(2:))
-            write( lunbat, '(a,a)' ) 'echo -------------'
-            write( lunscr, '(a,a)' ) 'echo -------------'
-            write( lunbat, '(a,a)' ) 'echo .'
-            write( lunscr, '(a,a)' ) 'echo .'
-            write( lunbat, '(3a)'  ) 'call compile ', trim(line(2:)), ' %1 %2 %3 %4 %5 %6 %7 %8'
-            write( lunscr, '(3a)' ) './compile ', trim(line(2:)), ' $1 $2 $3 $4 $5 $6 $7 $8'
-            write( lunbat, '(a,a)' ) 'echo .'
-            write( lunscr, '(a,a)' ) 'echo .'
+            write( lunbat, '(3a)' ) 'echo .', redirect
+            write( lunscr, '(3a)' ) 'echo .', redirect
+            write( lunbat, '(3a)' ) 'echo Check program: ', trim(line(2:))
+            write( lunbat, '(3a)' ) 'echo Check program: ', trim(line(2:)), redirect
+            write( lunscr, '(3a)' ) 'echo Check program: ', trim(line(2:))
+            write( lunscr, '(3a)' ) 'echo Check program: ', trim(line(2:)), redirect
+            write( lunbat, '(3a)' ) 'echo -------------', redirect
+            write( lunscr, '(3a)' ) 'echo -------------', redirect
+            write( lunbat, '(3a)' ) 'echo .', redirect
+            write( lunscr, '(3a)' ) 'echo .', redirect
+            write( lunbat, '(4a)'  ) 'call compile ', trim(line(2:)), ' %1 %2 %3 %4 %5 %6 %7 %8', redirect
+            write( lunscr, '(4a)' ) './compile ', trim(line(2:)), ' $1 $2 $3 $4 $5 $6 $7 $8', redirect
+            write( lunbat, '(a,a)' ) 'echo .', redirect
+            write( lunscr, '(a,a)' ) 'echo .', redirect
 
             label = label + 1
             write( lunbat, '(3a,i0)' ) 'if not exist ', trim(line(2:)), '.exe goto next', label
-            write( lunbat, '(2a)'    ) trim(line(2:)), '.exe'
+            write( lunbat, '(3a)'    ) trim(line(2:)), '.exe', redirect
             write( lunbat, '(a,i0)'  ) 'goto skip', label
             write( lunbat, '(a,i0)'  ) ':next', label
 
             write( lunscr, '(3a)'    ) 'if [ -f ', trim(line(2:)), '.exe ]; then'
-            write( lunscr, '(3x,3a)' ) './', trim(line(2:)), '.exe'
+            write( lunscr, '(3x,4a)' ) './', trim(line(2:)), '.exe', redirect
             write( lunscr, '(a)'     ) 'else'
         else
-            write( lunbat, '(a,a)'   ) '   echo ', trim(line)
-            write( lunscr, '(3a)'    ) '   echo ''', trim(line), ''''
+            write( lunbat, '(3a)'   ) '   echo ', trim(line), redirect
+            write( lunscr, '(4a)'    ) '   echo ''', trim(line), '''', redirect
         endif
 
     enddo
@@ -121,9 +126,9 @@ program buildscript
     write( lunbat, '(a,i0)'  ) ':skip', label
     write( lunscr, '(a)'  ) 'fi'
 
-    write( *, '(/,a,i0)' ) 'Number of tests to run: ', label
-    write( *, '(a,i0)' )   '    Number of feature checks:                 ', number_features
-    write( *, '(a,i0)' )   '    Number of diagnostic checks:              ', number_diagnostics
-    write( *, '(a,i0)' )   '    Number of checks on behaviour/properties: ', number_probes
-    write( *, '(a,i0)' )   '    Number of checks on compiler extensions:  ', number_extensions
+    write( *, '(/,a,i0,a)' ) 'Number of tests to run: ', label
+    write( *, '(a,i0,a)' )   '    Number of feature checks:                 ', number_features
+    write( *, '(a,i0,a)' )   '    Number of diagnostic checks:              ', number_diagnostics
+    write( *, '(a,i0,a)' )   '    Number of checks on behaviour/properties: ', number_probes
+    write( *, '(a,i0,a)' )   '    Number of checks on compiler extensions:  ', number_extensions
 end program buildscript

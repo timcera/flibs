@@ -1,6 +1,6 @@
 ! Test program for text streams
 !
-!     $Id$
+!     $Id: test_textstreams.f90,v 1.1 2006-06-23 08:04:13 arjenmarkus Exp $
 !
 program test_textstream
     use text_streams

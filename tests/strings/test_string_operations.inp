@@ -1,0 +1,22 @@
+This file simply contains the first part of the source file that holds the string_operations module.
+
+! string_operations.f90 --
+!     Module for replacing substrings and other operations on strings
+!
+!     Note:
+!     Two versions of the basic routine are supplied:
+!     - Replace one particular substring by another string
+!     - Replace a set of substrings by corresponding strings
+!
+!     In principle all substrings are replaced, but you can
+!     control this in the first version via an optional
+!     argument, taking the values: replace_all, first_only and last_only
+!
+!     The derived type pair can be used to specify which substring
+!     must be replaced by what other string:
+!
+!     newstring = replace( string, [pair('A', 'a'), pair('B', 'b'), ...])
+!
+module string_operations
+    implicit none
+

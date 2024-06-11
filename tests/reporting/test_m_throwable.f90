@@ -1,7 +1,7 @@
 ! test_m_throwable.f90 --
 !     Small test program for the m_throwable component.
 !
-!     $Id$
+!     $Id: test_m_throwable.f90,v 1.1 2008-04-09 07:29:56 relaxmike Exp $
 !
 program test_m_throwable
   use m_throwable, only : &

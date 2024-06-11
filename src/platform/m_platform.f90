@@ -127,8 +127,8 @@
 ! To inform the m_platform module of the particular environment
 ! variable extension, one of the following pre-processing macro MAY
 ! be defined :
-! _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
-! _PLATFORM_FORTRAN_2003
+! _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
+! _FS_FORTRAN_2003
 !
 ! Change directory fortran extension
 ! Depending on the compiler, the "CHDIR" fortran extension is provided
@@ -182,8 +182,20 @@
 !
 ! $Id: m_platform.f90,v 1.7 2008-06-17 12:46:07 relaxmike Exp $
 !
+#ifdef _FS_SYSTEM_FUNCTIONS
+#    define _PLATFORM_CHDIR_FUNCTION
+#    define _PLATFORM_STAT_FUNCTION
+#    define _PLATFORM_SYSTEM_FUNCTION
+#endif
+#ifdef _FS_SYSTEM_SUBROUTINES
+#    define _PLATFORM_CHDIR_SUBROUTINE
+#    define _PLATFORM_STAT_SUBROUTINE
+#    define _PLATFORM_SYSTEM_SUBROUTINE
+#endif
+
+
 module m_platform
-#ifdef _PLATFORM_INTEL_FORTRAN_PORTABILITY_ROUTINES
+#ifdef _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
   use ifport
 #endif
   implicit none

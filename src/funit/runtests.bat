@@ -3,7 +3,7 @@ rem runtests.bat --
 rem     DOS batch file to control a program that uses ftnunit
 rem     Name of the program: first argument
 rem
-rem     $Id$
+rem     $Id: runtests.bat,v 1.2 2008-01-26 11:15:10 arjenmarkus Exp $
 rem
 if exist runtests.log del runtests.log
 echo ALL >ftnunit.run

@@ -8,7 +8,7 @@
 !     This file is deprecated - use test_qsortarray_template.f90
 !     instead
 !
-!     $Id$
+!     $Id: qsort_plain_test.f90,v 1.2 2008-04-21 17:45:49 arjenmarkus Exp $
 !
 module sorting_data
     type SORT_DATA

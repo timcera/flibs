@@ -12,7 +12,7 @@
 !     But what if via compiler options single precision constants
 !     are promoted to double precision?
 !
-!     $Id$
+!     $Id: select_precision.f90,v 1.3 2008-10-02 09:02:33 arjenmarkus Exp $
 !
 module select_precision
     implicit none

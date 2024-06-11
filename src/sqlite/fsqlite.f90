@@ -29,7 +29,7 @@
 !    With the appropriate compilation options (if needed)
 !    the code should be thread-safe, as no data are shared.
 !
-!    $Id$
+!    $Id: fsqlite.f90,v 1.5 2011/01/19 11:36:46 arjenmarkus Exp $
 !
 module sqlite_types
 

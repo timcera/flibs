@@ -179,6 +179,9 @@
 !
 ! This is an abstract of all macros for several compilers.
 !
+! Use the macros _FS_SYSTEM_FUNCTIONS or _FS_SYSTEM_ROUTINES to define
+! the flavours in one step.
+!
 ! Compiler : Intel Fortran
 ! _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
 ! _FS_RENAME_FUNCTION
@@ -197,6 +200,16 @@
 !
 !   $Id: m_filedir.f90,v 1.7 2013-12-30 09:30:19 knystrom Exp $
 !
+#ifdef _FS_SYSTEM_FUNCTIONS
+#    define _FS_RENAME_FUNCTION
+#    define _FS_GETCWD_FUNCTION
+#endif
+#ifdef _FS_SYSTEM_SUBROUTINES
+#    define _FS_RENAME_SUBROUTINE
+#    define _FS_GETCWD_SUBROUTINE
+#endif
+
+
 module m_filedir
 #ifdef _FS_INTEL_FORTRAN_PORTABILITY_ROUTINES
   use ifport
@@ -503,7 +516,7 @@ contains
   end function filedir_add_extension
   !
   ! filedir_rename --
-  !   Renames the file ofdln to newfn by using the RENAME fortran extension.
+  !   Renames the file oldfn to newfn by using the RENAME fortran extension.
   ! Arguments:
   !   oldfn : the old file name
   !   newfn : the new file name
@@ -561,7 +574,7 @@ contains
   end subroutine filedir_rename
   !
   ! filedir_copy --
-  !   Copy the file ofdln to newfn by using the SYSTEM fortran extension.
+  !   Copy the file sourcefn to targetfn by using the SYSTEM fortran extension.
   ! Arguments:
   !   sourcefn : the source file name
   !   targetfn : the target file name
@@ -604,7 +617,7 @@ contains
   end subroutine filedir_copy
   !
   ! filedir_copy_std --
-  !   Copy the ascii file ofdln to targetfn by using standard fortran.
+  !   Copy the ascii file sourecfn to targetfn by using standard fortran.
   !   If the source file does not exists, generates an error.
   !   If the target file allready exists and force option is undefined
   !   or defined to false, generates an error.

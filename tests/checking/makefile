@@ -1,6 +1,6 @@
 # Makefile for "checking" tests and examples
 #
-# $Id$
+# $Id: makefile,v 1.1 2007-08-12 17:10:51 arjenmarkus Exp $
 #
 include ../../config/config.mk
 include ../../config/options.mk

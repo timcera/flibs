@@ -576,7 +576,7 @@ directory of the Flibs project):
 !    - All lines after that contain the name of the station
 !      the date and the two values.
 !
-!    $Id$
+!    $Id: fsqlite.man,v 1.1 2008-06-13 10:28:11 relaxmike Exp $
 !
 program csvtable
    use sqlite

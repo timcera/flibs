@@ -1,7 +1,7 @@
 ! genetic_algorithms.f90 --
 !     Basic framework for genetic algorithms
 !
-!     $Id$
+!     $Id: genetic_algorithms.f90,v 1.3 2009-05-05 17:17:42 arjenmarkus Exp $
 !
 module genetic_algorithms
 

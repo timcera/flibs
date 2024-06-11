@@ -25,10 +25,10 @@
 !
 ! ENDDOC
 !
-! $Author$
-! $Date$
-! $Source$
-! $Log$
+! $Author: arjenmarkus $
+! $Date: 2008-08-10 14:48:48 $
+! $Source: /home/cvs/f/fl/flibs/chksys/chksysff.f90,v $
+! $Log: not supported by cvs2svn $
 !
 !
 ! --------------------------------------------------------------------

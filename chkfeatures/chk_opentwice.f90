@@ -1,7 +1,7 @@
 ! chk_opentwice.f90 --
 !     Check: does the compiler support opening the same file on two different units?
 !
-!     Note: this is an extension to the standard
+!     Note: this is an extension to the standards prior to Fortran 2018.
 !
 program chk_opentwice
     implicit none

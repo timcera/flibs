@@ -5,24 +5,39 @@
 #
 # Get the operating system
 #
-OPERATING_SYSTEM = $(shell uname)
+OPERATING_SYSTEM = $(OSTYPE)
+OPERATING_SYSTEM_TEST = X$(OSTYPE)
+ARCHTEST = X$(ARCH)
 
 #
 # Get the CPU type (architecture)
 #
-ARCH = $(shell uname -m)
+ifeq ($(ARCHTEST),X)
+	OPERATING_SYSTEM = any
+endif
 
 #
 # Commands specific for the operating system
 #
-ifeq ($(OPERATING_SYSTEM),windows32)
+ifeq ($(OPERATING_SYSTEM_TEST),X)
+	OPERATING_SYSTEM = $(OS)
 	include Makefile-win32-NT
 endif
-ifeq ($(OPERATING_SYSTEM),Linux)
+ifeq ($(OPERATING_SYSTEM),linux-gnu)
+	echo linux
+	include Makefile-linux
+endif
+ifeq ($(OPERATING_SYSTEM),cygwin)
+	include OS
+	echo cygwin
+	include Makefile-linux
+endif
+ifeq ($(OPERATING_SYSTEM),msys)
+	echo msys
 	include Makefile-linux
 endif
 #
-# Debug or release ? 
+# Debug or release ?
 # Warning: this option does have an impact on the compiler options
 #
 VERSION = debug
@@ -30,15 +45,15 @@ VERSION = debug
 #VERSION = profiled
 
 ifeq ($(VERSION),debug)
-	FOPTS_BASE += -g -D_DEBUG  
+	FOPTS_BASE += -g -D_DEBUG
 	LOPTS_BASE += -g
 endif
 ifeq ($(VERSION),release)
 	FOPTS_BASE +=   -O2
-	LOPTS_BASE = 
+	LOPTS_BASE =
 endif
 ifeq ($(VERSION),optimized)
-	FOPTS_BASE += -O3 -mtune=pentium4   
+	FOPTS_BASE += -O3 -mtune=pentium4
 	LOPTS_BASE += -O3
 endif
 ifeq ($(VERSION),profiled)
@@ -49,6 +64,6 @@ endif
 #
 # Options specific to the fortran compiler
 #
-include Makefile-g95
-#include Makefile-gfortran
+#include Makefile-g95
+include Makefile-gfortran
 

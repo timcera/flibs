@@ -6,7 +6,7 @@
 !     independent variable should be of type AUTODERIV, as should be the
 !     result.
 !
-!     $Id$
+!     $Id: automdiff.f90,v 1.4 2008-10-26 12:16:43 arjenmarkus Exp $
 !
 module automatic_differentiation_type
     use select_precision

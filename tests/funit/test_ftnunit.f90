@@ -25,7 +25,7 @@
 !     To illustrate the way run-time errors are handled via
 !     the framework, some of these tests result in runtime errors
 !
-!     $Id$
+!     $Id: test_ftnunit.f90,v 1.8 2012-03-13 13:01:37 arjenmarkus Exp $
 !
 module data_processing
     implicit none

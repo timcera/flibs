@@ -144,3 +144,19 @@ contains
   end subroutine check_fileunitsnb
 end program test_fileunit
 
+!
+! Display an error and STOP the execution.
+!
+subroutine file_error ( command )
+  use m_filedir, only : MAX_COMMAND_LENGTH
+  implicit none
+  character (len= MAX_COMMAND_LENGTH ), intent(in) :: command
+  character (len= 40 ) :: cwd
+  write (6,*) "Error in operating on files while executing command :"
+  write (6,*) trim(command)
+  call GETCWD (cwd)
+  write (6,*) "Current working directory : ", trim(cwd)
+  STOP
+end subroutine file_error
+
+

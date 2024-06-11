@@ -1,7 +1,7 @@
 ! test_token.f90 --
 !    Incomplete test program for the tokenize module
 !
-!    $Id$
+!    $Id: test_token.f90,v 1.3 2008-04-02 08:30:55 arjenmarkus Exp $
 !
 program test_token
    use tokenize

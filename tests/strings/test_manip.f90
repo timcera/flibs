@@ -1,7 +1,7 @@
 ! test_manip.f90 --
 !     Program to test the string manipulation routines
 !
-!     $Id$
+!     $Id: test_manip.f90,v 1.2 2008-03-25 05:23:36 arjenmarkus Exp $
 !
 program test_manip
     use string_manipulation

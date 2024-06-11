@@ -1,7 +1,7 @@
 ! test_logging.f90 --
 !     Small test program for the report module
 !
-!     $Id$
+!     $Id: test_m_logger.f90,v 1.2 2012-11-27 07:36:53 arjenmarkus Exp $
 !
 program test_logging
   use m_logger

@@ -8,7 +8,7 @@
 !       This requires a comparison function for
 !       the data.
 !
-!     $Id$
+!     $Id: test_btree.f90,v 1.2 2006-03-26 19:03:53 arjenmarkus Exp $
 !
 module MYDATA_MODULE
 

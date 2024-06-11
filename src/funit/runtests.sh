@@ -3,7 +3,7 @@
 #    Bourne shell script to control a program that uses funit
 #    Name of the program: first argument
 #
-#    $Id$
+#    $Id: runtests.sh,v 1.3 2010-02-12 07:32:43 arjenmarkus Exp $
 #
 if test -f runtests.log ; then
     rm runtests.log

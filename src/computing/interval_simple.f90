@@ -11,7 +11,7 @@
 !     TODO:
 !     Make find_root more robust!
 !
-!     $Id$
+!     $Id: interval_simple.f90,v 1.4 2013-12-27 11:36:01 arjenmarkus Exp $
 !
 module interval_arithmetic
     use select_precision

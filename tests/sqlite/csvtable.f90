@@ -111,4 +111,7 @@ program csvtable
    endif
 
    call sqlite3_close( db )
+   if ( sqlite3_error(db) ) then
+       write(*,*) 'Error closing the database: ', trim(sqlite3_errmsg(db))
+   endif
 end program

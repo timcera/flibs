@@ -4,7 +4,7 @@
 !     - cylindrical to cartesian and back
 !     - polar to cartesian and back
 !
-!     $Id$
+!     $Id: m_coordinates.f90,v 1.1 2008-09-22 18:42:43 arjenmarkus Exp $
 !
 module m_coordinates
     implicit none

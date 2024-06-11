@@ -147,7 +147,7 @@
 !
 ! Copyright (c) 2008 Michael Baudin
 !
-! $Id$
+! $Id: m_exception.f90,v 1.5 2013-05-13 08:03:21 knystrom Exp $
 !
 module m_exception
   implicit none

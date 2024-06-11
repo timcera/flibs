@@ -20,7 +20,7 @@
 !       real is assumed to be 8 bytes long. There is NO provision
 !       for situations where this is not true.
 !
-!     $Id$
+!     $Id: binstream.f90,v 1.2 2006-03-26 19:03:53 arjenmarkus Exp $
 !
 module binary_streams
     implicit none

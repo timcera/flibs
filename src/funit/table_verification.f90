@@ -65,7 +65,7 @@
 !       should flag an out-of-range or other error.
 !
 !
-!     $Id$
+!     $Id: table_verification.f90,v 1.1 2007-02-16 12:45:00 arjenmarkus Exp $
 !
 module table_verification_data
     implicit none

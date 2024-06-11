@@ -1,7 +1,7 @@
 ! test_m_exception.f90 --
 !     Small test program for the m_exception component.
 !
-!     $Id$
+!     $Id: test_m_exception.f90,v 1.3 2013-05-13 08:03:21 knystrom Exp $
 !
 program test_m_exception
   use m_exception, only : &

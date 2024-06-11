@@ -4,7 +4,7 @@
 !
 !     See: qsort_inline.f90 for more details
 !
-!     $Id$
+!     $Id: qsort_test.f90,v 1.1 2008-04-15 04:25:30 arjenmarkus Exp $
 !
 program qsort_test
   implicit none

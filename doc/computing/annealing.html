@@ -1,221 +1,237 @@
-<! -- -*- flibs -*- doctools manpage
-   -->
+
 <html><head>
-<title>simulated_annealing - flibs </title>
+<title>simulated_annealing - flibs</title>
+<style type="text/css"><!--
+    HTML {
+	background: 	#FFFFFF;
+	color: 		black;
+    }
+    BODY {
+	background: 	#FFFFFF;
+	color:	 	black;
+    }
+    DIV.doctools {
+	margin-left:	10%;
+	margin-right:	10%;
+    }
+    DIV.doctools H1,DIV.doctools H2 {
+	margin-left:	-5%;
+    }
+    H1, H2, H3, H4 {
+	margin-top: 	1em;
+	font-family:	sans-serif;
+	font-size:	large;
+	color:		#005A9C;
+	background: 	transparent;
+	text-align:		left;
+    }
+    H1.doctools_title {
+	text-align: center;
+    }
+    UL,OL {
+	margin-right: 0em;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+    }
+    UL LI {
+	list-style: disc;
+    }
+    OL LI {
+	list-style: decimal;
+    }
+    DT {
+	padding-top: 	1ex;
+    }
+    UL.doctools_toc,UL.doctools_toc UL, UL.doctools_toc UL UL {
+	font:		normal 12pt/14pt sans-serif;
+	list-style:	none;
+    }
+    LI.doctools_section, LI.doctools_subsection {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding: 	0em;
+    }
+    PRE {
+	display: 	block;
+	font-family:	monospace;
+	white-space:	pre;
+	margin:		0%;
+	padding-top:	0.5ex;
+	padding-bottom:	0.5ex;
+	padding-left:	1ex;
+	padding-right:	1ex;
+	width:		100%;
+    }
+    PRE.doctools_example {
+	color: 		black;
+	background: 	#f5dcb3;
+	border:		1px solid black;
+    }
+    UL.doctools_requirements LI, UL.doctools_syntax LI {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding:	0em;
+    }
+    DIV.doctools_synopsis {
+	color: 		black;
+	background: 	#80ffff;
+	border:		1px solid black;
+	font-family:	serif;
+	margin-top: 	1em;
+	margin-bottom: 	1em;
+    }
+    UL.doctools_syntax {
+	margin-top: 	1em;
+	border-top:	1px solid black;
+    }
+    UL.doctools_requirements {
+	margin-bottom: 	1em;
+	border-bottom:	1px solid black;
+    }
+--></style>
 </head>
 <! -- Generated from file 'annealing.man' by tcllib/doctools with format 'html'
    -->
 <! -- Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;
    -->
-<! -- CVS: $Id$ simulated_annealing.n
+<! -- simulated_annealing.n
    -->
-
-<body>
-<h1> simulated_annealing(n) 1.0  &quot;flibs&quot;</h1>
-<h2><a name="name">NAME</a></h2>
-<p>
-<p> simulated_annealing - Implement a &quot;simulated annealing&quot; algorithm
-
-
-
-
-<h2><a name="table_of_contents">TABLE OF CONTENTS</a></h2>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#table_of_contents">TABLE OF CONTENTS</a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#synopsis">SYNOPSIS</a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#description">DESCRIPTION</a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#data_types_and_routines">DATA TYPES AND ROUTINES</a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#interface_issues">INTERFACE ISSUES</a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#copyright">COPYRIGHT</a><br>
-<h2><a name="synopsis">SYNOPSIS</a></h2>
-<p>
-<table border=1 width=100% cellspacing=0 cellpadding=0><tr            bgcolor=lightyellow><td bgcolor=lightyellow><table 0 width=100% cellspacing=0 cellpadding=0><tr valign=top ><td ><a href="#1"><b class='cmd'>use simulated_annealing</b> </a></td></tr>
-<tr valign=top ><td ><a href="#2"><b class='cmd'>type(ANNEALING_PARAMETERS)</b> </a></td></tr>
-<tr valign=top ><td ><a href="#3"><b class='cmd'>call set_parameters( params, update, initial_temp,  temp_reduction, number_iterations, scale_factor, automatic_scaling, verbose)</b> </a></td></tr>
-<tr valign=top ><td ><a href="#4"><b class='cmd'>call get_next_step( params, range, x, value, task</b> </a></td></tr>
-<tr valign=top ><td ><a href="#5"><b class='cmd'>call find_minimum( params, range, x, func, value )</b> </a></td></tr>
-</table></td></tr></table>
-<h2><a name="description">DESCRIPTION</a></h2>
-<p>
-
-The <em>simulated_annealing</em> module allows you to find the minimum
+<body><div class="doctools">
+<h1 class="doctools_title">simulated_annealing(n) 1.0  &quot;flibs&quot;</h1>
+<div id="name" class="doctools_section"><h2><a name="name">Name</a></h2>
+<p>simulated_annealing - Implement a &quot;simulated annealing&quot; algorithm</p>
+</div>
+<div id="toc" class="doctools_section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="doctools_toc">
+<li class="doctools_section"><a href="#toc">Table Of Contents</a></li>
+<li class="doctools_section"><a href="#synopsis">Synopsis</a></li>
+<li class="doctools_section"><a href="#section1">Description</a></li>
+<li class="doctools_section"><a href="#section2">DATA TYPES AND ROUTINES</a></li>
+<li class="doctools_section"><a href="#section3">INTERFACE ISSUES</a></li>
+<li class="doctools_section"><a href="#copyright">Copyright</a></li>
+</ul>
+</div>
+<div id="synopsis" class="doctools_section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="doctools_synopsis">
+<ul class="doctools_syntax">
+<li><a href="#1"><b class="cmd">use simulated_annealing</b></a></li>
+<li><a href="#2"><b class="cmd">type(ANNEALING_PARAMETERS)</b></a></li>
+<li><a href="#3"><b class="cmd">call set_parameters( params, update, initial_temp,  temp_reduction, number_iterations, scale_factor, automatic_scaling, verbose)</b></a></li>
+<li><a href="#4"><b class="cmd">call get_next_step( params, range, x, value, task</b></a></li>
+<li><a href="#5"><b class="cmd">call find_minimum( params, range, x, func, value )</b></a></li>
+</ul>
+</div>
+</div>
+<div id="section1" class="doctools_section"><h2><a name="section1">Description</a></h2>
+<p>The <em>simulated_annealing</em> module allows you to find the minimum
 of an arbitrary function of N variables using a straightforward
-simulated annealing algorithm.
-
-<p>
-The idea is that the variables can vary independently each within a
+simulated annealing algorithm.</p>
+<p>The idea is that the variables can vary independently each within a
 given interval. For each set of values generated in this way, the
 function that is to be minimized is evaluated. The new set of values is
-accepted as the new estimate of the minimum in two situations:
-
-<ul>
-<li>
-The value of the function is lower than the current minimum
-
-<br><br>
-<li>
-A generated random number is low enough, that is the expression
-<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+accepted as the new estimate of the minimum in two situations:</p>
+<ul class="doctools_itemized">
+<li><p>The value of the function is lower than the current minimum</p></li>
+<li><p>A generated random number is low enough, that is the expression</p>
+<pre class="doctools_example">
     r &lt; exp(-(new value - old value)/scaled temperature)
-</pre></td></tr></table></p>
-is true.
+</pre>
+<p>is true.</p></li>
 </ul>
-
-The &quot;temperature&quot; is reduced by a constant factor after a given number
+<p>The &quot;temperature&quot; is reduced by a constant factor after a given number
 of iterations, thus making the second case more and more improbable. If
-there are no new estimates, the iteration stops.
-
-<p>
-Theoretically, <em>simulated annealing</em> is able to find the global
+there are no new estimates, the iteration stops.</p>
+<p>Theoretically, <em>simulated annealing</em> is able to find the global
 minimum of a function, but it would require infinite time to actually
-achieve it.
-
-<p>
-The module implements the basic technique and if the interface to the
-function is more complex than the subroutine <em>find_minimum</em>
+achieve it.</p>
+<p>The module implements the basic technique and if the interface to the
+function is more complex than the subroutine <i class="term">find_minimum</i>
 assumes, then you can use the code for that routine as a template for a
 customised version (see below for some ideas regarding such more
-general functionality).
-
-
-<h2><a name="data_types_and_routines">DATA TYPES AND ROUTINES</a></h2>
-<p>
-The module defines a single data type, ANNEALING_PARAMETERS and several
-subroutines:
-
-<dl>
-
-<dt><a name="1"><b class='cmd'>use simulated_annealing</b> </a><dd>
-
-The name of the module. The module itself uses the module
-<em>select_precision</em> to select single or double precision reals.
-
-<br><br>
-<dt><a name="2"><b class='cmd'>type(ANNEALING_PARAMETERS)</b> </a><dd>
-
-The type holds the parameters and state variables needed for the
+general functionality).</p>
+</div>
+<div id="section2" class="doctools_section"><h2><a name="section2">DATA TYPES AND ROUTINES</a></h2>
+<p>The module defines a single data type, ANNEALING_PARAMETERS and several
+subroutines:</p>
+<dl class="doctools_definitions">
+<dt><a name="1"><b class="cmd">use simulated_annealing</b></a></dt>
+<dd><p>The name of the module. The module itself uses the module
+<i class="term">select_precision</i> to select single or double precision reals.</p></dd>
+<dt><a name="2"><b class="cmd">type(ANNEALING_PARAMETERS)</b></a></dt>
+<dd><p>The type holds the parameters and state variables needed for the
 iteration. You can set the fields via the subroutine
-<em>set_parameters</em>.
-
-<br><br>
-<dt><a name="3"><b class='cmd'>call set_parameters( params, update, initial_temp,  temp_reduction, number_iterations, scale_factor, automatic_scaling, verbose)</b> </a><dd>
-
-
-Subroutine to set the individual parameters for the algorithm. (All
-arguments are optional, except <em>params</em> and <em>update</em>)
-
-<br><br>
-<dl>
-
-<dt>type(ANNEALING_PARAMETERS) <i class='arg'>params</i><dd>
-Derived type holding all parameters (and internal state variables) for
-the iteration.
-
-<br><br>
-<dt>logical <i class='arg'>update</i><dd>
-If true, only the arguments that are present in the call are used to
-update the fields in <em>params</em>. Otherwise the structure is first
-initialised.
-<br><br>
-Note: this is probably not a very useful feature.
-
-<br><br>
-<dt>real(wp) <i class='arg'>initial_temp</i><dd>
-Initial &quot;temperature&quot; (defaults to 1). A larger value means it will be
+<i class="term">set_parameters</i>.</p></dd>
+<dt><a name="3"><b class="cmd">call set_parameters( params, update, initial_temp,  temp_reduction, number_iterations, scale_factor, automatic_scaling, verbose)</b></a></dt>
+<dd><p>Subroutine to set the individual parameters for the algorithm. (All
+arguments are optional, except <i class="term">params</i> and <i class="term">update</i>)</p>
+<dl class="doctools_arguments">
+<dt>type(ANNEALING_PARAMETERS) <i class="arg">params</i></dt>
+<dd><p>Derived type holding all parameters (and internal state variables) for
+the iteration.</p></dd>
+<dt>logical <i class="arg">update</i></dt>
+<dd><p>If true, only the arguments that are present in the call are used to
+update the fields in <i class="term">params</i>. Otherwise the structure is first
+initialised.</p>
+<p>Note: this is probably not a very useful feature.</p></dd>
+<dt>real(wp) <i class="arg">initial_temp</i></dt>
+<dd><p>Initial &quot;temperature&quot; (defaults to 1). A larger value means it will be
 easier for the vector representing the estimated minimum to wander
-about.
-
-<br><br>
-<dt>real(wp) <i class='arg'>temp_reduction</i><dd>
-Factor by which to reduce the temperature (defaults to 0.95). A smaller
+about.</p></dd>
+<dt>real(wp) <i class="arg">temp_reduction</i></dt>
+<dd><p>Factor by which to reduce the temperature (defaults to 0.95). A smaller
 value means the iteration will settle quicker, but possibly misses the
 global minimum. A value closer to 1 means the process will take longer,
-but the result will be more accurate.
-
-<br><br>
-<dt>integer <i class='arg'>number_iterations</i><dd>
-Number of estimates to be examined before reducing the &quot;temperature&quot;
-(defaults to 100).
-
-<br><br>
-<dt>real(wp) <i class='arg'>scale_factor</i><dd>
-Factor by which to scale the value before. The idea is that with a well
+but the result will be more accurate.</p></dd>
+<dt>integer <i class="arg">number_iterations</i></dt>
+<dd><p>Number of estimates to be examined before reducing the &quot;temperature&quot;
+(defaults to 100).</p></dd>
+<dt>real(wp) <i class="arg">scale_factor</i></dt>
+<dd><p>Factor by which to scale the value before. The idea is that with a well
 chose scale factor the simulation is more or less independent from the
-actual values (defaults to 1).
-
-<br><br>
-<dt>logical <i class='arg'>automatic_scaling</i><dd>
-Whether to first automatically determine a reasonable scale factor or
-not.
-
-<br><br>
-<dt>logical <i class='arg'>verbose</i><dd>
-Whether to print the intermediate results before reducing the
-temperature or not.
-
-</dl>
-<br><br>
-
-
-<dt><a name="4"><b class='cmd'>call get_next_step( params, range, x, value, task</b> </a><dd>
-
-Low-level routine that exmaines the function value and decides what the
-next step will be.
-
-<br><br>
-<dl>
-
-<dt>type(ANNEALING_PARAMETERS) <i class='arg'>params</i><dd>
-Derived type holding all parameters (and internal state variables) for
-the iteration.
-
-<br><br>
-<dt>real(wp), dimension(2,:) <i class='arg'>range</i><dd>
-The minimum and maximum value for each independent variable.
-
-<br><br>
-<dt>real(wp), dimension(:) <i class='arg'>x</i><dd>
-Current estimate of each independent variable where the minimum is
-attained.
-
-<br><br>
-<dt>real(wp) <i class='arg'>value</i><dd>
-Value of the function at x.
-
-<br><br>
-<dt>integer <i class='arg'>task</i><dd>
-Task to be performed: anneal_init, anneal_print, anneal_value or
-anneal_done.
-
-</dl>
-
-<dt><a name="5"><b class='cmd'>call find_minimum( params, range, x, func, value )</b> </a><dd>
-
-Routine implementing the procedure to find the minimum.
-
-<br><br>
-<dl>
-
-<dt>type(ANNEALING_PARAMETERS) <i class='arg'>params</i><dd>
-Derived type holding all parameters (and internal state variables) for
-the iteration.
-
-<br><br>
-<dt>real(wp), dimension(2,:) <i class='arg'>range</i><dd>
-The minimum and maximum value for each independent variable.
-
-<br><br>
-<dt>real(wp), dimension(:) <i class='arg'>x</i><dd>
-Upon return, estimate of each independent variable where the minimum is
-attained.
-
-<br><br>
-<dt>real(wp) <i class='arg'>value</i><dd>
-Estimate of the minimum value of the function (the value at x).
-
-<br><br>
-<dt>real(wp) function <i class='arg'>func(x)</i><dd>
-The function must have the interface:
-<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+actual values (defaults to 1).</p></dd>
+<dt>logical <i class="arg">automatic_scaling</i></dt>
+<dd><p>Whether to first automatically determine a reasonable scale factor or
+not.</p></dd>
+<dt>logical <i class="arg">verbose</i></dt>
+<dd><p>Whether to print the intermediate results before reducing the
+temperature or not.</p></dd>
+</dl></dd>
+<dt><a name="4"><b class="cmd">call get_next_step( params, range, x, value, task</b></a></dt>
+<dd><p>Low-level routine that exmaines the function value and decides what the
+next step will be.</p>
+<dl class="doctools_arguments">
+<dt>type(ANNEALING_PARAMETERS) <i class="arg">params</i></dt>
+<dd><p>Derived type holding all parameters (and internal state variables) for
+the iteration.</p></dd>
+<dt>real(wp), dimension(2,:) <i class="arg">range</i></dt>
+<dd><p>The minimum and maximum value for each independent variable.</p></dd>
+<dt>real(wp), dimension(:) <i class="arg">x</i></dt>
+<dd><p>Current estimate of each independent variable where the minimum is
+attained.</p></dd>
+<dt>real(wp) <i class="arg">value</i></dt>
+<dd><p>Value of the function at x.</p></dd>
+<dt>integer <i class="arg">task</i></dt>
+<dd><p>Task to be performed: anneal_init, anneal_print, anneal_value or
+anneal_done.</p></dd>
+</dl></dd>
+<dt><a name="5"><b class="cmd">call find_minimum( params, range, x, func, value )</b></a></dt>
+<dd><p>Routine implementing the procedure to find the minimum.</p>
+<dl class="doctools_arguments">
+<dt>type(ANNEALING_PARAMETERS) <i class="arg">params</i></dt>
+<dd><p>Derived type holding all parameters (and internal state variables) for
+the iteration.</p></dd>
+<dt>real(wp), dimension(2,:) <i class="arg">range</i></dt>
+<dd><p>The minimum and maximum value for each independent variable.</p></dd>
+<dt>real(wp), dimension(:) <i class="arg">x</i></dt>
+<dd><p>Upon return, estimate of each independent variable where the minimum is
+attained.</p></dd>
+<dt>real(wp) <i class="arg">value</i></dt>
+<dd><p>Estimate of the minimum value of the function (the value at x).</p></dd>
+<dt>real(wp) function <i class="arg">func(x)</i></dt>
+<dd><p>The function must have the interface:</p>
+<pre class="doctools_example">
     interface
         function f(x)
             use select_precision
@@ -223,56 +239,44 @@ The function must have the interface:
             real(wp)                           :: func
         end function
     end interface
-</pre></td></tr></table></p>
-
+</pre>
+</dd>
+</dl></dd>
 </dl>
-
-
-</dl>
-
-
-<h2><a name="interface_issues">INTERFACE ISSUES</a></h2>
-<p>
-The interface to the function to be minimized is fixed. This is an
+</div>
+<div id="section3" class="doctools_section"><h2><a name="section3">INTERFACE ISSUES</a></h2>
+<p>The interface to the function to be minimized is fixed. This is an
 unfortunate limitation of Fortran 95. But there are at least two ways
-around it:
-
-<ul>
-<li>
-If the function requires one or more parameters, or a set of
+around it:</p>
+<ul class="doctools_itemized">
+<li><p>If the function requires one or more parameters, or a set of
 measured data, then it can be useful to store these first as module
-variables and then call <em>find_minimum</em> with as argument a function
-in that module that can access the data:
-<p><table><tr><td bgcolor=black>&nbsp;</td><td><pre class='sample'>
+variables and then call <i class="term">find_minimum</i> with as argument a function
+in that module that can access the data:</p>
+<pre class="doctools_example">
     module measured_data
         use select_precision
         real(wp), dimension(:), allocatable, save :: data
     contains
-
     subroutine store_data( array )
         real(wp), dimension(:) :: data
         ... copy the data
     end subroutine store_data
-
     real(wp) function f(x)
         real(wp), dimension(:) :: x
         ... use x and data to determine the value of f
     end function f
     end module
-</pre></td></tr></table></p>
-
-<br><br>
-<li>
-Use the code for <em>find_minimum</em> to implement the evaluation of the
+</pre>
+</li>
+<li><p>Use the code for <i class="term">find_minimum</i> to implement the evaluation of the
 function in the way required. The code is fairly straightforward:
-
 {exampe {
 subroutine find_minimum( params, range, x, func, value )
     type(ANNEALING_PARAMETERS), intent(inout) :: params
     real(wp), dimension(:,:), intent(in)      :: range
     real(wp), dimension(:), intent(inout)     :: x
     real(wp), intent(out)                     :: value
-
     interface
         function func( x )
             use select_precision
@@ -280,14 +284,10 @@ subroutine find_minimum( params, range, x, func, value )
             real(wp)                           :: func
         end function
     end interface
-
     integer :: task
-
     task = annealing_init
-
     do
         call get_next_step( params, range, x, value, task )
-
         select case ( task )
             case ( annealing_value )
                 !
@@ -296,7 +296,6 @@ subroutine find_minimum( params, range, x, func, value )
                 ! You can put the customised code here
                 !
                 value = func(x)
-
             case ( annealing_report )
                 !
                 ! Fill in the reporting code
@@ -305,19 +304,15 @@ subroutine find_minimum( params, range, x, func, value )
                 write(*,'(a,(5e12.4),/)') '    Vector:   ', x
                 write(*,'(2(a,i5))')     '    Accepted: ', &amp;
                     params%accepted, ' from ', params%number_iterations
-
             case ( annealing_done )
                 exit
         end select
     enddo
-
 end subroutine find_minimum
-}]
-
+}]</p></li>
 </ul>
-
-<h2><a name="copyright">COPYRIGHT</a></h2>
-<p>
-Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;<br>
-</body></html>
-
+</div>
+<div id="copyright" class="doctools_section"><h2><a name="copyright">Copyright</a></h2>
+<p>Copyright &copy; 2008 Arjen Markus &lt;arjenmarkus@sourceforge.net&gt;</p>
+</div>
+</div></body></html>

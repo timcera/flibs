@@ -1,6 +1,6 @@
 # Makefile for "computing" tests and examples
 #
-# $Id$
+# $Id: makefile,v 1.1 2013-12-22 15:36:51 arjenmarkus Exp $
 #
 include ../../config/config.mk
 include ../../config/options.mk

@@ -1,7 +1,7 @@
 # gentabletest.tcl --
 #    Generate a test program based on the table specification
 #
-#    $Id$
+#    $Id: gentabletest.tcl,v 1.7 2008-09-30 13:37:02 arjenmarkus Exp $
 #
 #    TODO:
 #    - RANGES (instead of UNCERTAINTIES)

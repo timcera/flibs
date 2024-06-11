@@ -4,7 +4,7 @@
 !
 !     TODO: 3D, circles, spheres, on spherical surface
 !
-!     $Id$
+!     $Id: pointsets.f90,v 1.4 2013-12-30 07:16:20 arjenmarkus Exp $
 !
 module pointsets
     use select_precision

@@ -25,7 +25,7 @@
 !
 ! Copyright (c) 2008 Michael Baudin
 !
-! $Id$
+! $Id: m_throwable.f90,v 1.1 2008-04-09 07:29:23 relaxmike Exp $
 !
 module m_throwable
   implicit none

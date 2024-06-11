@@ -1,7 +1,7 @@
 ! test_permutations
 !     Test the random permutation routines
 !
-!     $Id$
+!     $Id: test_random_permutation.f90,v 1.1 2012-12-23 10:18:13 arjenmarkus Exp $
 !
 program test_permutations
     use random_permutations

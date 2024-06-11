@@ -2,7 +2,7 @@
 !     Main source file for the reporting module:
 !     write files with various formats (HTML, RTF and LaTex).
 !
-!     $Id$
+!     $Id: report.f90,v 1.1 2008-03-25 05:23:36 arjenmarkus Exp $
 !
 module reporting
     use reporting_rtf

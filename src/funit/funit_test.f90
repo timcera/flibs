@@ -3,7 +3,7 @@
 !     Include file containing the source code for the
 !     general "test" subroutine
 !
-!     $Id$
+!     $Id: funit_test.f90,v 1.2 2007-08-15 19:09:33 arjenmarkus Exp $
 !
 ! test --
 !     Routine to run a unit test

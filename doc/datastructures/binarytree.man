@@ -2,7 +2,7 @@
 [manpage_begin flibs/binarytree n 1.0]
 [copyright {2005 Arjen Markus <arjenmarkus@sourceforge.net>}]
 [moddesc flibs]
-[titledesc {Linked lists}]
+[titledesc {Binary trees}]
 
 [description]
 
@@ -10,7 +10,7 @@ The [strong binarytree.f90] source file allows you to implement
 [strong "binary trees"] of any (derived) type without having to edit
 the supplied source code. (The resulting binary tree is [strong not]
 balanced, that would require a method of ordering the data.) To achieve
-genericty, a simple technique is used, which is best illustrated by an
+genericity, a simple technique is used, which is best illustrated by an
 example:
 
 [example {
@@ -40,7 +40,7 @@ that holds the functionality to use binary trees:
 
 [bullet]
 The module [strong MYDATA_MODULE] is [strong used], but the derived type
-[strong MYDATA] is renamed to the (fixed) name [strong LIST_DATA]. (This
+[strong MYDATA] is renamed to the (fixed) name [strong TREE_DATA]. (This
 is the name used in the generic source file.)
 
 [bullet]
@@ -90,7 +90,7 @@ well.
 [list_begin arg]
 
 [arg_def "type(BINARY_TREE), pointer"  btree]
-The list to be destroyed
+The tree to be destroyed
 
 [list_end]
 [nl]
@@ -172,7 +172,7 @@ this can be destroyed or used independently of the original tree.
 [list_begin arg]
 
 [arg_def "type(BINARY_TREE), pointer"  node]
-The element in the list after which to insert a new one.
+The element in the tree after which to insert a new one.
 [arg_def "type(BINARY_TREE), pointer" subtree]
 The subtree that was removeds the child node
 [arg_def "logical"  right]

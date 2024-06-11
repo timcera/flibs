@@ -1,0 +1,11 @@
+dd. 3 november 2018
+The makefiles contained in this directory have turned out to be
+platform-dependent and to contain specifics wrt the Cygwin/MinGW tools expected.
+
+I have not been able to get them to work properly - all manner of strange things happen.
+
+For now I am working on individual makefiles instead.
+
+
+
+

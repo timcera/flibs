@@ -1,7 +1,7 @@
 !  text_tst.f90 --
 !      Test the modules manipulating arbitrary-length strings
 !
-!      $Id$
+!      $Id: text_tst.f90,v 1.2 2006-03-26 19:03:53 arjenmarkus Exp $
 !
 program text_tst
     use multiple_line_text

@@ -53,7 +53,7 @@
 ! Author: Michael Baudin, 2008, michael.baudin@gmail.com
 ! Changes: Arjen Markus, 2008, arjenmarkus@sourceforge.net
 !
-!     $Id$
+!     $Id: m_logger.f90,v 1.5 2012-11-27 07:36:52 arjenmarkus Exp $
 !
 module m_logger
   implicit none

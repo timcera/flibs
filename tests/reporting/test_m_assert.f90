@@ -1,7 +1,7 @@
 ! test_m_assert.f90 --
 !     Small test program for the m_assert component.
 !
-!     $Id$
+!     $Id: test_m_assert.f90,v 1.1 2008-04-08 09:06:53 relaxmike Exp $
 !
 program test_m_assert
   use m_assert, only : &

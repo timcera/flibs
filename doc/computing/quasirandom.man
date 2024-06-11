@@ -1,0 +1,78 @@
+[comment {-*- flibs -*- doctools manpage}]
+[manpage_begin quasirandom n 1.0]
+[copyright {2020 Arjen Markus <arjenmarkus at sourceforge dot net>}]
+[moddesc flibs]
+[titledesc {Select quasi-random points in space}]
+
+[description]
+
+The [term quasirandom] module provides a class [term quasirandom_generator] to
+generate quasi-random points in an n-dimensional space. Such points are
+spread more evenly over the space than would be the case with pseudo-random numbers.
+
+[para]
+The points are generated in either a unit-hypercube [lb]0,1[rb]^n, on a unit circle or
+a unit sphere or within a unit disk or a unit ball. Several options are available
+to influence the precise sequence.
+
+[para]
+As no random numbers are involved, the sequence is always the same, except for
+the starting point and the number of points that are skipped (if any).
+
+[para]
+The algorithm for generating the points is based on:  [uri "http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/"]
+
+
+[section "CLASS AND METHODS"]
+The module defines a single class with a small number of methods:
+
+[list_begin definitions]
+
+[call [cmd "type(quasirandom_generator) :: q"]]
+The class/derived type for generating the points in n-dimensional space
+
+[call [cmd "call q%init( dimin, stepsize)"]]
+Initialise the quasi-random generator. In the call the dimension
+or the shape of the occupied space is set. The stepsize allows you to
+skip points in the sequence, so that different points are selected.
+
+[list_begin arg]
+[arg_def integer dimin]
+The dimension of the space or the shape:
+[list_begin bullet]
+[bullet] quasi_circle - The points lie on a unit circle (two dimensions)
+[bullet] quasi_disk - The points lie within a unit disk (two dimensions)
+[bullet] quasi_sphere - The points lie on a unit sphere (three dimensions)
+[bullet] quasi_disk - The points lie within a unit ball (three dimensions)
+[list_end]
+
+[arg_def "integer, optional ::" stepsize]
+Optional argument: if given, then some points in the sequence will be skipped,
+so that you get a slightly different set of points. Default value: 1 (no point skipped).
+[list_end]
+[nl]
+
+[call [cmd "call q%restart( start, stepsize)"]]
+Restart the sequence. You can select a new starting point and a stepsize.
+
+[list_begin arg]
+[arg_def "integer, optional ::" start]
+The index of the starting point (if not given, 1 is chosen)
+[arg_def "integer, optional ::" stepsize]
+The step to be taken in the sequence (if not given, 1 is chosen)
+[list_end]
+[nl]
+
+[call [cmd "call q%next( coords )"]]
+Return the next point in the sequence. The coordinates array [term coords] may be
+either single or double precision. The array is assumed to be at least as long
+as the number of dimensions.
+
+[list_begin arg]
+[arg_def "real, dimension(:) ::"  coords]
+The coordinates of the selected point
+[list_end]
+[nl]
+
+[list_end]
+[manpage_end]

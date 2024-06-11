@@ -35,7 +35,7 @@ program chk_norm2_hypot
     !
     vector(1:2) = (/ 30.0 * tiny(x), 40.0 * tiny(x) /)
 
-    write( *, '(a)' )              '2-norm of a vector with very large components:'
+    write( *, '(a)' )              '2-norm of a vector with very small components:'
     write( *, '(a,2e14.4)' )       'Vector:        ', vector(1:2)
     write( *, '(a,e14.4)' )        'Euclidean norm:', norm2(vector(1:2))
     write( *, '(a,e14.4)' )        'Expected:      ', 50.0 * tiny(x)

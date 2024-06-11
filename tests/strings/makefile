@@ -1,6 +1,6 @@
 # Makefile for "string manipulation" tests and examples
 #
-# $Id$
+# $Id: makefile,v 1.6 2016-12-04 11:40:54 arjenmarkus Exp $
 #
 include ../../config/config.mk
 include ../../config/options.mk
@@ -17,6 +17,8 @@ PROGRAMS	=	test_token$(EXEEXT) \
 		mktranslation$(EXEEXT) \
 		test_flexoutput$(EXEEXT) \
 		test_command_args$(EXEEXT) \
+		test_string_operations$(EXEEXT) \
+		test_base64$(EXEEXT) \
 
 all:	$(PROGRAMS)
 
@@ -118,6 +120,7 @@ test_translation$(OBJEXT):	test_translation.f90 translation$(OBJEXT)
 test_translation$(EXEEXT):	test_translation$(OBJEXT) translation$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_translation$(OBJEXT) translation$(OBJEXT)
 
+
 flexoutput$(OBJEXT):	../../src/strings/flexoutput.f90
 	$(FC) $(FFLAGS) ../../src/strings/flexoutput.f90
 
@@ -127,6 +130,7 @@ test_flexoutput$(OBJEXT):	test_flexoutput.f90 flexoutput$(OBJEXT)
 test_flexoutput$(EXEEXT):	test_flexoutput$(OBJEXT) flexoutput$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_flexoutput$(OBJEXT) flexoutput$(OBJEXT)
 
+
 command_args$(OBJEXT):	../../src/strings/command_args.f90
 	$(FC) $(FFLAGS) ../../src/strings/command_args.f90
 
@@ -135,6 +139,26 @@ test_command_args$(OBJEXT):	test_command_args.f90 command_args$(OBJEXT)
 
 test_command_args$(EXEEXT):	test_command_args$(OBJEXT) command_args$(OBJEXT)
 	$(LD) $(LDFLAGS) $(LDOUTPUT) test_command_args$(OBJEXT) command_args$(OBJEXT)
+
+
+string_operations$(OBJEXT):	../../src/strings/string_operations.f90
+	$(FC) $(FFLAGS) ../../src/strings/string_operations.f90
+
+test_string_operations$(OBJEXT):	test_string_operations.f90 string_operations$(OBJEXT)
+	$(FC) $(FFLAGS) test_string_operations.f90
+
+test_string_operations$(EXEEXT):	test_string_operations$(OBJEXT) string_operations$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_string_operations$(OBJEXT) string_operations$(OBJEXT)
+
+
+base64$(OBJEXT):	../../src/strings/base64.f90
+	$(FC) $(FFLAGS) ../../src/strings/base64.f90
+
+test_base64$(OBJEXT):	test_base64.f90 base64$(OBJEXT)
+	$(FC) $(FFLAGS) test_base64.f90
+
+test_base64$(EXEEXT):	test_base64$(OBJEXT) base64$(OBJEXT)
+	$(LD) $(LDFLAGS) $(LDOUTPUT) test_base64$(OBJEXT) base64$(OBJEXT)
 
 
 

@@ -90,6 +90,14 @@
 #
 #     - check definition of C_PRTDIFF_T in ISO_C_BINDING
 #
+#     - check none(type,external)
+#
+#     - check go30 if (...) ... endif go30
+#
+#     - check "pointer functions" - access_func.f90
+#
+#     - Kahan's compensated summation
+#
 @chk_newunit
 FEATURE
 The compiler does not support OPEN( NEWUNIT = ... )
@@ -190,9 +198,9 @@ The compiler does not support the NORM2 or HYPOT functions (intrinsic functions 
 FEATURE
 The compiler does not support the G0 format
 
-#@chk_i0_format
-#EXTENSION
-#The compiler does not allow the I0 format for input
+@chk_i0_format
+EXTENSION
+The compiler does not allow the I0 format for input
 
 @chk_array_bound_static
 PROBE
@@ -648,6 +656,47 @@ The compiler should have accepted the program - please check
 FEATURE
 The compiler does not seem to support coarrays or requires a specific option
 
+@chk_open_coarrays
+FEATURE
+The compiler does not seem to support coarrays or requires a specific option
+
+@chk_coarrays_reduction
+FEATURE
+The compiler does not seem to support reduction routines (coarrays, Fortran 2018)
+or requires a specific option
+
 @chk_c_ptrdiff_t
 FEATURE
 The compiler does not support the kind C_PTRDIFF_T for the difference between memory addresses
+
+@chk_recursive_elemental
+FEATURE
+The compiler does not support recursive elemental routines (Fortran 2018)
+
+@chk_writealloc
+EXTENSION
+The compiler adheres to the restriction about allocatable and pointer components
+
+@chk_implicit_enhancement
+FEATURE
+The compiler does not support IMPLICIT NONE(TYPE,EXTERNAL) (Fortran 2018)
+
+@chk_varying_string_array_arg
+FEATURE
+The compiler does not support explicitly specifying the string length with string arrays
+
+@chk_string_array_arg
+EXTENSION
+The compiler does not support an array of literal strings of varying lengths
+
+@chk_param_derived_diff
+FEATURE
+The compiler checks the type parameters and finds them incompatible
+
+@chk_initialise_sum
+FEATURE
+The compiler does not accept intrinsics like SUM in initialisation statements
+
+@chk_recursive_default
+FEATURE
+The compiler does not support the Fortran 2018 feature that routines are recursive by default

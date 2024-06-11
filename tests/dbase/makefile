@@ -1,6 +1,6 @@
 # Makefile for "dbase" test
 #
-# $Id$
+# $Id: makefile,v 1.1 2013-10-05 10:53:13 arjenmarkus Exp $
 #
 include ../../config/config.mk
 include ../../config/options.mk

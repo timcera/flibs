@@ -41,6 +41,7 @@ call compile buildscript
 
 buildscript.exe
 
-call runfeatures >features.out 2>&1
+call runfeatures
+rem call runfeatures >features.out 2>&1
 
 echo Done - results in features.out

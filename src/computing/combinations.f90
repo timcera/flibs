@@ -1,7 +1,7 @@
 ! combinations.f90 --
 !     Module for some simple combinatorical functions and subroutines
 !
-!     $Id$
+!     $Id: combinations.f90,v 1.1 2008-09-21 10:42:33 arjenmarkus Exp $
 !
 module combinations
     implicit none

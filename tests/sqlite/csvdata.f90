@@ -1,7 +1,7 @@
 ! csvdata.f90 --
 !    Program to generate a simple CSV file with fictitious data
 !
-!    $Id$
+!    $Id: csvdata.f90,v 1.2 2006-03-26 19:03:53 arjenmarkus Exp $
 !
 program csvdata
    implicit none

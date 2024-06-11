@@ -1,7 +1,7 @@
 ! test_tokenlist.f90 --
 !    Test program for the tokenlist module
 !
-!    $Id$
+!    $Id: test_tokenlist.f90,v 1.1 2012-11-04 12:57:07 arjenmarkus Exp $
 !
 program test_tokenlist
    use tokenlists

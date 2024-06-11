@@ -2,7 +2,7 @@
 !     Module for a simple implementation of
 !     simulated annealing
 !
-!     $Id$
+!     $Id: annealing.f90,v 1.4 2009-05-05 17:17:42 arjenmarkus Exp $
 !
 
 module simulated_annealing

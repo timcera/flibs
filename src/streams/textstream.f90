@@ -11,7 +11,7 @@
 !     of that type of input processing, but a / seems to interfer
 !     with the detection of the end of input.
 !
-!     $Id$
+!     $Id: textstream.f90,v 1.1 2006-06-23 08:04:13 arjenmarkus Exp $
 !
 module text_streams
     implicit none

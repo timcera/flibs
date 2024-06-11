@@ -1,7 +1,7 @@
 ! test_mem_pool.f90 --
 !     Test program for the memory pool facility
 !
-!     $Id$
+!     $Id: test_mem_pool.f90,v 1.1 2006-10-01 08:49:10 arjenmarkus Exp $
 !
 module MYDATA_MODULE
 

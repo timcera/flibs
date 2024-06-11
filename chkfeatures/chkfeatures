@@ -41,6 +41,7 @@ rm -f *.exe
 ./buildscript.exe
 chmod +x runfeatures.sh
 
-./runfeatures.sh $1 $2 $3 $4 $5 $6 $7 $8 >features.out 2>&1
+./runfeatures.sh $1 $2 $3 $4 $5 $6 $7 $8
+# ./runfeatures.sh $1 $2 $3 $4 $5 $6 $7 $8 >features.out 2>&1
 
 echo Done - results in features.out

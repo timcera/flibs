@@ -1,6 +1,6 @@
 ! Test program for binary streams
 !
-!     $Id$
+!     $Id: test_binstreams.f90,v 1.3 2006-06-23 08:04:13 arjenmarkus Exp $
 !
 program test_binstream
     use binary_streams

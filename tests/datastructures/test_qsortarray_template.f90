@@ -32,7 +32,7 @@ end module m_testsorting
 !
 !     See: sorting.f90 for more details
 !
-!     $Id$
+!     $Id: test_qsortarray_template.f90,v 1.1 2008-04-17 14:43:56 relaxmike Exp $
 !
 program test_qsortarray_template
   use m_specialdata, only : MY_SPECIAL_DATA , QSORT_COMPARE

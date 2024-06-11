@@ -24,7 +24,7 @@
 !         "stopped" must be properly used.
 !
 !
-!     $Id$
+!     $Id: ftnunit.f90,v 1.21 2016-07-22 06:35:03 arjenmarkus Exp $
 !
 
 ! ftnunit_utilities

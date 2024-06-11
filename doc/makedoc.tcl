@@ -1,5 +1,5 @@
 #
-# A script to generate the html documentation from the 
+# A script to generate the html documentation from the
 # doctools man files.
 #
 

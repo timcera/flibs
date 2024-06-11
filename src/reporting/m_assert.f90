@@ -39,7 +39,7 @@
 !
 ! Copyright (c) 2008 Michael Baudin
 !
-! $Id$
+! $Id: m_assert.f90,v 1.2 2008-05-06 08:39:47 relaxmike Exp $
 !
 module m_assert
   use m_exception, only : &
